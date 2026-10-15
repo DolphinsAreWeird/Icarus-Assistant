@@ -17,14 +17,22 @@ QUESTIONS = {
 
 
 class ConversationSession:
-    def __init__(self,profile_id="new",language="en",today="2026-10-15"):
+    def __init__(self,profile_id="new",language="en",today=None):
         load_profile(profile_id)
         if language not in ("en","th"):
             raise ValueError("UNKNOWN_LANGUAGE")
-        date.fromisoformat(today)
-        self.profile_id,self.language,self.today = profile_id,language,today
+        self.set_calculation_date(today)
+        self.profile_id,self.language = profile_id,language
         self.updates,self.provenance,self.memory = {},{},[]
         self.turn = 0
+
+    @property
+    def today(self):
+        return date.today().isoformat() if self.date_mode == "runtime" else self._today
+
+    def set_calculation_date(self, today=None):
+        self.date_mode = "runtime" if today is None else "fixed"
+        self._today = date.today().isoformat() if today is None else date.fromisoformat(today).isoformat()
 
     @property
     def profile(self):
@@ -39,6 +47,7 @@ class ConversationSession:
 
     def local_reply(self,text,route,status="ok"):
         return {"text":text,"language":self.language,"status":status,"route":route,"model_calls":[],
+                "calculation_date":self.today,"date_mode":self.date_mode,
                 "sources":[],"tool_results":{},"numerical_summaries":[],"ui_actions":[],"disclaimer":"",
                 "profile_context":self.profile,"profile_provenance":self.provenance,
                 "guidance_context":guidance_context(self.profile),"elapsed_seconds":0.0}
@@ -81,6 +90,7 @@ class ConversationSession:
             result = answer(message,language=self.language,profile_id=self.profile_id,today=self.today,
                             profile_updates=self.updates,profile_provenance=self.provenance,
                             memory=self.memory,offline=offline,model=model,screen_context=screen_context,data_adapter=data_adapter)
+            result["date_mode"] = self.date_mode
             self.memory.append({"user":message,"assistant":result["text"],"sources":result["sources"],
                                 "tool_results":result["tool_results"]})
             self.memory = self.memory[-4:]
@@ -94,6 +104,7 @@ class ConversationSession:
         target = session_path(session_id)
         target.parent.mkdir(parents=True,exist_ok=True)
         data = {"schema_version":1,"profile_id":self.profile_id,"language":self.language,"today":self.today,
+                "date_mode":self.date_mode,
                 "updates":self.updates,"provenance":self.provenance,"memory":self.memory,"turn":self.turn}
         temp = target.with_suffix(".tmp")
         temp.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding="utf-8")
@@ -104,7 +115,11 @@ class ConversationSession:
         data = json.loads(session_path(session_id).read_text(encoding="utf-8"))
         if not isinstance(data,dict) or data.get("schema_version") != 1:
             raise ValueError("UNSUPPORTED_SESSION_VERSION")
-        state = cls(data["profile_id"],data["language"],data["today"])
+        mode = data.get("date_mode", "fixed")
+        if mode not in ("runtime", "fixed"):
+            raise ValueError("INVALID_SESSION_DATE_MODE")
+        date.fromisoformat(data["today"])
+        state = cls(data["profile_id"],data["language"],None if mode == "runtime" else data["today"])
         state.updates = validate_updates(data["updates"])
         if type(data.get("turn")) is not int or data["turn"]<0:
             raise ValueError("INVALID_SESSION_TURN")

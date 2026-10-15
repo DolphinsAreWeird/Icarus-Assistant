@@ -45,3 +45,20 @@ Full hashes, cutoffs and scoring metrics are in ignored `model/results/forecast_
 Complete, focused requests for explicitly mock fees, labeled no-interest savings and exact-date USDT historical what-if calculations now use the same deterministic tools directly in Thai and English. Mixed advice, risk/app questions, unsupported currencies, incomplete dates and ambiguous multi-asset requests remain with Qwen. This routing does not execute trades or assert an actual fee schedule.
 
 The same six numeric scenarios that previously used Qwen now pass exact-tool-field checks with zero model calls. In the measured local run, median elapsed time was 0.0025 seconds and maximum was 0.006 seconds, compared with the earlier model-loop median of 15.9245 seconds. This measures different routes for these explicit cases, not model acceleration or general natural-language performance. All 79 automated tests pass.
+
+## Final engineering verification
+
+The final bilingual smoke run passed six structural cases: PAXG explanations, near-term essential-money guidance and exact displayed-chart explanations. Four model turns had a median of 11.4905 seconds and maximum of 17.61 seconds; the two local guidance turns each took about 0.001 seconds. Inspection exposed incorrect model-selected data-origin labels, so historical/synthetic/saved-reference/experimental limitations now derive from actual successful tool provenance. Unit tests reproduce and reject that mislabeling.
+
+Normal calculations now use the current host-local day instead of the old fixed demonstration date. New runtime sessions advance across midnight and resume; explicit fixed dates stay reproducible. Legacy saved sessions preserve their previous fixed date, and CLI `--today` can override it. App integrations should supply the user's local date when it differs from the host. The evaluation runners deliberately retain their explicit fixed date.
+
+Unit calculation tests use provider doubles rather than requiring ignored market downloads. `python model/verify_checkpoint.py` checks all 83 tests, both retrieval suites, six local numeric scenarios and all three prepared market/forecast artifacts. Gateway calls are explicitly blocked. It passed with 1,004 daily observations per asset, cutoff 2026-09-30. The offline conversation suite also passed. Fresh checkouts need the documented archive preparation and forecast-generation steps before the market-artifact check can pass.
+
+### Deferred human/external items
+
+- Luka and First: review Thai wording, source interpretation and financial-guidance examples. No pending result was marked human-approved.
+- App owner: confirm actual fee rules, supported assets and live screen/account payloads when connecting the prototype. Existing fixtures remain labeled synthetic.
+- Orion operator, if needed: confirm supported lower-reasoning options. Open-ended model answers still take seconds to tens of seconds; no unsupported no-thinking setting was enabled.
+- Prediction research: use new forward data and independently written evaluation cases before claiming generalization. Saved forecasts remain historical-cutoff experiments with no demonstrated trading advantage.
+
+These do not block running the local model prototype. No immediate user decision was required during this optimization pass.

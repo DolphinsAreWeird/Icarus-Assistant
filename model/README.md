@@ -4,7 +4,7 @@ The full assistant prototype, profile/session commands, factual tools, and conve
 
 Standalone model integration, not a backend. Python 3.12 is available in this workspace; no additional packages are required.
 
-Gateway base URL is confirmed from user-supplied Orion documentation: `https://api.orion.cmkl.ai/v1`. The pasted completion example selects `Mango 1.5-9B`; it does not confirm the exact API identifier for Qwen. List gateway models or copy the Qwen-selected example before setting the model.
+Gateway base URL is `https://api.orion.cmkl.ai/v1`. Authenticated testing confirmed model ID `Qwen 3.8-27B-NVFP4`, bilingual tool calling and JSON-object mode. Use the existing local `.env`, or list gateway models when configuring a different model.
 
 Set the key securely for the current PowerShell process, without putting it in shell history:
 
@@ -46,7 +46,7 @@ Authenticated Orion testing confirmed model ID `Qwen 3.8-27B-NVFP4`, bilingual t
 
 The timings are complete HTTP-response durations, not first-token latency. This does not benchmark production concurrency, streaming, or voice. Read the answers to assess factual and numerical correctness. A completed tool cycle establishes protocol behavior, not financial suitability.
 
-No live probes were run during setup because no key was provided to the process. Syntax and CLI checks do not establish provider compatibility. A future production adapter may need to preserve additional provider-specific assistant fields for tool cycles; test the actual model.
+Live capability checks and prototype evaluations have completed against the configured Orion model. Saved results are development evidence, not a guarantee of current gateway availability. Retest after changing the provider, model or tool protocol.
 
 Remove the key from the process when done:
 

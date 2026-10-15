@@ -1,5 +1,7 @@
 # Icarus model prototype
 
+Latest engineering checkpoint: run `python model/verify_checkpoint.py` from the repository root. It checks tests, retrieval, local calculations and prepared data with gateway access blocked. It requires the market artifacts below to have been prepared; it does not download them or imply human approval.
+
 This is the model/data-processing part of Icarus. It includes a local Python interface and CLI, not an app backend. Python's standard library is sufficient; no additional packages are required.
 
 The latest [modelling checkpoint](MODEL_CARD.md) documents daily-return intervals with separate model selection, calibration and testing, real-data results, bilingual retrieval coverage, and remaining modelling work. Regenerate all forecast artifacts with `python model/predict_risk.py --asset all`; `/risk` renders their historical cutoff, interval and measured test coverage in either language.
@@ -69,7 +71,7 @@ Thai equivalents:
 
 Recognized factual intake makes no model requests. `/profile` shows current values and provenance. `/lang th` or `/lang en` switches language without clearing state. `/reset` clears this conversation's updates and memory back to its selected fictional seed; it does not delete unrelated evaluation data. `/quit` exits. Interactive answers now use readable text; `--json` shows the integration payload instead.
 
-Persistence is off by default. Add `--session demo` to save and resume a named local session in ignored `model/results/sessions/`. This stores user-entered context and recent conversation, so use fictional demo information unless you intend that local storage. A saved session's profile, language, and date take precedence over startup defaults; use `/lang` to change its language. Voice, navigation, and execution remain owned by other systems.
+Persistence is off by default. Add `--session demo` to save and resume a named local session in ignored `model/results/sessions/`. This stores user-entered context and recent conversation, so use fictional demo information unless you intend that local storage. A saved session's profile and language take precedence over startup defaults; use `/lang` to change its language. New sessions use the host's current local date and advance across midnight/resume. Pass `--today 2026-10-15` for a reproducible fixed demo; an explicit `--today` also overrides a loaded session's date. Legacy sessions retain their saved fixed date. App integrations can pass the user's local date explicitly. Responses expose `calculation_date`; session responses also expose `date_mode`.
 
 ```powershell
 python model/assistant.py --interactive --lang en --session demo
@@ -94,7 +96,7 @@ Fast factual commands make no model requests and render actual tool fields:
 
 Results contain `text`, `disclaimer`, `sources`, `tool_results`, `numerical_summaries`, `limitations`, and model-call timing. Display numerical summaries alongside the explanation. Feed deterministic summaries to TTS when exact amounts need speaking. The plain `text` field intentionally avoids financial figures.
 
-Explicit `/fee` and a small set of unambiguous whole-request English/Thai fee-only patterns skip Qwen entirely. Compound questions still use the model. Other questions may make multiple sequential model calls; earlier measured latency was significant. No supported no-thinking mode has been established for Orion. Unexpected Chinese-script mixing and missing Thai in a Thai response are flagged; spelling and financial meaning still need Thai review. Do not promise low voice latency from this prototype.
+Explicit commands and complete, focused English/Thai mock-fee, labeled savings and exact-date historical what-if calculations skip Qwen. Mixed advice and ambiguous inputs retain model planning. Other questions may make multiple sequential model calls; measured latency remains significant. No supported no-thinking mode has been established for Orion. Unexpected Chinese-script mixing and missing Thai in a Thai response are flagged; spelling and financial meaning still need Thai review. Do not promise low voice latency from this prototype.
 
 Additional latency probes accepted `reasoning_effort=none/low`, but the gateway still reported reasoning tokens and one answer had degraded Thai wording. These fields are not enabled in the assistant. API acceptance does not prove that the requested reasoning mode was applied. Live multi-turn tests included a Thai comparison taking roughly forty-seven seconds.
 

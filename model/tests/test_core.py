@@ -166,7 +166,7 @@ class CoreTests(unittest.TestCase):
             self.assertEqual(result["route"],"deterministic_data_tool")
             self.assertEqual(result["model_calls"],[])
             self.assertIn("80.00%",result["numerical_summaries"][0]["text"])
-        self.assertEqual(answer("/goal 50000 1000 THB 2027-06-15")["status"],"ok")
+        self.assertEqual(answer("/goal 50000 1000 THB 2027-06-15",today="2026-10-15")["status"],"ok")
         self.assertEqual(answer("/goal 50000 1000 USD 2027-06-15")["status"],"invalid_input")
         self.assertEqual(answer("/whatif btc 1000 THB 2024-01-01 2026-09-30")["status"],"invalid_input")
 

@@ -3,6 +3,7 @@ import sys
 import unittest
 from unittest.mock import patch
 import json
+from datetime import date, timedelta
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from input_grounding import monetary_mentions, validate_monetary_arguments, natural_calculation
@@ -73,9 +74,16 @@ class InputGroundingTests(unittest.TestCase):
     def test_clear_bilingual_numeric_requests_bypass_model(self):
         from icarus_core import ROOT, read_json
         from evaluate_assistant import structural_checks
+        # Unit provider double: these tests must not require ignored downloads.
+        def fake_history(asset):
+            start, end = date(2024, 1, 1), date(2026, 9, 30)
+            return {"asset_id":asset, "currency":"USDT", "origin":"real_historical",
+                    "source_url":"https://example.org/unit-test-double",
+                    "points":[{"date":str(start+timedelta(days=i)), "close":str(100+i)}
+                              for i in range((end-start).days+1)]}
         for case in read_json(ROOT/"evaluation"/"numeric_cases.json"):
-            with patch("assistant.completion", side_effect=AssertionError("Must not call model")):
-                result = answer(case["message"], language=case["lang"])
+            with patch("assistant.completion", side_effect=AssertionError("Must not call model")), patch("icarus_core.history", side_effect=fake_history):
+                result = answer(case["message"], language=case["lang"], today="2026-10-15")
             self.assertEqual(result["route"], "deterministic_natural_calculation", case["id"])
             self.assertTrue(all(structural_checks(case, result, live=True).values()), case["id"])
 

@@ -1,5 +1,7 @@
 # Modelling checkpoint — 16 October 2026
 
+This card records the initial prediction checkpoint. Later engineering verification and multi-window robustness results are in [OPTIMIZATION_LOG.md](OPTIMIZATION_LOG.md); its current test counts supersede the earlier counts below. The historical data cutoff and prediction limitations in this card remain unchanged.
+
 The assistant uses the existing cloud Qwen model with bilingual evidence retrieval, explicit user context, and deterministic financial tools. No Qwen fine-tuning has been performed. The prediction component is a separate statistical experiment on daily market returns; the LLM explains its saved output rather than calculating predictions itself.
 
 ## Prediction inputs and evaluation
