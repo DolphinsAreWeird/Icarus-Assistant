@@ -1,0 +1,36 @@
+{
+  "name": "icarus-voice",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Icarus voice pipeline: ElevenLabs speech-to-text, text-to-speech and turn-taking",
+  "scripts": {
+    "dev": "tsx watch src/server/index.ts",
+    "start": "tsx src/server/index.ts",
+    "build:client": "node scripts/build-client.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "tsx scripts/elevenlabs-check.ts",
+    "pregenerate": "tsx scripts/pregenerate.ts",
+    "bench": "tsx scripts/bench.ts",
+    "predev": "npm run build:client && npm run build:app",
+    "prestart": "npm run build:client && npm run build:app",
+    "dev:fake": "FAKE_ELEVENLABS=1 npm run dev",
+    "build:app": "node scripts/build-app.mjs"
+  },
+  "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.72.0",
+    "dotenv": "^18.0.8",
+    "express": "^5.3.0",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "@types/ws": "^8.18.2",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.4"
+  }
+}

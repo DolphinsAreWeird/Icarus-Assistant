@@ -1,0 +1,26 @@
+{
+  "name": "icarus-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Runs Oasis's Icarus prototype (a .dc.html design file) as a React app, paired with the Icarus voice stack",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "esbuild": "^0.28.2",
+    "jsdom": "^30.1.3",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.4"
+  }
+}
