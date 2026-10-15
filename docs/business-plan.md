@@ -211,7 +211,7 @@ What to watch: voice and token prices move the number of paying users we need mo
 | Question | Our answer |
 |---|---|
 | "What if U-topia is small?" | Then the full-cost price does not pay for itself (section 5), so U-topia starts on the pilot and the per-user price. The business is sized for about 162,000 paying users across several apps, not one partner. |
-| "Why would they pay when U-Bot exists?" | U-Bot is a general assistant for payments and shopping. Icarus lives on the app's own screens for first-week users, sets up buys on those screens with an exact read-back, and gives the business the friction map. We hand U-Bot what it does best (travel, rides, groceries). |
+| "Why would they pay when U-Bot exists?" | U-Bot is a general assistant for payments and shopping. Icarus lives on the app's own screens for first-week users, prepares buys on a preview card with an exact read-back, draws charts and step-by-step help, and gives the business the friction map. We hand U-Bot what it does best (travel, rides, groceries). |
 | "Can it recommend investments?" | No, on purpose. It explains, compares on facts and calculates. A licensed partner can show its own approved picks. |
 | "Isn't the model a cost risk?" | The model is about 0.10 THB a question. If token prices doubled we would need about 271,000 paying users instead of 162,000 for a 20% margin, or we move to the cheaper host or the smaller model (section 7). |
 | "Why not your own GPUs?" | A GPU sized for the busiest hour sits idle most of the day; the API charges only for what is used. We rent GPUs, in Thailand, when a partner needs its data kept there. |

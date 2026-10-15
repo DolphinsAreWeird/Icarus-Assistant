@@ -38,7 +38,7 @@ http://localhost:8787/app/?backend                         backend at http://loc
 http://localhost:8787/app/?backend=http://127.0.0.1:8010&user=u_small
 ```
 
-`src/backend-bridge.ts` plugs into the prototype's own hook (`Icarus.setBackend`), so the prototype file is not edited. Typed and spoken questions both go to `POST /chat`, with the prototype's own `getContext()` as the snapshot. The backend answers with the prototype's own screen actions, which run as they are: "put 1,000 baht in gold" opens gold, types 1,000 and stops on Review purchase, where only the user taps Confirm purchase. Icarus reads the purchase back exactly, with the numbers from the prototype's own `calc()` (what that screen shows). "Ask U-topia" and the U-Bot handoffs still run first. What still has to be agreed between the parts is in [`../INTEGRATION.md`](../INTEGRATION.md).
+`src/backend-bridge.ts` plugs into the prototype's own hook (`Icarus.setBackend`), so the prototype file is not edited. Typed and spoken questions both go to `POST /chat`, with the prototype's own `getContext()` as the snapshot. The backend answers with screen actions the prototype runs as they are, and at most one card, which floats over the phone: a **trade preview** with the backend's numbers ("put 1,000 baht in gold"; confirming is a tap on the card, which calls `POST /trades/{id}/confirm`, and Icarus reads the card back exactly), a **chart** ("how did bitcoin do this year?", or two or three assets compared in %), or **steps** ("how do I buy?", with "Show me" on each step). "Ask U-topia" and the U-Bot handoffs still run first. What still has to be agreed between the parts is in [`../INTEGRATION.md`](../INTEGRATION.md).
 
 ## U-Bot: Ask U-topia and handoffs
 
@@ -61,6 +61,7 @@ frontend/
   src/voice-bridge.ts                  attaches our TTS and Scribe speech-in to the prototype
   src/backend-bridge.ts                ?backend: questions go to the real backend (POST /chat)
   src/trade-card.ts                    the backend's trade preview, confirmed by a tap
+  src/chat-cards.ts                    the backend's chart and step-by-step cards
   src/ubot-mock.ts                     ?page=ubot: the U-Bot mock a handoff opens (sample data, says MOCK)
   src/utopia-bridge.ts                 Ask U-topia answers and handoffs, wrapped around the prototype's own answers
   src/handoff-card.ts                  the "U-Bot can help with this" card

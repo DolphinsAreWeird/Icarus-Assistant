@@ -3,7 +3,8 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { setMascotFallback } from './assets';
-import { backendFromLocation, installBackend } from './backend-bridge';
+import { backendFromLocation, installBackend, toPrototypeAction, type PrototypeLike } from './backend-bridge';
+import { hideInfoCard, showChartCard, showStepsCard, type ChartCardData, type StepsCardData } from './chat-cards';
 import { createDcApp, installHelmet } from './dc-runtime';
 import { hideHandoffCard, showHandoffCard } from './handoff-card';
 import { hideTradeCard, showTradeCard } from './trade-card';
@@ -38,19 +39,25 @@ function routePageLinks() {
   });
 }
 
-/** A small pill under the phone: what the voice stack is doing, and any problem. */
+/**
+ * A small pill under the phone: what the voice stack is doing, and any problem. Information fades after 10 s so it
+ * never covers a card; an error stays until clicked. It sits below the cards (z-index 8000 against their 9000+).
+ */
 function createStatusPill(): (text: string, kind?: 'info' | 'error') => void {
   const pill = document.createElement('div');
   pill.style.cssText =
     'position:fixed;left:50%;bottom:10px;transform:translateX(-50%);max-width:92vw;padding:6px 14px;border-radius:999px;' +
-    'font:12px/1.4 ui-monospace,Menlo,monospace;background:#fff;color:#4A2E36;box-shadow:0 2px 12px rgba(150,60,85,.2);z-index:9999;cursor:pointer';
+    'font:12px/1.4 ui-monospace,Menlo,monospace;background:#fff;color:#4A2E36;box-shadow:0 2px 12px rgba(150,60,85,.2);z-index:8000;cursor:pointer';
   pill.title = 'Click to hide';
   pill.onclick = () => (pill.style.display = 'none');
   document.body.appendChild(pill);
+  let timer = 0;
   return (text, kind = 'info') => {
     pill.textContent = text;
     pill.style.color = kind === 'error' ? '#C0332B' : '#4A2E36';
     pill.style.display = 'block';
+    window.clearTimeout(timer);
+    if (kind === 'info') timer = window.setTimeout(() => (pill.style.display = 'none'), 10_000);
   };
 }
 
@@ -121,9 +128,23 @@ async function main() {
       if (backend) {
         installBackend({
           ...backend,
-          getInstance: () => instance as { state?: { asst?: string } } | null,
+          getInstance: () => instance as PrototypeLike | null,
           wrap: (ask) => withUtopiaRouting(utopia, ask),
-          hideTrade: hideTradeCard,
+          hideCards: () => {
+            hideTradeCard();
+            hideInfoCard();
+          },
+          showChart: (card, lang) => showChartCard(card as unknown as ChartCardData, { lang, getPhone }),
+          showSteps: (card, lang) =>
+            showStepsCard(card as unknown as StepsCardData, {
+              lang,
+              getPhone,
+              // "Show me" runs the backend's own pointing actions on the prototype.
+              runActions: (actions) =>
+                (window as unknown as { Icarus?: { runActions?: (a: unknown[]) => void } }).Icarus?.runActions?.(
+                  actions.map(toPrototypeAction).filter((a): a is Record<string, unknown> => a !== null),
+                ),
+            }),
           showTrade: (card, lang) =>
             showTradeCard(card, {
               lang,

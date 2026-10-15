@@ -4,18 +4,23 @@
 //
 // The backend speaks the prototype's language (backend/app/ui.py, backend/data/app_ui.json):
 //   - we send the prototype's own getContext() as `snapshot`; the backend reads the screen, asset and numbers from it
-//   - it answers with the prototype's own screen actions (open_asset, start_buy, type_amount, review, highlight...),
-//     already checked against the closed list, so they pass straight through to the prototype
+//   - it answers with screen actions from a closed list. The prototype's own ones (SCREEN_ACTIONS) pass straight
+//     through; highlight comes as { element_id } and is renamed to the prototype's { target }
+//   - and with at most one card: a trade preview, a chart, or step-by-step instructions. The prototype's chat cannot
+//     draw them, so we show them over the phone (trade-card.ts, chat-cards.ts)
 //
-// A buy stops on the prototype's review screen. The user taps Confirm purchase there (hard rule 4). For voice we
-// read the purchase back EXACTLY, with the numbers the review screen will show: they come from the prototype's own
-// calc(), the same function its screen uses, never from the model's words (hard rule 3).
+// A buy comes as a trade preview card with the backend's numbers, and Icarus reads it back EXACTLY from that card
+// (hard rule 3). The user taps Confirm on the card (hard rule 4). An older backend drove the prototype's own buy
+// screens instead; for that, the read-back comes from the prototype's own calc(), what its review screen shows.
 
 import { withReadbackFields } from '../../voice/src/shared/backend-card';
 import { buildReadback, parsePreview } from '../../voice/src/shared/readback';
 import { STRINGS } from '../../voice/src/config/strings';
 
 export const DEFAULT_BACKEND_URL = 'http://localhost:8000';
+
+/** Screen actions the prototype runs (its doAction, and start_guide). Anything else the backend sends is not passed on. */
+export const SCREEN_ACTIONS = new Set(['navigate', 'back', 'open_asset', 'set_period', 'set_filter', 'toggle_freeze', 'hide_balance', 'start_guide', 'start_buy', 'type_amount', 'select_wallet', 'review', 'cancel_buy']);
 export const DEFAULT_USER = 'u_new';
 const THAI = /[฀-๿]/;
 
@@ -119,38 +124,55 @@ export function buyReadback(actions: Array<Record<string, unknown>>, ctx: Protot
   return preview ? `${buildReadback(preview, lang, { prompt: false })} ${STRINGS[lang].lines.tapConfirmPurchase}` : null;
 }
 
+/** One backend screen action in the prototype's shape, or null when the prototype cannot run it. */
+export function toPrototypeAction(a: Record<string, unknown>): Record<string, unknown> | null {
+  if (a.type === 'highlight' && typeof a.element_id === 'string') return { type: 'highlight', target: a.element_id };
+  if (a.type === 'highlight' && typeof a.target === 'string') return a;
+  return SCREEN_ACTIONS.has(String(a.type)) ? a : null;
+}
+
+export interface ReplyCards {
+  /** A trade preview, with amount, fee and total added so they add up (backend-card.ts). */
+  trade: Record<string, unknown> | null;
+  chart: Record<string, unknown> | null;
+  steps: Record<string, unknown> | null;
+}
+
 /**
- * The backend's reply as the prototype's. Screen actions pass through (the backend checked them). A buy gets the
- * exact read-back as its spoken line. An older backend's trade card is returned separately, for our own card.
+ * The backend's reply as the prototype's: screen actions pass through, the card comes back separately, and the
+ * spoken line is the exact read-back for a buy (from the trade card, or from the prototype's own calculator).
  */
-export function toPrototypeReply(r: BackendReply, lang: 'en' | 'th', ctx?: PrototypeContext, proto: PrototypeLike | null = null): { reply: PrototypeReply; trade: Record<string, unknown> | null } {
+export function toPrototypeReply(r: BackendReply, lang: 'en' | 'th', ctx?: PrototypeContext, proto: PrototypeLike | null = null): { reply: PrototypeReply } & ReplyCards {
   const actions: Array<Record<string, unknown>> = [];
-  let trade: Record<string, unknown> | null = null;
+  const cards: ReplyCards = { trade: null, chart: null, steps: null };
   for (const a of r.ui_actions ?? []) {
     if (!a || typeof a.type !== 'string') continue;
     if (a.type === 'card') {
-      if (a.card_type === 'trade_preview' && a.data && typeof a.data === 'object') trade = withReadbackFields(a.data as Record<string, unknown>);
-    } else if (a.type === 'highlight' && typeof a.element_id === 'string' && a.target === undefined) {
-      actions.push({ type: 'highlight', target: a.element_id }); // the older backend's shape
-    } else {
-      actions.push(a);
+      const data = a.data && typeof a.data === 'object' ? (a.data as Record<string, unknown>) : null;
+      if (!data) continue;
+      if (a.card_type === 'trade_preview') cards.trade = withReadbackFields(data);
+      else if (a.card_type === 'chart') cards.chart = data;
+      else if (a.card_type === 'steps') cards.steps = data;
+      continue;
     }
+    const action = toPrototypeAction(a);
+    if (action) actions.push(action);
   }
   let speech = buyReadback(actions, ctx, proto, lang) ?? r.text;
-  const preview = trade ? parsePreview(trade) : null;
+  const preview = cards.trade ? parsePreview(cards.trade) : null;
   if (preview) speech = `${buildReadback(preview, lang, { prompt: false })} ${STRINGS[lang].lines.tapToConfirm}`;
   return {
     reply: {
       text: r.text,
       speech,
-      emotion: trade || actions.some((a) => a.type === 'review') ? 'excited' : 'happy',
+      emotion: cards.trade || actions.some((a) => a.type === 'review') ? 'excited' : cards.chart || cards.steps ? 'curious' : 'happy',
       speak: r.speak ?? true,
       ui_actions: actions,
       sources: sourceLabels(r.sources),
       suggestions: [],
       offer: null,
     },
-    trade,
+    ...cards,
   };
 }
 
@@ -169,11 +191,13 @@ export interface BackendBridgeOptions {
   getInstance: () => PrototypeLike | null;
   /** Put the U-topia routing around the backend (withUtopiaRouting). */
   wrap?: (fn: (q: string, ctx: unknown) => Promise<PrototypeReply>) => (q: string, ctx: unknown) => unknown;
-  /** Only for an older backend that still sends trade cards. */
   showTrade: (card: Record<string, unknown>, lang: 'en' | 'th') => void;
-  hideTrade: () => void;
+  showChart?: (card: Record<string, unknown>, lang: 'en' | 'th') => void;
+  showSteps?: (card: Record<string, unknown>, lang: 'en' | 'th') => void;
+  /** Take down any card from the last reply. */
+  hideCards: () => void;
   fetchImpl?: typeof fetch;
-  /** The card appears after the reply bubble. */
+  /** A card appears after the reply bubble. */
   cardDelayMs?: number;
 }
 
@@ -185,7 +209,7 @@ export function installBackend(o: BackendBridgeOptions): boolean {
   const sessionId = `app-${Date.now().toString(36)}`;
 
   const ask = async (text: string, rawCtx: unknown): Promise<PrototypeReply> => {
-    o.hideTrade();
+    o.hideCards();
     const ctx = (rawCtx ?? undefined) as PrototypeContext | undefined;
     const lang = langOf(text, ctx);
     const proto = o.getInstance();
@@ -207,8 +231,11 @@ export function installBackend(o: BackendBridgeOptions): boolean {
       const message = detail && typeof detail[lang === 'th' ? 'message_th' : 'message_en'] === 'string' ? String(detail[lang === 'th' ? 'message_th' : 'message_en']) : COPY[lang].failed;
       return plainReply(message, `Backend error ${res.status}${detail?.code ? ` (${String(detail.code)})` : ''}`);
     }
-    const { reply, trade } = toPrototypeReply(body as unknown as BackendReply, lang, ctx, proto);
-    if (trade) window.setTimeout(() => o.showTrade(trade, lang), o.cardDelayMs ?? 650);
+    const { reply, trade, chart, steps } = toPrototypeReply(body as unknown as BackendReply, lang, ctx, proto);
+    const later = (show: () => void) => window.setTimeout(show, o.cardDelayMs ?? 650);
+    if (trade) later(() => o.showTrade(trade, lang));
+    else if (chart && o.showChart) later(() => o.showChart?.(chart, lang));
+    else if (steps && o.showSteps) later(() => o.showSteps?.(steps, lang));
     return reply;
   };
 

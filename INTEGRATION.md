@@ -16,13 +16,14 @@ microphone
   -> the brain: Luka and First's backend (backend/, POST /chat), tools + model
        it gets the app's own getContext() as `snapshot`
   -> reply { text, speak, ui_actions, sources }
-       ui_actions are the app's own screen actions (open_asset, start_buy, type_amount, review, highlight...)
-  -> the app runs them on Oasis's own screens; a buy stops on the Review purchase screen
-  -> Icarus says the exact read-back, from the numbers that screen shows (the app's own calc)
+       ui_actions: the app's own screen actions (open_asset, set_period, navigate, highlight...)
+       plus at most one card: a trade preview, a chart, or step-by-step instructions
+  -> the app runs the screen actions; the card shows over the phone (frontend/src/trade-card.ts, chat-cards.ts)
+  -> Icarus says the reply; for a trade preview, the exact read-back from the card's numbers
   -> text-to-speech (ElevenLabs via the voice server, Brittney in English, Malee in Thai)
   -> speaker
 
-the user taps "Confirm purchase" on the app's review screen  (no confirm action exists, by design)
+tap Confirm on the trade card -> backend POST /trades/{preview_id}/confirm  (the only way a trade happens)
 ```
 
 ## Run all of it (three terminals)
@@ -33,7 +34,7 @@ the user taps "Confirm purchase" on the app's review screen  (no confirm action 
    uv venv .venv && uv pip install -p .venv/bin/python -r requirements.txt
    .venv/bin/uvicorn app.main:app --port 8000
    ```
-   It needs a model (Ollama, or `LLM_PROVIDER=groq` / `gemini`, see `backend/README.md` and `backend/.env.example`). **No model on your laptop?** `OFFLINE=1 .venv/bin/python -m scripts.stand_in_brain` runs the same API with simple rules instead of a model: it only understands "put 1,000 baht in gold" and "show me gold", but everything after that (the tools, the screen actions, the checks) is the real code.
+   It needs a model (Ollama, or `LLM_PROVIDER=groq` / `gemini`, see `backend/README.md` and `backend/.env.example`). **No model on your laptop?** `OFFLINE=1 .venv/bin/python -m scripts.stand_in_brain` runs the same API with simple rules instead of a model. It understands "put 1,000 baht in gold", "show me bitcoin", "how did bitcoin do this year?" (or "compare bitcoin and gold") and "how do I buy?", so every kind of reply can be seen on screen; everything after the model (the tools, the cards, the checks) is the real code.
 2. **Voice server** (KP): `cd voice && npm install && npm run dev` (needs `voice/.env` with the ElevenLabs key, see `voice/.env.example`). No key: `npm run dev:fake`.
 3. **App** (Oasis): `cd frontend && npm install && npm run build`, then open **http://localhost:8787/app/?backend**
    - `?backend=http://127.0.0.1:8010` for another address, `&user=u_small` for the other demo user.
@@ -41,27 +42,28 @@ the user taps "Confirm purchase" on the app's review screen  (no confirm action 
 
 The voice test page (http://localhost:8787) can use the backend too: in `voice/.env` set `ASSISTANT_MODE=http`, `ASSISTANT_URL=http://localhost:8000/chat`, `ASSISTANT_USER_ID=u_new`.
 
-## Checked end to end (15 Oct, about 21:15, after First's 21:08 update)
+## Checked end to end (15 Oct, about 22:35, after First's 22:16 update)
 
 With the real backend code and the stand-in model (no LLM was available on this laptop):
 
-- Typed "Put 1,000 baht in gold" in the app: the backend sent `open_asset, start_buy, type_amount, select_wallet, review`, the app opened gold, typed 1,000 and stopped on **Review purchase: fee (1%) 10, total 1,010**, and Icarus's line was "one thousand baht into gold. Fee ten baht. Total one thousand ten baht. Tap Confirm purchase when you are ready." The numbers come from the app's own `calc()`, so the voice always matches the screen. A test runs this inside the real prototype (`frontend/test/backend-bridge.test.ts`).
-- "Show me bitcoin" opens the Bitcoin page. The voice server's old request shape (`text, language, snapshot, userId`) is accepted too.
-- A busy model or a missing backend: Icarus says the backend's own message (English or Thai) instead of failing silently.
-- "Book me a ride to the airport" still hands off to U-Bot (now the U-Bot mock), "What is U-Coin?" still gets the glossary answer, with the backend switched on.
-- Backend tests: 69 passing. Voice: 382. App: 63.
+- "Put 1,000 baht in gold": the app opened gold and showed the trade card with the backend's numbers (995 into gold, fee 5, you pay 1,000). Icarus's line: "nine hundred ninety-five baht into gold. Fee five baht. Total one thousand baht. Tap Confirm on the card when you are ready." Tapping Confirm calls the backend; a second tap does not buy twice.
+- "Compare bitcoin and gold over a year": a chart card with both lines in % from the start, and the backend's own words for each ("down about 24% over the past year").
+- "How do I buy?": a steps card from `backend/data/howto.json`; "Show me" on a step opens the right screen and points at the button.
+- A new question takes the old card down. A busy model or a missing backend: Icarus says the backend's own message (English or Thai).
+- "Book me a ride to the airport" still hands off to the U-Bot mock, "What is U-Coin?" still gets the glossary answer.
+- Tests: backend 83 (including First's checks that the bridge passes on every action and card he sends), voice 382, app 70.
 - Not checked: a real model's answers (Ollama or Groq), and a real microphone through the whole chain (the browser pane I tested in blocks the mic).
 
 ## To agree before the demo
 
-First's update (21:08) settled most of the earlier list: the backend now uses the app's own asset ids, screens, periods and element ids (`backend/data/app_ui.json`), drives the app's own screens, and answers about the numbers the screen shows. What is left:
+The backend now uses the app's own asset ids, screens, periods and element ids (`backend/data/app_ui.json`), and shows buys, charts and how-to steps on cards. What is left:
 
-1. **The fee in `backend/data/fees.json`.** The app's buy screen charges **1% on top** (1,000 + 10 = 1,010; `FEE=0.01` in the prototype). That is what users see and what Icarus now reads back. The voice side's mock and demo audio were changed to match (they said 15 and 1,015 before; that was our mistake). `fees.json` still says 0.25%, at least 5 baht, included. It is only used when there is no screen (the voice test page, or explaining the fee line with no snapshot), but an answer from it would contradict the screen. Suggest: set it to the app's rule.
-2. **Buying does not reach the backend.** "Confirm purchase" runs the prototype's own demo purchase. The backend's `/trades/{id}/confirm` and its demo users' balances are not used by this flow. Fine for the demo, since the screens show the prototype's data. Say so on stage.
-3. **Prices on screen are the prototype's dollars**, live baht prices are in the backend. The backend now answers about what the screen shows and labels the currency, so nothing contradicts. Live prices on the screens would need the prototype to read `GET /prices`.
-4. **Reply fields.** The app also uses `speech` (a separate line for the voice), `emotion` (the mascot's face) and `suggestions` (chips). The bridge fills `speech` for a buy (the exact read-back); the backend could send the others.
+1. **Two fees for the same buy.** A buy through Icarus uses the backend's rule (`backend/data/fees.json`: 0.25%, at least 5 baht, included: you pay 1,000, the fee is 5). A buy on the app's own buy screen uses the prototype's rule (`FEE=0.01`: 1% on top, 1,000 + 10 = 1,010). A judge who tries both sees two fees. Pick one rule and use it in both places.
+2. **Dollars on the screens, baht in Icarus.** The prototype's screens show its own demo prices in US dollars. Icarus's cards and charts are in baht. First added `GET /market` (live baht prices and period changes, keyed by the app's asset ids) so the screens can show the same numbers. The prototype would need to read it (Oasis).
+3. **Buying through the card changes the backend's demo account, not the screens.** Confirm on the trade card updates the backend's user (`u_new`), while the prototype's John Doe balances stay the same. Say so on stage, or have the screens read `GET /portfolio/{user_id}`.
+4. **Reply fields.** The app also uses `emotion` (the mascot's face) and `suggestions` (chips). The backend could send them.
 5. **U-Bot.** The `handoff` action and the "Ask U-topia" glossary live in the voice server and run before the backend. Fine for the demo. If the backend wants them as tools, the shapes are in `voice/README.md` (U-Bot section).
-6. **Thai.** Lines marked `THAI REVIEW` (voice strings, the read-back, the U-Bot mock) and the Thai voice (Malee) need a Thai speaker.
+6. **Thai.** Lines marked `THAI REVIEW` (voice strings, the read-back, the cards, the U-Bot mock) and the Thai voice (Malee) need a Thai speaker.
 
 ## For the backend: what the voice needs from a reply
 
@@ -74,10 +76,11 @@ First's update (21:08) settled most of the earlier list: the backend now uses th
 
 | File | What it does |
 |---|---|
-| `frontend/src/backend-bridge.ts` | `?backend`: the prototype's questions go to `POST /chat` with its own context as the snapshot; the backend's screen actions run on the app; a buy gets the exact read-back from the app's own `calc()` |
-| `frontend/src/trade-card.ts` | Only for an older backend that sends trade cards: the card, confirmed by a tap that calls `POST /trades/{id}/confirm` |
+| `frontend/src/backend-bridge.ts` | `?backend`: the prototype's questions go to `POST /chat` with its own context as the snapshot; the screen actions the prototype runs (`SCREEN_ACTIONS`) pass through; cards go to the overlays; a trade card gets the exact read-back |
+| `frontend/src/trade-card.ts` | The trade preview card with the backend's numbers. Confirm is a tap that calls `POST /trades/{id}/confirm` |
+| `frontend/src/chat-cards.ts` | The chart card (one asset in baht, two or three compared in %) and the steps card ("Show me" runs the backend's pointing actions) |
 | `frontend/src/utopia-bridge.ts` | "Ask U-topia" and the U-Bot handoff, around the demo answers and around the backend |
-| `voice/src/server/assistant/http.ts` | The voice server's adapter for `POST /chat` (`ASSISTANT_MODE=http`): sends the snapshot as it is, passes the screen actions through |
-| `voice/src/shared/backend-card.ts` | Reads an older backend's trade card for the exact money read-back |
+| `voice/src/server/assistant/http.ts` | The voice server's adapter for `POST /chat` (`ASSISTANT_MODE=http`): sends the snapshot as it is, turns cards into `show_card` |
+| `voice/src/shared/backend-card.ts` | Reads the backend's trade card for the exact money read-back (used by the app and the voice server) |
 | `backend/scripts/stand_in_brain.py` | The backend API with a rule-based stand-in for the model, for integration tests |
 | `voice/src/server/ubot-mock/`, `frontend/src/ubot-mock.ts` | The U-Bot mock: handoff sessions, sample replies, the mock page, and our proposed "Ask U-topia" API |

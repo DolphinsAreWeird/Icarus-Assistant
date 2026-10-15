@@ -6,7 +6,8 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setMascotFallback } from '../src/assets';
-import { backendFromLocation, buyReadback, installBackend, toChatRequest, toPrototypeReply, type PrototypeLike, type PrototypeReply } from '../src/backend-bridge';
+import { backendFromLocation, buyReadback, installBackend, SCREEN_ACTIONS, toChatRequest, toPrototypeAction, toPrototypeReply, type PrototypeLike, type PrototypeReply } from '../src/backend-bridge';
+import { axisLabel, chartSvg, hideInfoCard, showStepsCard } from '../src/chat-cards';
 import { createDcApp, installHelmet } from '../src/dc-runtime';
 import { hideTradeCard, showTradeCard } from '../src/trade-card';
 
@@ -100,11 +101,99 @@ describe("the reply: the backend's screen actions, and the exact buy read-back",
   });
 });
 
+// What the backend sends now (backend/app/tools.py, after First's 22:16 update).
+const TRADE_CARD = {
+  type: 'card', card_type: 'trade_preview',
+  data: { preview_id: 'pv_abc', asset_id: 'gold', asset_name: 'Tokenized gold (PAX Gold)', side: 'buy', amount_thb: 1000, price_thb: 139137.82, unit: 'PAXG', freshness: 'live', fee_is_mock: true, fee_thb: 5, qty: 0.00715118, you_pay_thb: 1000, expires_in_s: 120 },
+};
+const CHART_CARD = {
+  type: 'card', card_type: 'chart',
+  data: {
+    title: 'Bitcoin vs Gold', period: '1Y', period_text: 'over the past year', unit: '%',
+    series: [
+      { asset_id: 'BTC', name: 'Bitcoin', points: [['2025-10-15T00:00:00+00:00', 0], ['2026-04-15T00:00:00+00:00', 12.5], ['2026-10-15T00:00:00+00:00', 30.2]], change_pct: 30.2, change_text: 'up about 30%' },
+      { asset_id: 'XAU', name: 'Gold', points: [['2025-10-15T00:00:00+00:00', 0], ['2026-04-15T00:00:00+00:00', 4.1], ['2026-10-15T00:00:00+00:00', -2.4]], change_pct: -2.4, change_text: 'down about 2.4%' },
+    ],
+    source: 'Binance price history, in baht at each day\'s exchange rate',
+  },
+};
+const STEPS_CARD = {
+  type: 'card', card_type: 'steps',
+  data: { title: 'How to buy', topic: 'buy', steps: [
+    { n: 1, title: 'Open the asset', text: 'Tap the asset in the Invest list.', show_me: [{ type: 'navigate', to: { tab: 'invest', view: 'invest' } }, { type: 'highlight', element_id: 'invest.asset.XAU' }] },
+    { n: 2, title: 'Tap Buy', text: 'Then type the amount.', show_me: [] },
+  ] },
+};
+
+describe('the backend\'s cards and screen actions', () => {
+  it('passes the prototype\'s own actions, renames highlight, and drops anything the prototype cannot run', () => {
+    expect(toPrototypeAction({ type: 'highlight', element_id: 'asset.chart' })).toEqual({ type: 'highlight', target: 'asset.chart' });
+    expect(toPrototypeAction({ type: 'open_asset', asset: 'XAU' })).toEqual({ type: 'open_asset', asset: 'XAU' });
+    expect(toPrototypeAction({ type: 'delete_account' })).toBeNull();
+    for (const a of ['navigate', 'back', 'open_asset', 'set_period', 'set_filter', 'toggle_freeze', 'hide_balance', 'start_guide']) expect(SCREEN_ACTIONS.has(a)).toBe(true);
+  });
+
+  it('a buy: opens the asset, shows the trade card, and reads the card back exactly', () => {
+    const r = toPrototypeReply({ text: "Here's your preview.", ui_actions: [{ type: 'open_asset', asset: 'XAU' }, TRADE_CARD] }, 'en');
+    expect(r.reply.ui_actions).toEqual([{ type: 'open_asset', asset: 'XAU' }]);
+    expect(r.trade).toMatchObject({ preview_id: 'pv_abc', amount: 995, fee: 5, total: 1000 });
+    expect(r.reply.speech).toBe('nine hundred ninety-five baht into gold. Fee five baht. Total one thousand baht. Tap Confirm on the card when you are ready.');
+  });
+
+  it('a chart or steps card comes back separately, and the voice says just the reply line', () => {
+    const chart = toPrototypeReply({ text: 'Bitcoin is up about 30% over the past year.', ui_actions: [CHART_CARD] }, 'en');
+    expect(chart.chart).toMatchObject({ title: 'Bitcoin vs Gold', unit: '%' });
+    expect(chart.reply.speech).toBe('Bitcoin is up about 30% over the past year.');
+    expect(chart.reply.ui_actions).toEqual([]);
+    expect(toPrototypeReply({ text: 'Here is how.', ui_actions: [STEPS_CARD] }, 'en').steps).toMatchObject({ title: 'How to buy' });
+  });
+
+  it('installBackend shows the chart card after the reply', async () => {
+    let backend: ((q: string, ctx: unknown) => Promise<PrototypeReply>) | null = null;
+    (window as unknown as { Icarus: unknown }).Icarus = { setBackend: (fn: typeof backend) => (backend = fn) };
+    const showChart = vi.fn();
+    const showTrade = vi.fn();
+    installBackend({ url: 'http://be', userId: 'u_new', getInstance: () => null, showTrade, showChart, hideCards: () => undefined, cardDelayMs: 0,
+      fetchImpl: vi.fn(async () => jsonResponse(200, { text: 'Up about 30%.', ui_actions: [CHART_CARD] })) as unknown as typeof fetch });
+    await backend!('how did bitcoin do this year?', { screen: 'home' });
+    await sleep(5);
+    expect(showChart).toHaveBeenCalledWith(expect.objectContaining({ title: 'Bitcoin vs Gold' }), 'en');
+    expect(showTrade).not.toHaveBeenCalled();
+  });
+});
+
+describe('chart and steps cards', () => {
+  afterEach(hideInfoCard);
+
+  it('draws one line per series, in baht for one asset and in % when comparing', () => {
+    const svg = chartSvg(CHART_CARD.data as never);
+    expect(svg.querySelectorAll('path')).toHaveLength(2);
+    expect(svg.getAttribute('aria-label')).toContain('Bitcoin: up about 30%');
+    const labels = Array.from(svg.querySelectorAll('text')).map((t) => t.textContent);
+    expect(labels).toContain('0%'); // the zero line of a % chart
+    expect(axisLabel(2_729_983, 'THB')).toBe('฿2.7M');
+    expect(axisLabel(69_203, 'THB')).toBe('฿69k');
+    expect(axisLabel(950, 'THB')).toBe('฿950');
+    expect(axisLabel(12.4, '%')).toBe('+12%');
+  });
+
+  it('a steps card lists the steps, and "Show me" runs the backend\'s pointing actions on the prototype', () => {
+    const run = vi.fn();
+    const el = showStepsCard(STEPS_CARD.data as never, { lang: 'en', getPhone: () => null, runActions: run });
+    expect(el.textContent).toContain('How to buy');
+    expect(el.textContent).toContain('Open the asset');
+    const buttons = Array.from(el.querySelectorAll('button')).filter((b) => b.textContent === 'Show me');
+    expect(buttons).toHaveLength(1); // step 2 has nothing to show
+    buttons[0]!.click();
+    expect(run).toHaveBeenCalledWith(STEPS_CARD.data.steps[0]!.show_me);
+  });
+});
+
 describe('installBackend', () => {
   function install(fetchImpl: typeof fetch, proto: PrototypeLike = { ...fakeProto(), state: { asst: 'voice' } }) {
     let backend: ((q: string, ctx: unknown) => Promise<PrototypeReply>) | null = null;
     (window as unknown as { Icarus: unknown }).Icarus = { setBackend: (fn: typeof backend) => (backend = fn) };
-    expect(installBackend({ url: 'http://be', userId: 'u_new', getInstance: () => proto, showTrade: vi.fn(), hideTrade: () => undefined, fetchImpl, cardDelayMs: 0 })).toBe(true);
+    expect(installBackend({ url: 'http://be', userId: 'u_new', getInstance: () => proto, showTrade: vi.fn(), hideCards: () => undefined, fetchImpl, cardDelayMs: 0 })).toBe(true);
     return (q: string, ctx: unknown = { screen: 'home', language: 'en', asset: { id: 'XAU' } }) => backend!(q, ctx);
   }
 
@@ -147,7 +236,7 @@ describe("inside the REAL prototype: the backend's buy actions drive Oasis's own
       root.render(React.createElement(app.Root, { instanceRef: (c: unknown) => (instance = c as typeof instance) }));
     });
     const fetchImpl = vi.fn(async () => jsonResponse(200, BUY_REPLY)) as unknown as typeof fetch;
-    installBackend({ url: 'http://be', userId: 'u_new', getInstance: () => instance, showTrade: vi.fn(), hideTrade: () => undefined, fetchImpl });
+    installBackend({ url: 'http://be', userId: 'u_new', getInstance: () => instance, showTrade: vi.fn(), hideCards: () => undefined, fetchImpl });
 
     await act(async () => (window as unknown as { Icarus: { send: (t: string) => void } }).Icarus.send('Put 1,000 baht in gold'));
     await act(async () => sleep(6000)); // the prototype opens screens and types the amount one digit at a time
