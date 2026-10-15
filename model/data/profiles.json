@@ -1,0 +1,7 @@
+{
+  "new": {"origin":"synthetic","goal":null,"horizon_months":null,"essential_money":null,"loss_capacity":null,"experience":"beginner","currency":"THB","budget_thb":"5000.00","outside_holdings_known":false},
+  "near_term": {"origin":"synthetic","goal":"tuition","horizon_months":3,"essential_money":true,"loss_capacity":"low","experience":"beginner","currency":"THB","budget_thb":"5000.00","outside_holdings_known":false},
+  "long_term": {"origin":"synthetic","goal":"long-term discretionary investment","horizon_months":120,"essential_money":false,"loss_capacity":"moderate","risk_preference":"moderate","experience":"some","currency":"THB","budget_thb":"5000.00","outside_holdings_known":false},
+  "concentrated": {"origin":"synthetic","goal":"understand portfolio risk","horizon_months":36,"essential_money":false,"loss_capacity":"moderate","experience":"some","currency":"THB","outside_holdings_known":false,"positions_thb":{"btc":"8000.00","eth":"1000.00","gold":"500.00","cash":"500.00"}},
+  "experienced": {"origin":"synthetic","goal":"evaluate a risk forecast","horizon_months":60,"essential_money":false,"loss_capacity":"high","experience":"experienced","currency":"THB","budget_thb":"5000.00","outside_holdings_known":false}
+}

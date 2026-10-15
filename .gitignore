@@ -27,3 +27,19 @@ voice/logs/
 
 # Voice auditions (WAV files made by npm run audition)
 voice/auditions/
+
+# Model development: private files, Python caches, and generated datasets.
+*.pem
+*.key
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+/model/results/
+/model/data/raw/
+/model/data/market/
+/model/data/forecasts/
+/model/data/market_manifest.json
+/model/data/public_price_snapshot.json
+/model/data/*.tmp
+Thumbs.db
