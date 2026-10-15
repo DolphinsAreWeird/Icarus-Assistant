@@ -93,7 +93,7 @@ describe('/api/ask with the mock assistant', () => {
     const res = await fetch(`${srv.base}/api/ask`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: 'hi there', language: 'en', snapshot, userId: 'u9' }) });
     expect(((await res.json()) as AskResponse).speech).toBeNull(); // speak:false means silence
     await srv.close();
-    expect(seen[0]).toEqual({ text: 'hi there', language: 'en', snapshot, userId: 'u9' });
+    expect(seen[0]).toEqual({ text: 'hi there', language: 'en', snapshot, userId: 'u9', sessionId: expect.any(String) });
   });
 
   it('offers no read-back when the preview card is incomplete', async () => {

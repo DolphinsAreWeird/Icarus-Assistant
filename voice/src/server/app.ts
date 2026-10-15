@@ -125,7 +125,7 @@ export function createApp(deps: AppDeps): express.Express {
 
     const started = performance.now();
     try {
-      const reply = await assistant.ask({ text, language, ...(snapshot ? { snapshot } : {}), userId });
+      const reply = await assistant.ask({ text, language, ...(snapshot ? { snapshot } : {}), userId, sessionId: sessionOf(req) });
       const assistantMs = Math.round(performance.now() - started);
       const response: AskResponse = { reply, ...planSpeech(reply, language, text), assistantMs };
       res.json(response);

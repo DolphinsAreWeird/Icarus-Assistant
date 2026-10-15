@@ -55,6 +55,8 @@ export interface ServerConfig {
   assistantMode: 'mock' | 'http';
   assistantUrl: string | undefined;
   assistantTimeoutMs: number;
+  /** Sent as user_id to the real assistant. Its backend only knows its demo users (u_new, u_small). */
+  assistantUserId: string | undefined;
   mockDelayMs: number;
 
   cacheDir: string;
@@ -135,6 +137,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     assistantMode: mode,
     assistantUrl: orUndefined(env.ASSISTANT_URL),
     assistantTimeoutMs: num(env.ASSISTANT_TIMEOUT_MS, 15_000),
+    assistantUserId: orUndefined(env.ASSISTANT_USER_ID),
     mockDelayMs: num(env.MOCK_ASSISTANT_DELAY_MS, 120),
 
     cacheDir: path.resolve(VOICE_ROOT, env.AUDIO_CACHE_DIR?.trim() || '.audio-cache'),

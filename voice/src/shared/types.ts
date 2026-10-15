@@ -66,6 +66,8 @@ export interface AssistantRequest {
   language: LangSetting;
   snapshot?: Snapshot;
   userId: string;
+  /** One conversation (the backend keeps the history per user and session). */
+  sessionId?: string;
 }
 
 export interface AssistantReply {

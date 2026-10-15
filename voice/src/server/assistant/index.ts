@@ -15,7 +15,7 @@ import { MockAssistant } from './mock';
 export function createAssistant(cfg: ServerConfig, utopia?: UtopiaService): Assistant {
   if (cfg.assistantMode === 'http') {
     if (!cfg.assistantUrl) throw new Error('ASSISTANT_MODE=http needs ASSISTANT_URL');
-    return new HttpAssistant(cfg.assistantUrl, cfg.assistantTimeoutMs);
+    return new HttpAssistant(cfg.assistantUrl, cfg.assistantTimeoutMs, cfg.assistantUserId);
   }
   return new MockAssistant(cfg.mockDelayMs, utopia);
 }

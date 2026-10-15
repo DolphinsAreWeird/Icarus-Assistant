@@ -89,10 +89,17 @@ export function showHandoffCard(info: HandoffInfo, options: { th: boolean; getPh
   card.append(title, question, row, note);
   document.body.appendChild(card);
 
-  // Sit over the lower part of the phone, above the tab bar, and follow it if the window changes.
+  cleanup = placeOverPhone(card, options.getPhone);
+  return card;
+}
+
+/**
+ * Sit over the lower part of the phone, above the tab bar, and follow it if the window changes.
+ * Returns a function that stops following. Also used by the trade card.
+ */
+export function placeOverPhone(card: HTMLElement, getPhone: () => Element | null): () => void {
   const place = () => {
-    const phone = options.getPhone();
-    const r = phone?.getBoundingClientRect();
+    const r = getPhone()?.getBoundingClientRect();
     if (!r || r.width === 0) {
       // No phone to line up with (small window or tests): a sensible spot at the bottom of the page.
       Object.assign(card.style, { left: '50%', transform: 'translateX(-50%)', width: 'min(360px, 92vw)', bottom: '64px' });
@@ -108,9 +115,8 @@ export function showHandoffCard(info: HandoffInfo, options: { th: boolean; getPh
   place();
   window.addEventListener('resize', place);
   window.addEventListener('scroll', place, { passive: true });
-  cleanup = () => {
+  return () => {
     window.removeEventListener('resize', place);
     window.removeEventListener('scroll', place);
   };
-  return card;
 }

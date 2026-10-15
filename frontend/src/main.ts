@@ -3,9 +3,11 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { setMascotFallback } from './assets';
+import { backendFromLocation, installBackend } from './backend-bridge';
 import { createDcApp, installHelmet } from './dc-runtime';
 import { hideHandoffCard, showHandoffCard } from './handoff-card';
-import { installUtopiaRouting, type PrototypeInstance } from './utopia-bridge';
+import { hideTradeCard, showTradeCard } from './trade-card';
+import { installUtopiaRouting, withUtopiaRouting, type PrototypeInstance } from './utopia-bridge';
 import { attachTts, installVoice } from './voice-bridge';
 
 // Oasis's export has two pages that link to each other by file name. ?page=dashboard picks the second.
@@ -98,13 +100,38 @@ async function main() {
     // Wait for the instance too: the U-topia routing below wraps the prototype's own answers.
     if (attachTts(voice, () => instance) && instance) {
       clearInterval(wait);
+      const getPhone = () => document.querySelector('[data-screen-label="Phone"]');
       // "Ask U-topia" answers and handoffs to U-Bot, wrapped around the prototype's own answers.
-      installUtopiaRouting({
+      const utopia = {
         getInstance: () => instance,
-        showCard: (handoff, th) => showHandoffCard(handoff, { th, getPhone: () => document.querySelector('[data-screen-label="Phone"]') }),
+        showCard: (handoff: Parameters<typeof showHandoffCard>[0], th: boolean) => showHandoffCard(handoff, { th, getPhone }),
         hideCard: hideHandoffCard,
-      });
-      void describeServer().then((text) => status(text));
+      };
+      installUtopiaRouting(utopia);
+      // ?backend: answers come from Luka and First's backend instead of the demo answers (backend-bridge.ts).
+      const backend = backendFromLocation(location.search);
+      if (backend) {
+        installBackend({
+          ...backend,
+          getInstance: () => instance as { state?: { asst?: string } } | null,
+          wrap: (ask) => withUtopiaRouting(utopia, ask),
+          hideTrade: hideTradeCard,
+          showTrade: (card, lang) =>
+            showTradeCard(card, {
+              lang,
+              backendUrl: backend.url,
+              userId: backend.userId,
+              getPhone,
+              log: (type, data) => (instance as { log?: (t: string, d?: unknown) => void } | null)?.log?.(type, data),
+              onConfirmed: (_result, sentence) =>
+                (window as unknown as { Icarus?: { receiveResponse?: (r: unknown) => void } }).Icarus?.receiveResponse?.({
+                  text: sentence, speech: sentence, emotion: 'excited', speak: true, ui_actions: [],
+                  sources: ['confirm_trade · demo account (simulated)'], suggestions: [], offer: null,
+                }),
+            }),
+        });
+      }
+      void describeServer().then((text) => status(backend ? `${text} Brain: backend at ${backend.url} (user ${backend.userId}).` : text));
     } else if (Date.now() - started > 5000) {
       clearInterval(wait);
       status('Could not attach text-to-speech: window.Icarus was not created.', 'error');

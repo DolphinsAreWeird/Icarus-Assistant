@@ -42,11 +42,13 @@ interface RouteReply {
 const THAI = /[฀-๿]/;
 const SUGGESTIONS = ['Show me gold', 'What can you do?'];
 
-export function installUtopiaRouting(options: UtopiaBridgeOptions): boolean {
-  const inst = options.getInstance();
-  if (!inst || typeof inst.demoRespond !== 'function') return false;
-  if ((inst.demoRespond as { __utopia?: boolean }).__utopia) return true; // already installed
-  const original = inst.demoRespond.bind(inst);
+type Responder = (q: string, ctx: unknown) => unknown;
+
+/**
+ * The routing itself: answer U-topia questions, hand off what Icarus cannot do, otherwise call `next`.
+ * Used around the prototype's demo answers (installUtopiaRouting) and around the real backend (backend-bridge.ts).
+ */
+function makeRouter(options: UtopiaBridgeOptions, inst: PrototypeInstance) {
   const fetchImpl = options.fetchImpl ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
   const base = options.serverUrl ?? '';
 
@@ -73,7 +75,7 @@ export function installUtopiaRouting(options: UtopiaBridgeOptions): boolean {
     return reply(h.message, { emo: 'curious', src: ['Handed off to U-Bot'] });
   };
 
-  const wrapped = async (q: string, ctx: unknown): Promise<unknown> => {
+  return async (q: string, next: () => unknown): Promise<unknown> => {
     options.hideCard();
     const th = THAI.test(q) || inst.state?.lang === 'th';
     const language = th ? 'th' : 'en';
@@ -85,15 +87,32 @@ export function installUtopiaRouting(options: UtopiaBridgeOptions): boolean {
     }
     if (route.kind === 'handoff' && route.handoff) return handoffReply(route.handoff, th);
 
-    const original_reply = await original(q, ctx);
+    const answer = await next();
     // The prototype's dead end. A real request deserves a handoff, a misheard word does not.
-    if (typeof (original_reply as { text?: unknown })?.text === 'string' && (original_reply as { text: string }).text.startsWith("I didn't catch that")) {
+    if (typeof (answer as { text?: unknown })?.text === 'string' && (answer as { text: string }).text.startsWith("I didn't catch that")) {
       const fallback = await askServer(q, language, true);
       if (fallback.kind === 'handoff' && fallback.handoff) return handoffReply(fallback.handoff, th);
     }
-    return original_reply;
+    return answer;
   };
+}
+
+export function installUtopiaRouting(options: UtopiaBridgeOptions): boolean {
+  const inst = options.getInstance();
+  if (!inst || typeof inst.demoRespond !== 'function') return false;
+  if ((inst.demoRespond as { __utopia?: boolean }).__utopia) return true; // already installed
+  const original = inst.demoRespond.bind(inst);
+  const route = makeRouter(options, inst);
+  const wrapped = (q: string, ctx: unknown): Promise<unknown> => route(q, () => original(q, ctx));
   (wrapped as unknown as { __utopia: boolean }).__utopia = true;
   inst.demoRespond = wrapped;
   return true;
+}
+
+/** The same routing around any other responder, for example the real backend. */
+export function withUtopiaRouting(options: UtopiaBridgeOptions, responder: Responder): Responder {
+  const inst = options.getInstance();
+  if (!inst) return responder;
+  const route = makeRouter(options, inst);
+  return (q, ctx) => route(q, () => responder(q, ctx));
 }

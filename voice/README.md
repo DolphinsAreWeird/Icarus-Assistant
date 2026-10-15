@@ -248,14 +248,17 @@ Things to know:
 
 ## Connect the real assistant
 
-One config change in `.env`:
+Luka and First's backend (`../backend`, FastAPI) is the real brain. Start it, then three lines in `.env`:
 
 ```
 ASSISTANT_MODE=http
-ASSISTANT_URL=http://localhost:3000/ask
+ASSISTANT_URL=http://localhost:8000/chat
+ASSISTANT_USER_ID=u_new
 ```
 
-The server POSTs `{ text, language, snapshot, userId }` and expects `{ text, speak, ui_actions, sources }` back (`context.md` section 8). Or write a class with `ask(req)` and return it from `src/server/assistant/index.ts`.
+The adapter (`src/server/assistant/http.ts`) speaks their contract (`backend/app/contracts.py`): it sends `{ session_id, user_id, text, lang, input_mode: "voice", screen_context }` and turns their `card` actions into our `show_card`. It also sends the older fields (`language`, `snapshot`, `userId`); the backend ignores them. `ASSISTANT_USER_ID` matters: the backend only knows its demo users (`u_new`, `u_small`). The backend's own error messages (busy, not set up, price expired) are spoken in English or Thai instead of a generic failure.
+
+**Money.** The backend's trade card says what the user pays **with the fee included** (`you_pay_thb`). The read-back is built from it so the numbers add up: "nine hundred ninety-five baht into gold. Fee five baht. Total one thousand baht." (`src/shared/backend-card.ts`). For a sale the last part is "You get ...". If a number is missing, there is no read-back and no voice confirm: the user taps the card. Checked end to end on 15 Oct against the real backend code (with a stand-in for the model, see `../INTEGRATION.md`).
 
 The reply is not streamed. Whatever time the real assistant takes is added to the wait before Icarus speaks.
 

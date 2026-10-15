@@ -29,6 +29,17 @@ Voice commands ("stop", "repeat that", "louder", "slower", "go back") are handle
 
 If the mic is blocked or the voice server is not running, the prototype falls back to its tap-a-phrase demo mode by itself. The pill under the phone says what the voice stack is doing and shows any problem. Click it to hide it.
 
+## The real brain: Luka and First's backend
+
+Open the app with `?backend` to send Icarus's questions to the backend instead of the prototype's demo answers:
+
+```
+http://localhost:8787/app/?backend                         backend at http://localhost:8000, user u_new
+http://localhost:8787/app/?backend=http://127.0.0.1:8010&user=u_small
+```
+
+`src/backend-bridge.ts` plugs into the prototype's own hook (`Icarus.setBackend`), so the prototype file is not edited. Typed and spoken questions both go to `POST /chat`. "Ask U-topia" and the U-Bot handoffs still run first. A trade preview appears on a card with the **backend's** numbers (`src/trade-card.ts`), Icarus reads it back exactly, and the only way to buy is a tap on Confirm, which calls `POST /trades/{preview_id}/confirm`. The prototype's screens still show its own demo data. What still has to be agreed between the parts is in [`../INTEGRATION.md`](../INTEGRATION.md).
+
 ## U-Bot: Ask U-topia and handoffs
 
 `src/utopia-bridge.ts` wraps the prototype's `demoRespond` on the running instance (the prototype file is not edited). For each request it asks the voice server `/api/utopia/route`:
@@ -46,6 +57,8 @@ frontend/
   prototype/Icarus Prototype.dc.html   Oasis's design (voice pacing in say())
   src/dc-runtime.ts                    runs a .dc.html file: parses it, compiles the template to React
   src/voice-bridge.ts                  attaches our TTS and Scribe speech-in to the prototype
+  src/backend-bridge.ts                ?backend: questions go to the real backend (POST /chat)
+  src/trade-card.ts                    the backend's trade preview, confirmed by a tap
   src/utopia-bridge.ts                 Ask U-topia answers and handoffs, wrapped around the prototype's own answers
   src/handoff-card.ts                  the "U-Bot can help with this" card
   src/assets.ts                        draws placeholder mascots when the real images are missing
