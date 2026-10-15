@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Mali:wght@400;500;600&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#FFF7F9 url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22520%22%20height%3D%22360%22%3E%3Cg%20fill%3D%22%23fff%22%20opacity%3D%22.85%22%3E%3Cpath%20d%3D%22M60%20120a26%2026%200%200%201%2040-22%2034%2034%200%200%201%2062%208%2022%2022%200%200%201%204%2044H66a24%2024%200%200%201-6-30z%22%2F%3E%3Cpath%20d%3D%22M330%20280a20%2020%200%200%201%2031-17%2027%2027%200%200%201%2049%206%2017%2017%200%200%201%203%2034h-78a19%2019%200%200%201-5-23z%22%2F%3E%3C%2Fg%3E%3Cpath%20fill%3D%22%23F6A6B8%22%20opacity%3D%22.55%22%20d%3D%22M420%2070c-6-9-20-4-18%206%201%207%2018%2018%2018%2018s17-11%2018-18c2-10-12-15-18-6z%22%2F%3E%3Cpath%20fill%3D%22%23F6A6B8%22%20opacity%3D%22.45%22%20d%3D%22M150%20260c-4-6-14-3-13%204%201%205%2013%2013%2013%2013s12-8%2013-13c1-7-9-10-13-4z%22%2F%3E%3C%2Fsvg%3E") repeat;font-family:'Fredoka','Mali',system-ui,sans-serif;color:#4A2E36;-webkit-font-smoothing:antialiased}*{box-sizing:border-box}a{color:#C94F72;text-decoration:none}a:hover{color:#C94F72}</style>
+</helmet>
+<div data-screen-label="Dashboard" style="max-width:1360px;margin:0 auto;padding:28px 32px 48px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+<img src="mascot/bow/icon.png" alt="Icarus" style="width:48px;height:48px;border-radius:15px">
+<div style="flex:1;min-width:220px"><div style="font-size:26px;font-weight:500;letter-spacing:-.3px">Icarus Insights</div><div style="font-size:14px;color:#7E636C">Where users struggle in the app · for product and support teams</div></div>
+<div style="height:30px;padding:0 12px;border-radius:15px;border:1px dashed #E6C9D1;color:#7E636C;font-size:13px;display:flex;align-items:center">Demo data · simulated</div>
+<div style="display:flex;padding:3px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(150,60,85,.05)"><sc-for list="{{ ranges }}" as="r" hint-placeholder-count="3"><div onClick="{{ r.on }}" style="height:32px;padding:0 14px;border-radius:16px;display:flex;align-items:center;font-size:13.5px;cursor:pointer;background:{{ r.bg }};color:{{ r.fg }}">{{ r.label }}</div></sc-for></div>
+<a href="Icarus Prototype.dc.html" style="height:36px;padding:0 16px;border-radius:18px;background:#fff;box-shadow:0 1px 2px rgba(150,60,85,.05);display:flex;align-items:center;font-size:14px">← App prototype</a>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+<sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+<div style="background:#fff;border-radius:22px;padding:18px 20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:14px;color:#6E5560">{{ k.label }}</div>
+<div style="font-size:34px;font-weight:500;letter-spacing:-.8px;margin-top:4px">{{ k.value }}</div>
+<div style="font-size:13px;color:{{ k.color }};margin-top:2px">{{ k.sub }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px">
+<div style="background:#fff;border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);grid-column:span 2;min-width:0">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap"><div style="font-size:17px;font-weight:500">Assistant interactions per day</div><div style="display:flex;gap:14px;font-size:13px;color:#6E5560"><div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:3px;border-radius:2px;background:#C94F72"></span>Thai</div><div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:3px;border-radius:2px;background:#F9C9D5"></span>English</div></div></div>
+<div style="position:relative;height:220px;margin-top:16px">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between"><div style="border-top:1px solid #F8E8EC"></div><div style="border-top:1px solid #F8E8EC"></div><div style="border-top:1px solid #F8E8EC"></div><div style="border-top:1px solid #F2DCE2"></div></div>
+<svg width="100%" height="220" viewBox="0 0 600 220" preserveAspectRatio="none" style="position:absolute;inset:0;display:block"><path d="{{ lineTh.area }}" fill="#C94F72" fill-opacity=".08"></path><path d="{{ lineEn }}" fill="none" stroke="#F9C9D5" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round"></path><path d="{{ lineTh.line }}" fill="none" stroke="#C94F72" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round"></path></svg>
+<div style="position:absolute;right:0;top:-8px;font-size:11.5px;color:#8A6B75;background:#fff;padding-left:4px">{{ yMax }}</div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:12px;color:#8A6B75;margin-top:8px"><sc-for list="{{ xLabels }}" as="x"><div>{{ x }}</div></sc-for></div>
+</div>
+<div style="background:#fff;border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);min-width:0">
+<div style="font-size:17px;font-weight:500">Thai vs English</div>
+<div style="display:flex;height:14px;border-radius:7px;overflow:hidden;margin-top:18px"><div style="width:61%;background:linear-gradient(90deg,#E67895,#C94F72)"></div><div style="flex:1;background:#F9C9D5"></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+<div><div style="font-size:13px;color:#6E5560">Thai</div><div style="font-size:28px;font-weight:500">61%</div><div style="font-size:13px;color:#8A6B75">{{ thCount }} interactions</div></div>
+<div><div style="font-size:13px;color:#6E5560">English</div><div style="font-size:28px;font-weight:500">39%</div><div style="font-size:13px;color:#8A6B75">{{ enCount }} interactions</div></div>
+</div>
+<div style="border-top:1px solid #F8E8EC;margin-top:16px;padding-top:14px;font-size:14px;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:13px;color:#6E5560">Share of interactions by voice</div>
+<div style="display:flex;align-items:center;gap:10px"><div style="width:58px">Thai</div><div style="flex:1;height:8px;border-radius:4px;background:#F9E9EE;overflow:hidden"><div style="width:44%;height:100%;background:#C94F72"></div></div><div style="width:36px;text-align:right">44%</div></div>
+<div style="display:flex;align-items:center;gap:10px"><div style="width:58px">English</div><div style="flex:1;height:8px;border-radius:4px;background:#F9E9EE;overflow:hidden"><div style="width:27%;height:100%;background:#C94F72"></div></div><div style="width:36px;text-align:right">27%</div></div>
+</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px">
+<div style="background:#fff;border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:17px;font-weight:500">Most frequently asked</div>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:14px"><sc-for list="{{ questions }}" as="q" hint-placeholder-count="6">
+<div><div style="display:flex;justify-content:space-between;font-size:14.5px;gap:10px"><div>{{ q.text }}</div><div style="color:#6E5560;font-variant-numeric:tabular-nums">{{ q.count }}</div></div><div style="height:8px;border-radius:4px;background:#F9E9EE;margin-top:6px;overflow:hidden"><div style="height:100%;width:{{ q.w }}%;border-radius:4px;background:linear-gradient(90deg,#E67895,#C94F72)"></div></div></div>
+</sc-for></div>
+</div>
+<div style="background:#fff;border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:17px;font-weight:500">Most confusing screens</div><div style="font-size:12.5px;color:#8A6B75">Ask-Icarus taps per 1k views</div></div>
+<div style="display:flex;flex-direction:column;margin-top:8px"><sc-for list="{{ screens }}" as="c" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:22px 1fr 120px 44px;align-items:center;gap:12px;padding:11px 0;border-top:{{ c.border }};font-size:14.5px">
+<div style="color:#8A6B75">{{ c.rank }}</div>
+<div><div>{{ c.name }}</div><div style="font-size:12.5px;color:#8A6B75">{{ c.note }}</div></div>
+<div style="height:8px;border-radius:4px;background:#F9E9EE;overflow:hidden"><div style="height:100%;width:{{ c.w }}%;background:#C94F72;border-radius:4px"></div></div>
+<div style="text-align:right;font-weight:500">{{ c.val }}</div>
+</div>
+</sc-for></div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px">
+<div style="background:#fff;border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:17px;font-weight:500">Onboarding completion funnel</div>
+<div style="display:flex;flex-direction:column;gap:6px;margin-top:14px"><sc-for list="{{ funnel }}" as="f" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:130px 1fr 64px;align-items:center;gap:12px;font-size:14px"><div style="color:#5E4650">{{ f.label }}</div><div style="height:30px;border-radius:8px;background:#F4F5F7;overflow:hidden"><div style="height:100%;width:{{ f.w }}%;border-radius:8px;background:linear-gradient(90deg,#E67895,#C94F72);display:flex;align-items:center;padding-left:10px;color:#fff;font-size:13px">{{ f.count }}</div></div><div style="text-align:right;font-size:12.5px;color:{{ f.dropColor }}">{{ f.drop }}</div></div>
+</sc-for></div>
+<div style="font-size:12.5px;color:#8A6B75;margin-top:10px">Right column: drop-off from the previous step.</div>
+</div>
+<div style="background:#fff;border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:17px;font-weight:500">First deposit and first purchase conversion</div>
+<div style="display:flex;gap:16px;font-size:13px;color:#6E5560;margin-top:6px"><div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#E6C9D1"></span>Did not use Icarus</div><div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#C94F72"></span>Used Icarus</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px;height:190px;align-items:end">
+<sc-for list="{{ conv }}" as="v" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;align-items:center;gap:8px;height:100%">
+<div style="flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:12px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end"><div style="font-size:14px;font-weight:500">{{ v.a }}%</div><div style="width:46px;height:{{ v.ah }}%;border-radius:8px 8px 3px 3px;background:#E6C9D1"></div></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end"><div style="font-size:14px;font-weight:500;color:#C94F72">{{ v.b }}%</div><div style="width:46px;height:{{ v.bh }}%;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#F6A6B8,#E67895)"></div></div>
+</div>
+<div style="font-size:14px;color:#5E4650">{{ v.label }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="background:#fff;border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:17px;font-weight:500">User drop-off points</div>
+<div style="display:flex;flex-direction:column;margin-top:8px"><sc-for list="{{ drops }}" as="d" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-top:{{ d.border }};font-size:14.5px"><div style="flex:1"><div>{{ d.name }}</div><div style="font-size:12.5px;color:#8A6B75">{{ d.note }}</div></div><div style="font-weight:500;color:#C8312E">{{ d.val }}</div></div>
+</sc-for></div>
+<div style="font-size:12.5px;color:#8A6B75;margin-top:6px">Share of sessions that ended on this step without continuing.</div>
+</div>
+</div>
+
+<div style="background:#fff;border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:17px;font-weight:500">Example friction reports</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px"><sc-for list="{{ reports }}" as="r" hint-placeholder-count="3">
+<div style="border:1px solid #F6E4E9;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:8px"><div style="height:24px;padding:0 10px;border-radius:12px;background:#FDECF1;color:#C94F72;font-size:12.5px;display:flex;align-items:center">{{ r.screen }}</div><div style="font-size:12.5px;color:{{ r.sevColor }}">{{ r.sev }}</div></div>
+<div style="font-size:16px;font-weight:500;text-wrap:pretty">{{ r.title }}</div>
+<div style="font-size:14px;line-height:1.45;color:#5E4650;text-wrap:pretty">{{ r.body }}</div>
+<div style="font-size:13.5px;color:#6E5560;background:#FFF2F5;border-radius:12px;padding:10px 12px;font-style:italic">{{ r.quote }}</div>
+<div style="font-size:12.5px;color:#8A6B75">{{ r.meta }}</div>
+</div>
+</sc-for></div>
+</div>
+
+<div style="background:#fff;border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);border:1.5px solid #F6B9C8">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="width:8px;height:8px;border-radius:50%;background:#1E9E55"></span><div style="font-size:17px;font-weight:500;flex:1">This demo session · live</div><div style="font-size:13px;color:#8A6B75">Recorded from the app prototype in this browser</div><div onClick="{{ clear }}" style="height:30px;padding:0 12px;border-radius:15px;border:1px solid #F2DCE2;font-size:13px;display:flex;align-items:center;cursor:pointer">Clear session</div></div>
+<sc-if value="{{ empty }}"><div style="font-size:14.5px;color:#7E636C;padding:18px 0 4px">No events yet. Run scenarios A–D in the <a href="Icarus Prototype.dc.html">app prototype</a>; questions, explain taps and guide steps appear here.</div></sc-if>
+<sc-if value="{{ notEmpty }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px"><sc-for list="{{ live.stats }}" as="x"><div style="background:#FFF2F5;border-radius:16px;padding:12px 14px"><div style="font-size:12.5px;color:#6E5560">{{ x.label }}</div><div style="font-size:24px;font-weight:500">{{ x.value }}</div></div></sc-for></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:20px;margin-top:16px">
+<div><div style="font-size:14px;font-weight:500;margin-bottom:6px">Questions asked</div><sc-for list="{{ live.questions }}" as="q"><div style="display:flex;gap:10px;padding:8px 0;border-top:1px solid #F8E8EC;font-size:14px"><div style="flex:1">{{ q.text }}</div><div style="color:#8A6B75;font-size:12.5px;white-space:nowrap">{{ q.where }}</div></div></sc-for><sc-if value="{{ live.noQ }}"><div style="font-size:13.5px;color:#8A6B75">None yet</div></sc-if></div>
+<div><div style="font-size:14px;font-weight:500;margin-bottom:6px">Friction signals</div><sc-for list="{{ live.friction }}" as="f"><div style="display:flex;gap:10px;padding:8px 0;border-top:1px solid #F8E8EC;font-size:14px"><div style="flex:1">{{ f.text }}</div><div style="font-weight:500">{{ f.n }}</div></div></sc-for><sc-if value="{{ live.noF }}"><div style="font-size:13.5px;color:#8A6B75">None yet</div></sc-if></div>
+</div>
+</sc-if>
+</div>
+<div style="font-size:12.5px;color:#8A6B75;text-align:center">All figures except the live session panel are simulated demo data.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const STORE='icarus.demo.events';
+const n=x=>x.toLocaleString('en-US');
+const mk=seed=>()=>{seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+const LABELS={'home.balance':'Total balance','invest.portfolio_value':'Portfolio value','invest.chart':'Portfolio chart','asset.chart':'Asset price chart','asset.change24h':'24h change','buy.fee_line':'Transaction fee','portfolio.allocation':'Allocation','card.balance':'Card balance'};
+class Component extends DCLogic {
+ state={range:30,events:[]};
+ componentDidMount(){this.read();this.iv=setInterval(()=>this.read(),1500);}
+ componentWillUnmount(){clearInterval(this.iv);}
+ read(){let ev=[];try{ev=JSON.parse(localStorage.getItem(STORE)||'[]');}catch(e){}if(ev.length!==this.state.events.length)this.setState({events:ev});}
+ renderVals(){
+  const s=this.state,days=s.range,k=days/30;
+  const r=mk(7);const th=[],en=[];for(let i=0;i<days;i++){const base=420+i/days*140*k+Math.sin(i/2.2)*40;th.push(base*(1+(r()-.5)*.25)+(i%7>4?90:0));en.push(base*.64*(1+(r()-.5)*.3)+(i%7>4?40:0));}
+  const max=Math.ceil(Math.max(...th)/100)*100;const P=a=>a.map((v,i)=>(i?'L':'M')+(i/(a.length-1)*600).toFixed(1)+' '+(220-v/max*210).toFixed(1)).join('');
+  const total=Math.round((th.reduce((a,b)=>a+b,0)+en.reduce((a,b)=>a+b,0)));
+  const xl=[];for(let i=0;i<5;i++){const d=new Date(2026,9,15-Math.round((days-1)*(1-i/4)));xl.push(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getDate());}
+  const qs=[['What does this chart mean?',2940],['How do I buy gold?',2310],['What is the transaction fee?',1860],['Why did my balance change?',1420],['What is XAU?',1105],['Is my money safe here?',870]];
+  const scr=[['Buy · review','Fee line and total',46],['Asset · price chart','Period selector, high/low',38],['Payments · swap','Rate and estimated amount',31],['Portfolio · allocation','Percent vs value',22],['Home · total balance','Which wallets are included',12]];
+  const fun=[['App installed',10000],['Account created',7820],['KYC verified',5410],['First deposit',3260],['First purchase',1940]];
+  const drops=[['Buy · amount entry','Users unsure how much to enter','18.4%'],['KYC · document upload','Photo rejected or retried','15.1%'],['Buy · wallet selection','THB vs USD wallet unclear','9.7%'],['Payments · swap review','Estimated amount questioned','8.2%'],['Asset detail','Left after viewing chart','6.9%']];
+  const ev=s.events;const q=ev.filter(e=>e.type==='question'||e.type==='explain_ask');
+  const cnt=t=>ev.filter(e=>e.type===t).length;
+  const taps={};ev.filter(e=>e.type==='explain_tap').forEach(e=>{taps[e.target]=(taps[e.target]||0)+1;});
+  const fr=Object.keys(taps).map(t=>({text:'Tapped “'+(LABELS[t]||t)+'” for an explanation',n:taps[t]})).sort((a,b)=>b.n-a.n);
+  if(cnt('guide_exit'))fr.push({text:'Exited a Show Me guide early',n:cnt('guide_exit')});
+  if(cnt('preview_cancel'))fr.push({text:'Cancelled an Icarus purchase preview',n:cnt('preview_cancel')});
+  const tA=ev.filter(e=>e.type==='timer'&&e.mode==='A').pop(),tB=ev.filter(e=>e.type==='timer'&&e.mode==='B').pop();const ft=x=>x?(x.ms/1000).toFixed(1)+'s':'—';
+  return{
+   ranges:[7,30,90].map(d=>({label:d+' days',bg:s.range===d?'linear-gradient(180deg,#E67895,#C94F72)':'transparent',fg:s.range===d?'#fff':'#6E5560',on:()=>this.setState({range:d})})),
+   kpis:[{label:'Assistant interactions',value:n(total),sub:'+12.4% vs previous period',color:'#1E9E55'},{label:'Users helped',value:n(Math.round(total*.224)),sub:'Unique users who asked Icarus',color:'#7E636C'},{label:'Show Me guided sessions',value:n(Math.round(total*.132)),sub:'71% completed all steps',color:'#7E636C'},{label:'Purchases prepared by Icarus',value:n(Math.round(total*.0615)),sub:'Every one confirmed by tap',color:'#7E636C'}],
+   lineTh:{line:P(th),area:P(th)+'L600 220L0 220Z'},lineEn:P(en),yMax:n(max)+'/day',xLabels:xl,
+   thCount:n(Math.round(total*.61)),enCount:n(Math.round(total*.39)),
+   questions:qs.map(x=>({text:x[0],count:n(Math.round(x[1]*k)),w:(x[1]/qs[0][1]*100).toFixed(0)})),
+   screens:scr.map((x,i)=>({rank:i+1,name:x[0],note:x[1],val:x[2],w:(x[2]/46*100).toFixed(0),border:i?'1px solid #F8E8EC':'none'})),
+   funnel:fun.map((x,i)=>({label:x[0],count:n(Math.round(x[1]*k)),w:(x[1]/100).toFixed(1),drop:i?'-'+((1-x[1]/fun[i-1][1])*100).toFixed(1)+'%':'',dropColor:'#C8312E'})),
+   conv:[{label:'First deposit',a:29,b:38,ah:29/45*100,bh:38/45*100},{label:'First purchase',a:16,b:24,ah:16/45*100,bh:24/45*100}],
+   drops:drops.map((x,i)=>({name:x[0],note:x[1],val:x[2],border:i?'1px solid #F8E8EC':'none'})),
+   reports:[{screen:'Buy · review',sev:'High',sevColor:'#C8312E',title:'Users read the fee as a separate charge',body:'Many users ask whether the 1% fee is taken on top of the amount. Showing the total first and the fee beneath it may reduce questions.',quote:'“Do I pay ฿1,000 or ฿1,010?”',meta:'412 questions · 63% Thai'},{screen:'Asset · price chart',sev:'Medium',sevColor:'#C99A2E',title:'Period selector changes the meaning of the % change',body:'The headline 24h change and the chart period change disagree, which users read as an error.',quote:'“Why is gold up 0.48% and 3.40% at the same time?”',meta:'287 questions · 58% English'},{screen:'Buy · wallet selection',sev:'Medium',sevColor:'#C99A2E',title:'THB vs USD wallet is unclear',body:'Users paying from the Spending Wallet are unsure of the exchange rate applied.',quote:'“Which wallet should I use for baht?”',meta:'198 questions · 71% Thai'}],
+   empty:ev.length===0,notEmpty:ev.length>0,
+   live:{stats:[{label:'Events recorded',value:ev.length},{label:'Questions to Icarus',value:q.length},{label:'Tap-to-explain',value:cnt('explain_tap')},{label:'Guide steps shown',value:cnt('guide_step')},{label:'Previews prepared',value:cnt('preview_shown')},{label:'Purchases (simulated)',value:cnt('purchase')},{label:'Scenario A time',value:ft(tA)},{label:'Scenario B time',value:ft(tB)}],
+    questions:q.slice(-8).reverse().map(e=>({text:e.text,where:(e.context||e.screen)+(e.mode==='voice'?' · voice':'')})),noQ:q.length===0,friction:fr,noF:fr.length===0},
+   clear:()=>{try{localStorage.removeItem(STORE);}catch(e){}this.setState({events:[]});}
+  };
+ }
+}
+</script>
+</body>
+</html>
