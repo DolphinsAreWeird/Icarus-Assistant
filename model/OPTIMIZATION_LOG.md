@@ -13,3 +13,11 @@ python model/evaluate_assistant.py --live --suite numeric --limit 6
 ```
 
 Natural-language goal calculations now need explicitly labeled target/current amounts and an ISO deadline; `/goal` remains the direct typed interface. Missing or ambiguous inputs produce a tool error for clarification. Broader natural-language parsing remains deliberately conservative.
+
+## Data and provider reliability
+
+Every historical-data consumer now checks asset identity, quote currency, canonical daily dates, missing/duplicate days, coverage endpoints and finite valid candle values. Supported price bounds are internal input guards, not predictions of market limits. Saved forecasts are checked before rendering. Malformed provider envelopes and unreadable local files return explicit fallbacks/data errors instead of crashing.
+
+Market ingestion only publishes an asset when the full requested month range is available and valid. Failed refreshes preserve that asset's existing series and exit with a failure report. Each newly published series retains its archive hashes/URLs. Writes use a temporary file in the destination directory and atomic replacement; a failed serialization or replacement preserves the previous artifact. The downloader defaults to all three supported assets.
+
+All 75 automated tests pass, including simulated failed downloads/replacements, corrupted metadata, nonfinite prices and invalid provider envelopes. All 99 cached archives revalidated with zero failures and 1,004 daily observations per asset. Forecasts were regenerated successfully using the shared validation. No live API request is needed to reproduce those local checks.

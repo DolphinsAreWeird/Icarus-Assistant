@@ -8,6 +8,8 @@ import json
 from pathlib import Path
 import urllib.request
 import zipfile
+from calendar import monthrange
+from market_validation import atomic_json, validate_daily_series
 
 ROOT = Path(__file__).resolve().parent
 SYMBOLS = {"btc": "BTCUSDT", "eth": "ETHUSDT", "gold": "PAXGUSDT"}
@@ -43,14 +45,31 @@ def download(url):
         return response.read()
 
 
+def build_series(asset, rows, start, end, retrieved_at):
+    points = sorted(rows.values(), key=lambda row:row["date"])
+    year, month = map(int, end.split("-"))
+    expected_end = f"{end}-{monthrange(year, month)[1]:02d}"
+    if not points or points[0]["date"] != start+"-01" or points[-1]["date"] != expected_end:
+        raise ValueError("REQUESTED_COVERAGE_INCOMPLETE")
+    result = {"asset_id":asset,"currency":"USDT","origin":"real_historical",
+              "source":"binance_public_archive","source_url":"https://data.binance.vision/",
+              "coverage_start":points[0]["date"],"coverage_end":points[-1]["date"],
+              "retrieved_at":retrieved_at,"gaps":[],"points":points}
+    return validate_daily_series(result, expected_asset=asset)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--assets", nargs="+", choices=SYMBOLS, default=["btc", "eth"])
+    parser.add_argument("--assets", nargs="+", choices=SYMBOLS, default=list(SYMBOLS))
     parser.add_argument("--start", default="2024-01")
     parser.add_argument("--end", default="2026-09")
     args = parser.parse_args()
     for value in (args.start, args.end):
-        datetime.strptime(value, "%Y-%m")
+        try:
+            if datetime.strptime(value, "%Y-%m").strftime("%Y-%m") != value:
+                raise ValueError()
+        except ValueError:
+            parser.error("Months must use YYYY-MM")
     if args.start > args.end:
         parser.error("Start must precede end")
     manifest = {"provider":"binance_public_archive", "quote_currency":"USDT",
@@ -77,6 +96,8 @@ def main():
                     parsed = [normalize_row(row) for row in csv.reader(io.StringIO(archive.read(entries[0]).decode())) if row]
                 if not parsed or any(not row["date"].startswith(month) for row in parsed):
                     raise ValueError("Archive dates do not match requested month")
+                if len({row["date"] for row in parsed}) != len(parsed):
+                    raise ValueError("Duplicate daily candle")
                 for row in parsed:
                     if row["date"] in rows and rows[row["date"]] != row:
                         raise ValueError("Conflicting duplicate date")
@@ -89,19 +110,17 @@ def main():
             except (OSError, ValueError, zipfile.BadZipFile) as exc:
                 manifest["failures"].append({"asset":asset,"month":month,"error_type":type(exc).__name__})
                 print(f"Unavailable {asset} {month}: {type(exc).__name__}", flush=True)
-        if rows:
-            points = sorted(rows.values(), key=lambda row:row["date"])
-            dates = [datetime.fromisoformat(row["date"]).date() for row in points]
-            gaps = [{"after":a.isoformat(),"before":b.isoformat()} for a,b in zip(dates,dates[1:]) if (b-a).days != 1]
-            result = {"asset_id":asset,"currency":"USDT","origin":"real_historical",
-                      "source":"binance_public_archive","source_url":"https://data.binance.vision/",
-                      "coverage_start":points[0]["date"],"coverage_end":points[-1]["date"],
-                      "retrieved_at":manifest["retrieved_at"],"gaps":gaps,"points":points}
-            target = ROOT / "data" / "market" / f"{asset}.json"
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(json.dumps(result, indent=2), encoding="utf-8")
-    (ROOT / "data").mkdir(exist_ok=True)
-    (ROOT / "data" / "market_manifest.json").write_text(json.dumps(manifest,indent=2),encoding="utf-8")
+        if rows and not any(failure["asset"] == asset for failure in manifest["failures"]):
+            try:
+                result = build_series(asset, rows, args.start, args.end, manifest["retrieved_at"])
+                result["archives"] = [entry for entry in manifest["files"] if entry["asset"] == asset]
+                atomic_json(ROOT / "data" / "market" / f"{asset}.json", result)
+            except (OSError, ValueError) as exc:
+                manifest["failures"].append({"asset":asset,"month":"requested_range","error_type":type(exc).__name__})
+                print(f"Incomplete {asset}: existing market series preserved", flush=True)
+    atomic_json(ROOT / "data" / "market_manifest.json", manifest)
+    if manifest["failures"]:
+        raise SystemExit("Refresh incomplete. Failed assets' existing series preserved; inspect the manifest.")
     if not manifest["files"]:
         raise SystemExit("No verified data obtained. No market series fabricated.")
 

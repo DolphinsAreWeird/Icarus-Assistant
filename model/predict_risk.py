@@ -7,6 +7,7 @@ import statistics
 
 from icarus_core import ROOT, history
 from forecast_intervals import experiment as interval_experiment
+from market_validation import atomic_json
 
 
 def experiment(asset):
@@ -43,8 +44,7 @@ def experiment(asset):
     report["return_interval"] = interval_experiment(data) if len(returns) >= 600 else {
         "status":"unavailable", "reason":"At least 600 daily returns required for interval evaluation."}
     target = ROOT / "data" / "forecasts" / f"{asset}.json"
-    target.parent.mkdir(exist_ok=True,parents=True)
-    target.write_text(json.dumps(report,indent=2),encoding="utf-8")
+    atomic_json(target, report)
     return report
 
 

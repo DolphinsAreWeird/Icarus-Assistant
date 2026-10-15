@@ -72,10 +72,14 @@ def completion(model, messages, timings, *, tools=None):
     else:
         payload.update(tools=tools,tool_choice="auto")
     result, elapsed = request("/chat/completions",payload)
+    if not isinstance(result, dict) or not isinstance(result.get("choices"), list) or not result["choices"] or not isinstance(result["choices"][0], dict):
+        raise ValueError("INVALID_COMPLETION_ENVELOPE")
     choice = result["choices"][0]
     timings.append({"seconds":elapsed,"usage":result.get("usage"),"finish_reason":choice.get("finish_reason")})
     if choice.get("finish_reason") == "length":
         raise ValueError("MODEL_OUTPUT_TRUNCATED")
+    if not isinstance(choice.get("message"), dict):
+        raise ValueError("INVALID_COMPLETION_MESSAGE")
     return choice["message"]
 
 
@@ -244,6 +248,8 @@ def answer(message, *, language="en", profile_id="new", today="2026-10-15", mode
                     raise ValueError("INVALID_TOOL_ARGUMENTS")
                 return data_adapter.get_portfolio()
             return invoke(name,args,profile,today)
+        except OSError:
+            return {"status":"error", "code":"LOCAL_DATA_READ_FAILED", "no_action_executed":True}
         except (ValueError,TypeError,KeyError,ArithmeticError) as exc:
             return {"status":"error","code":str(exc),"no_action_executed":True}
 

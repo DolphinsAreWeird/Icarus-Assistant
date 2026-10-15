@@ -7,6 +7,7 @@ import math
 from pathlib import Path
 import re
 import statistics
+from market_validation import validate_daily_series, validate_forecast
 
 ROOT = Path(__file__).resolve().parent
 ASSETS = {"btc":"Bitcoin", "eth":"Ethereum", "gold":"PAX Gold"}
@@ -150,10 +151,7 @@ def history(asset_id):
     path = ROOT / "data" / "market" / f"{asset_id}.json"
     if not path.exists():
         raise ValueError("HISTORY_UNAVAILABLE")
-    result = read_json(path)
-    if result.get("gaps"):
-        raise ValueError("HISTORY_HAS_GAPS")
-    return result
+    return validate_daily_series(read_json(path), expected_asset=asset_id)
 
 
 def history_summary(asset_id):
@@ -206,7 +204,7 @@ def risk_forecast(asset_id):
     path = ROOT / "data" / "forecasts" / f"{asset_id}.json"
     if not path.exists():
         return {"status":"unavailable", "reason":"Risk baseline has not been evaluated yet."}
-    return read_json(path)
+    return validate_forecast(read_json(path), asset_id)
 
 
 def invoke(name, args, profile, today):

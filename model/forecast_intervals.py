@@ -8,7 +8,7 @@ import hashlib
 import json
 import math
 import statistics
-from datetime import date
+from market_validation import validate_daily_series
 
 
 VERSION = "daily-return-interval-v1"
@@ -112,18 +112,8 @@ def evaluate_returns(returns):
 
 
 def experiment(data):
+    validate_daily_series(data)
     points = data["points"]
-    if data.get("currency") != "USDT":
-        raise ValueError("UNSUPPORTED_QUOTE_CURRENCY")
-    if not points:
-        raise ValueError("HISTORY_UNAVAILABLE")
-    dates = [date.fromisoformat(point["date"]) for point in points]
-    if any(str(parsed) != point["date"] for parsed, point in zip(dates, points)):
-        raise ValueError("INVALID_DATE_FORMAT")
-    if any((later-earlier).days != 1 for earlier, later in zip(dates, dates[1:])):
-        raise ValueError("HISTORY_NOT_CONTIGUOUS_DAILY")
-    if data.get("coverage_start") != points[0]["date"] or data.get("coverage_end") != points[-1]["date"]:
-        raise ValueError("COVERAGE_METADATA_MISMATCH")
     closes = [float(point["close"]) for point in points]
     if any(not math.isfinite(c) or c <= 0 for c in closes):
         raise ValueError("INVALID_CLOSES")
