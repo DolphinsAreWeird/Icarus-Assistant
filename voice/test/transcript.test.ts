@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { confidenceFromWords, isEchoOf, shouldAcceptFinal, squash } from '../src/shared/transcript';
+import { confidenceFromWords, isEchoOf, normalizeConfidence, shouldAcceptFinal, squash } from '../src/shared/transcript';
 
 const cfg = { minConfidence: 0.5, minCharsEn: 4, minCharsTh: 3 };
 
@@ -76,5 +76,30 @@ describe('shouldAcceptFinal', () => {
 describe('squash', () => {
   it('keeps letters and digits only', () => {
     expect(squash('Gold, is down 2.3%!')).toBe('goldisdown23');
+  });
+});
+
+describe('normalizeConfidence (live Scribe measurements, see config/defaults.ts)', () => {
+  it('maps clean speech to about 1 and noise to low numbers', () => {
+    // English reference 0.47: clean 0.49, 15 dB 0.42, 5 dB 0.35, 0 dB 0.20
+    expect(normalizeConfidence(0.49, 0.47)).toBe(1);
+    expect(normalizeConfidence(0.42, 0.47)).toBeCloseTo(0.894, 2);
+    expect(normalizeConfidence(0.35, 0.47)).toBeCloseTo(0.745, 2);
+    expect(normalizeConfidence(0.2, 0.47)).toBeCloseTo(0.426, 2);
+    // Thai reference 0.35: clean 0.36, 15 dB 0.30, 5 dB 0.044
+    expect(normalizeConfidence(0.364, 0.35)).toBe(1);
+    expect(normalizeConfidence(0.3, 0.35)).toBeCloseTo(0.857, 2);
+    expect(normalizeConfidence(0.044, 0.35)).toBeCloseTo(0.126, 2);
+  });
+  it('keeps unknown as unknown and never goes outside 0 to 1', () => {
+    expect(normalizeConfidence(null, 0.47)).toBeNull();
+    expect(normalizeConfidence(5, 0.47)).toBe(1);
+    expect(normalizeConfidence(-1, 0.47)).toBe(0);
+  });
+  it('matches the real per-word values we saw for a clean "Confirm."', () => {
+    // Scribe returned logprob -0.716 for the single word "Confirm."
+    const raw = confidenceFromWords([{ type: 'word', logprob: -0.716 }]);
+    expect(raw).toBeCloseTo(0.489, 3);
+    expect(normalizeConfidence(raw, 0.47)).toBe(1);
   });
 });

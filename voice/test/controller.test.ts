@@ -15,6 +15,8 @@ function setup(options: IcarusVoiceOptions = {}) {
   const ctl = { failNew: false };
   const voice = new IcarusVoice({
     ...options,
+    // These tests use plain 0..1 confidences. The real-scale defaults have their own tests below.
+    config: { confidenceReference: { en: 1, th: 1 }, ...options.config },
     deps: {
       api,
       audio: { unlock: async () => undefined, output: () => output, mic },
@@ -795,5 +797,154 @@ describe('blocked audio', () => {
     s.voice.sendText('take me to gold');
     await flush();
     expect(s.log.error.filter((e) => e.code === 'audio_blocked')).toHaveLength(0);
+  });
+});
+
+describe('confidence scale (measured on the live Scribe)', () => {
+  // Scribe's raw score for CLEAN speech is low: about 0.49 (English) and 0.36 (Thai).
+  // With the default reference values those must count as clean, and noise must not.
+  const real = (extra: IcarusVoiceOptions = {}) => ready({ ...extra, config: { confidenceReference: { en: 0.47, th: 0.35 }, ...extra.config } });
+
+  it('a clean English utterance (raw 0.49) is accepted at about 1.0', async () => {
+    const s = await real();
+    await userSays(s, 'what is the fee', 0.49);
+    expect(s.log.finalTranscript[0]?.confidence).toBe(1);
+    expect(s.log.finalTranscript[0]?.rawConfidence).toBe(0.49);
+    expect(s.api.asks).toHaveLength(1);
+  });
+
+  it('a clean Thai utterance (raw 0.36) is accepted too', async () => {
+    const s = await real({ language: 'th' });
+    await userSays(s, 'ทองคืออะไร', 0.36);
+    expect(s.log.finalTranscript[0]?.confidence).toBe(1);
+    expect(s.api.asks).toHaveLength(1);
+  });
+
+  it('heavy noise (raw 0.18) is dropped as low confidence', async () => {
+    const s = await real();
+    await userSays(s, 'what is the fee', 0.18);
+    expect(s.log.transcriptIgnored[0]).toMatchObject({ reason: 'low_confidence' });
+    expect(s.api.asks).toHaveLength(0);
+  });
+
+  it('a clean "confirm" starts the countdown, a noisy one (5 dB, raw 0.35) does not', async () => {
+    const clean = await real();
+    await userSays(clean, 'put 1,000 baht in gold', 0.49);
+    clean.output.last.finishNaturally();
+    await flush();
+    await userSays(clean, 'confirm', 0.49);
+    expect(clean.log.countdown[0]).toMatchObject({ phase: 'start' });
+
+    const noisy = await real();
+    await userSays(noisy, 'put 1,000 baht in gold', 0.49);
+    noisy.output.last.finishNaturally();
+    await flush();
+    await userSays(noisy, 'confirm', 0.35);
+    expect(noisy.log.countdown).toHaveLength(0);
+    expect(noisy.api.ttsRequests.at(-1)?.text).toBe("Sorry, I didn't catch that. Say confirm or cancel.");
+  });
+
+  it('unknown confidence still fails the confirm', async () => {
+    const s = await real();
+    await userSays(s, 'put 1,000 baht in gold', 0.49);
+    s.output.last.finishNaturally();
+    await flush();
+    await userSays(s, 'confirm', null);
+    expect(s.log.countdown).toHaveLength(0);
+  });
+});
+
+describe('speak() returns a promise (for hooks like Icarus.setTTS in the prototype)', () => {
+  it('resolves "finished" when the line ends by itself', async () => {
+    const s = await ready();
+    const done = s.voice.speak('Confirmed. Your gold purchase is on its way.');
+    await flush();
+    s.output.last.finishNaturally();
+    await expect(done).resolves.toBe('finished');
+  });
+
+  it('resolves "interrupted" when the user talks over it', async () => {
+    const s = await ready();
+    const done = s.voice.speak('A fairly long line that Icarus is saying right now.');
+    await flush();
+    s.stt().partial('hold on a second');
+    await expect(done).resolves.toBe('interrupted');
+  });
+
+  it('stopSpeaking() resolves "stopped" and silences the line', async () => {
+    const s = await ready();
+    const done = s.voice.speak('A fairly long line that Icarus is saying right now.');
+    await flush();
+    s.voice.stopSpeaking();
+    await expect(done).resolves.toBe('stopped');
+    expect(s.output.last.stopped).toBe(true);
+    expect(s.voice.state).toBe('listening');
+  });
+
+  it('resolves "error" when there is no sound at all, instead of hanging', async () => {
+    const s = await ready();
+    s.api.ttsFails = true;
+    await expect(s.voice.speak('This will fail.')).resolves.toBe('error');
+  });
+
+  it('a newer line replaces the older one, and the older one resolves "stopped"', async () => {
+    const s = await ready();
+    const first = s.voice.speak('The first line is long enough to still be playing.');
+    await flush();
+    void s.voice.speak('The second line.');
+    await expect(first).resolves.toBe('stopped');
+  });
+
+  it('resolves at once for empty text', async () => {
+    const s = await ready();
+    await expect(s.voice.speak('   ')).resolves.toBe('stopped');
+  });
+});
+
+
+describe("assistant: 'external' (voice in and out only, the host does the thinking)", () => {
+  it('emits the transcript but never calls our assistant or speaks by itself', async () => {
+    const s = await ready({ assistant: 'external' });
+    s.stt().partial('take me');
+    await userSays(s, 'take me to gold');
+    expect(s.log.finalTranscript[0]).toMatchObject({ text: 'take me to gold', source: 'voice' });
+    expect(s.api.asks).toHaveLength(0);
+    expect(s.api.ttsRequests).toHaveLength(0);
+    expect(s.voice.state).toBe('listening');
+    expect(s.api.friction).toHaveLength(1); // the friction log still gets every transcript
+  });
+
+  it('the host can answer with speak(), and barge-in still works', async () => {
+    const s = await ready({ assistant: 'external' });
+    await userSays(s, 'take me to gold');
+    const done = s.voice.speak('Sure, taking you to gold.');
+    await flush();
+    expect(s.voice.state).toBe('speaking');
+    s.stt().partial('actually wait');
+    await expect(done).resolves.toBe('interrupted');
+    expect(s.voice.state).toBe('listening');
+  });
+
+  it('local commands still run, and never reach the host assistant', async () => {
+    const s = await ready({ assistant: 'external' });
+    const done = s.voice.speak('A fairly long line that is being said right now.');
+    await flush();
+    s.stt().final('stop', 0.9);
+    await expect(done).resolves.toBe('interrupted');
+    expect(s.log.command.map((c) => c.name)).toContain('stop');
+  });
+
+  it('push to talk returns to idle after the transcript', async () => {
+    const s = setup({ mode: 'push-to-talk', assistant: 'external' });
+    await s.voice.start();
+    await flush();
+    s.voice.pushToTalkStart();
+    await flush();
+    s.mic.feed(s.timers, 0.3, 400);
+    s.voice.pushToTalkEnd();
+    s.stt().final('take me to gold', 0.95);
+    await flush();
+    expect(s.log.finalTranscript).toHaveLength(1);
+    expect(s.voice.state).toBe('idle');
   });
 });

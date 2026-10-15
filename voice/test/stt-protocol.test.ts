@@ -10,7 +10,6 @@ const base = {
   minSpeechMs: 100,
   minSilenceMs: 100,
   keyterms: ['gold', 'U-topia', 'ทอง'],
-  filterBackground: true,
   noVerbatim: true,
   detectLanguage: false,
 };
@@ -41,6 +40,12 @@ describe('buildSttUrl', () => {
     const q = new URL(buildSttUrl({ ...base, commitStrategy: 'manual' })).searchParams;
     expect(q.get('commit_strategy')).toBe('manual');
     expect(q.has('vad_silence_threshold_secs')).toBe(false);
+  });
+
+  it('never sends filter_background_audio (the API refuses it together with include_timestamps)', () => {
+    const q = new URL(buildSttUrl(base)).searchParams;
+    expect(q.get('include_timestamps')).toBe('true');
+    expect(q.has('filter_background_audio')).toBe(false);
   });
 
   it('can hide the token for logs', () => {

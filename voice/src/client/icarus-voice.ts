@@ -17,7 +17,7 @@ import { STRINGS } from '../config/strings';
 import { GLOBAL_COMMANDS, matchCommand } from '../shared/commands';
 import { detectLang } from '../shared/lang';
 import { toSpeakable } from '../shared/speech-format';
-import { isEchoOf, shouldAcceptFinal } from '../shared/transcript';
+import { isEchoOf, normalizeConfidence, shouldAcceptFinal } from '../shared/transcript';
 import type {
   AskResponse,
   FinalTranscript,
@@ -60,6 +60,13 @@ export interface IcarusVoiceOptions {
   acceptSimulatedConfirm?: boolean;
   /** Use the browser's own voice if ElevenLabs fails. Default true. */
   fallbackToBrowserVoice?: boolean;
+  /**
+   * 'internal' (default): we send what the user says to the assistant through our server and speak the answer.
+   * 'external': voice in and out ONLY. We emit `finalTranscript` and the host app does the thinking,
+   * then calls `speak()`. Local commands (stop, repeat, back, louder, slower) still work.
+   * Use this when the host already has its own assistant, like the Oasis prototype.
+   */
+  assistant?: 'internal' | 'external';
   /** Replace the microphone (the test page uses a synthetic one). */
   mic?: MicPort;
   /** Replace the browser, network and audio pieces. For tests. */
@@ -140,7 +147,12 @@ interface ActivePlayback {
   handle: PlaybackHandle | null;
   started: boolean;
   ended: boolean;
+  /** Settles once, however this playback ends. speak() returns it. */
+  done: Promise<SpeechEnd>;
+  settle: (reason: SpeechEnd) => void;
 }
+
+type SpeechEnd = VoiceEvents['speakingEnd']['reason'];
 
 const PRE_ROLL_FRAMES = 15; // 300 ms of audio kept for push-to-talk
 const BACKGROUND_TICK_MS = 5000;
@@ -155,6 +167,7 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
   private readonly confirm: ConfirmFlow;
   private readonly userId: string;
   private readonly fallbackEnabled: boolean;
+  private readonly externalAssistant: boolean;
 
   private running = false;
   private mode: Mode;
@@ -201,6 +214,7 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     this.currentLang = this.language === 'th' ? 'th' : 'en';
     this.userId = options.userId ?? 'demo-user';
     this.fallbackEnabled = options.fallbackToBrowserVoice ?? true;
+    this.externalAssistant = options.assistant === 'external';
 
     const sessionId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}${Math.random()}`).replace(/[^A-Za-z0-9]/g, '').slice(0, 16);
     // Real browser pieces, with anything the caller provides (tests) swapped in. Nothing here touches the DOM until it is used.
@@ -394,13 +408,22 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
    * Say a line out loud (for example "Confirmed. Your gold purchase is on its way." after the
    * UI has executed a trade). Markdown and symbols are cleaned up, but numbers are kept EXACT:
    * a line the UI passes in is already final text, so we never round it.
+   * Returns a promise that settles when the line ends: 'finished', 'interrupted' (the user talked
+   * over it), 'stopped' or 'error'. You can ignore it.
    */
-  speak(text: string, options: { language?: Lang } = {}): void {
+  speak(text: string, options: { language?: Lang } = {}): Promise<SpeechEnd> {
     const lang = options.language ?? detectLang(text, this.currentLang);
     const spoken = toSpeakable(text, { lang, shorten: false, exact: true });
-    if (!spoken) return;
+    if (!spoken) return Promise.resolve('stopped');
     this.lastActivityAt = this.deps.timers.now();
-    void this.playSpeech({ text: spoken, language: lang, kind: 'line' }, null);
+    return this.playSpeech({ text: spoken, language: lang, kind: 'line' }, null);
+  }
+
+  /** Stop talking now, and drop any answer that is still on its way. */
+  stopSpeaking(): void {
+    this.cancelTurn();
+    this.stopPlayback('stopped');
+    this.afterSpeech();
   }
 
   /** The user tapped Cancel on the preview or the countdown. */
@@ -603,7 +626,8 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     const language = this.resolveLanguage(f.text, f.languageCode);
     const speechStartedAt = this.utterance.startedAt ?? this.utterance.firstPartialAt;
     this.utterance = { startedAt: null, firstPartialAt: null };
-    this.processFinal({ text: f.text, confidence: f.confidence, language, source: 'voice', speechStartedAt }, true);
+    const confidence = normalizeConfidence(f.confidence, this.cfg.confidenceReference[language]);
+    this.processFinal({ text: f.text, confidence, rawConfidence: f.confidence, language, source: 'voice', speechStartedAt }, true);
   }
 
   /** Filter, announce, log, then act. */
@@ -687,7 +711,11 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
       return;
     }
 
-    // 3. Ask the assistant.
+    // 3. Ask the assistant. In 'external' mode the host app does this itself, from `finalTranscript`.
+    if (this.externalAssistant) {
+      this.afterSpeech(); // back to listening (or idle for push to talk)
+      return;
+    }
     void this.runTurn(final);
   }
 
@@ -787,8 +815,12 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     void this.playSpeech({ text: readback.text, language: readback.lang, kind: 'readback' }, null);
   }
 
-  private async playSpeech(speech: { text: string; language: Lang; kind: 'reply' | 'readback' | 'line' }, turnId: number | null): Promise<void> {
+  private playSpeech(speech: { text: string; language: Lang; kind: 'reply' | 'readback' | 'line' }, turnId: number | null): Promise<SpeechEnd> {
     this.stopPlayback('stopped');
+    let settle: (reason: SpeechEnd) => void = () => undefined;
+    const done = new Promise<SpeechEnd>((resolve) => {
+      settle = resolve;
+    });
     const pb: ActivePlayback = {
       text: speech.text,
       lang: speech.language,
@@ -799,12 +831,18 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
       handle: null,
       started: false,
       ended: false,
+      done,
+      settle,
     };
     this.playback = pb;
     this.lastSpeech = { text: speech.text, endedAt: null };
     this.lastSpoken = { text: speech.text, lang: speech.language };
     this.lastActivityAt = this.deps.timers.now();
+    void this.runPlayback(pb, speech, turnId);
+    return done;
+  }
 
+  private async runPlayback(pb: ActivePlayback, speech: { text: string; language: Lang }, turnId: number | null): Promise<void> {
     try {
       await this.ensureAudio();
       const res = await this.deps.api.tts({ text: speech.text, language: speech.language, speed: this.cfg.tts.speedSteps[this.speedStep] ?? 1 }, pb.abort.signal);
@@ -867,6 +905,7 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     this.playback = null;
     if (this.lastSpeech) this.lastSpeech.endedAt = this.deps.timers.now();
     this.lastActivityAt = this.deps.timers.now();
+    pb.settle('finished');
     if (pb.started) this.emit('speakingEnd', { reason: 'finished' });
     // The ONLY place that unlocks "confirm": the read-back audio ended on its own.
     if (pb.isReadback) this.confirm.readbackFinished();
@@ -891,6 +930,7 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     }
     // No sound at all.
     pb.ended = true;
+    pb.settle('error');
     if (this.playback === pb) this.playback = null;
     if (pb.isReadback && this.confirm.phase) {
       // We could not read the preview aloud, so voice confirmation is off. The card on screen still works.
@@ -913,6 +953,7 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     if (this.lastSpeech) this.lastSpeech.endedAt = this.deps.timers.now();
     pb.abort.abort();
     pb.handle?.stop();
+    pb.settle(reason);
     if (pb.started) this.emit('speakingEnd', { reason });
   }
 

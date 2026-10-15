@@ -87,7 +87,7 @@ function wire(v: IcarusVoice): void {
   v.on('partialTranscript', ({ text }) => { el.partial.textContent = text; });
   v.on('finalTranscript', (t) => {
     el.partial.textContent = '';
-    const conf = t.confidence === null ? 'confidence unknown' : `confidence ${t.confidence.toFixed(2)}`;
+    const conf = t.confidence === null ? 'confidence unknown' : `confidence ${t.confidence.toFixed(2)}${typeof t.rawConfidence === 'number' ? ` (raw ${t.rawConfidence.toFixed(2)})` : ''}`;
     const fake = fakeMode && t.source === 'voice' ? ' | FAKE script, not your words' : '';
     addRow('me', 'You', t.text, `${t.language} | ${conf} | ${t.source}${fake}`);
   });

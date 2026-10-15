@@ -49,6 +49,20 @@ describe('/api/ask with the mock assistant', () => {
     expect(r.speech?.text).toBe('2,500 baht into Bitcoin. Fee 37.50 baht. Total 2,537.50 baht. Say confirm or cancel.');
   });
 
+  it('speaks the assistant\'s own `speech` script when it provides one (as in the Oasis prototype)', async () => {
+    const s = makeStack();
+    const app = (await import('../src/server/app')).createApp({
+      cfg: s.cfg, tts: s.tts, port: s.port, usage: s.usage, friction: () => undefined, log: () => undefined,
+      assistant: { ask: async () => ({ text: 'Gold is down \u20bf-2.3% (\u0e3f1,015). Details below.', speech: 'Gold is down about 2 percent today. Want a closer look?', emotion: 'curious', speak: true, ui_actions: [], sources: [] }) },
+    });
+    const srv = await listen(app);
+    const r = (await (await fetch(`${srv.base}/api/ask`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: 'how is gold', language: 'en' }) })).json()) as AskResponse;
+    await srv.close();
+    expect(r.speech?.text).toBe('Gold is down about 2 percent today. Want a closer look?');
+    expect(r.reply.text).toContain('Details below'); // the screen text is untouched
+    expect(r.reply.emotion).toBe('curious'); // passed through for the UI
+  });
+
   it('refuses to pick investments', async () => {
     const r = await ask('what should I buy?');
     expect(r.speech?.text).toMatch(/^I can't pick investments for you/);

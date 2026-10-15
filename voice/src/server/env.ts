@@ -31,12 +31,11 @@ export interface ServerConfig {
   ttsMaxChars: number;
 
   stt: {
-    commitStrategy: 'manual' | 'vad' | 'turn_prediction';
+    commitStrategy: 'manual' | 'vad';
     vadSilenceSecs: number;
     vadThreshold: number;
     minSpeechMs: number;
     minSilenceMs: number;
-    filterBackground: boolean;
     noVerbatim: boolean;
     keyterms: string[];
     droppedKeyterms: string[];
@@ -70,8 +69,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   if (!pcm) throw new Error(`TTS_OUTPUT_FORMAT must be a pcm format like pcm_24000, got "${outputFormat}"`);
 
   const strategy = (env.STT_COMMIT_STRATEGY?.trim() || 'vad') as ServerConfig['stt']['commitStrategy'];
-  if (!['manual', 'vad', 'turn_prediction'].includes(strategy)) {
-    throw new Error(`STT_COMMIT_STRATEGY must be manual, vad or turn_prediction, got "${strategy}"`);
+  if (!['manual', 'vad'].includes(strategy)) {
+    // 'turn_prediction' is in the API reference but the live API refuses it for scribe_v2_realtime.
+    throw new Error(`STT_COMMIT_STRATEGY must be manual or vad, got "${strategy}"`);
   }
   const mode = (env.ASSISTANT_MODE?.trim() || 'mock') as ServerConfig['assistantMode'];
   if (!['mock', 'http'].includes(mode)) throw new Error(`ASSISTANT_MODE must be mock or http, got "${mode}"`);
@@ -100,11 +100,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     stt: {
       commitStrategy: strategy,
       // Silence before a turn ends. This is the biggest part of the "time to first audio".
-      vadSilenceSecs: num(env.STT_VAD_SILENCE_SECS, 0.7),
+      // Measured on the live Scribe: 0.7 s gives about 1150 ms to the final transcript, 0.5 s and 0.3 s
+      // both give about 920 ms (Scribe has a floor). So 0.5 is the lowest setting that still helps.
+      vadSilenceSecs: num(env.STT_VAD_SILENCE_SECS, 0.5),
       vadThreshold: num(env.STT_VAD_THRESHOLD, 0.4),
       minSpeechMs: num(env.STT_MIN_SPEECH_MS, 100),
       minSilenceMs: num(env.STT_MIN_SILENCE_MS, 100),
-      filterBackground: bool(env.STT_FILTER_BACKGROUND, true),
       noVerbatim: bool(env.STT_NO_VERBATIM, true),
       keyterms: kept,
       droppedKeyterms: dropped,

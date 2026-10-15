@@ -29,6 +29,8 @@ export function normalizeReply(raw: unknown): AssistantReply {
   if (typeof r.text !== 'string') throw new Error('Assistant reply has no text');
   return {
     text: r.text,
+    ...(typeof r.speech === 'string' && r.speech.trim() ? { speech: r.speech } : {}),
+    ...(typeof r.emotion === 'string' ? { emotion: r.emotion } : {}),
     speak: typeof r.speak === 'boolean' ? r.speak : true,
     ui_actions: Array.isArray(r.ui_actions) ? (r.ui_actions as UiAction[]) : [],
     sources: Array.isArray(r.sources) ? (r.sources as AssistantReply['sources']) : [],

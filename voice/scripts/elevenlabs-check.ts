@@ -5,11 +5,19 @@
 // IDs real? Can the server mint a short-lived Scribe token? It never prints the key or a token.
 
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
-import { createElevenLabsPort } from '../src/server/elevenlabs';
+import { createElevenLabsPort, upstreamInfo } from '../src/server/elevenlabs';
 import { loadConfig, makeRedactor } from '../src/server/env';
 
 const cfg = loadConfig();
 const redact = makeRedactor(cfg.apiKey);
+
+/** One short line for an API error. A restricted key is a limit, not a failure. */
+function explain(err: unknown): { text: string; missingPermission: string | null } {
+  const info = upstreamInfo(err);
+  const match = /missing the permission (\w+)/.exec(info.message);
+  const text = redact(info.message).split('\n')[0] ?? '';
+  return { text: `${info.statusCode ?? ''} ${text}`.trim(), missingPermission: info.apiStatus === 'missing_permissions' && match ? (match[1] ?? null) : null };
+}
 const ok = (msg: string) => console.log(`  OK    ${msg}`);
 const bad = (msg: string) => { console.log(`  FAIL  ${msg}`); failures += 1; };
 const warn = (msg: string) => console.log(`  WARN  ${msg}`);
@@ -29,7 +37,12 @@ try {
   modelsListed = true;
   ok(`key works, ${models.length} models listed`);
 } catch (err) {
-  bad(`could not list models (is the key right?): ${redact((err as Error).message).split('\n')[0]}`);
+  const e = explain(err);
+  if (e.missingPermission) {
+    warn(`this key is restricted: it lacks "${e.missingPermission}", so models cannot be listed. That only limits this check. Run with --speak to test the models by using them.`);
+  } else {
+    bad(`could not list models (is the key right?): ${e.text}`);
+  }
 }
 
 const supports = (modelId: string, lang: string) => {
@@ -62,7 +75,9 @@ for (const [lang, id] of [['en', cfg.voiceIdEn], ['th', cfg.voiceIdTh]] as const
     ok(`${lang}: "${v.name}" (${v.category ?? 'unknown category'})${verified ? `, verified for: ${verified}` : ''}`);
     if (lang === 'th' && verified && !/th|thai/i.test(verified)) warn('this voice is not verified for Thai. Have the Thai teammate listen before the demo.');
   } catch (err) {
-    bad(`${lang}: voice ${id} was not found or not allowed: ${redact((err as Error).message).split('\n')[0]}`);
+    const e = explain(err);
+    if (e.missingPermission) warn(`${lang}: cannot look up voice ${id} (key lacks "${e.missingPermission}"). Run with --speak to test it by speaking.`);
+    else bad(`${lang}: voice ${id} was not found or not allowed: ${e.text}`);
   }
 }
 
@@ -71,7 +86,7 @@ try {
   const token = await createElevenLabsPort(cfg).createRealtimeToken();
   ok(`token minted (${token.length} characters, not shown). The browser never needs the API key.`);
 } catch (err) {
-  bad(`could not mint a token: ${redact((err as Error).message).split('\n')[0]}`);
+  bad(`could not mint a token (the key needs the speech-to-text permission): ${explain(err).text}`);
 }
 
 if (process.argv.includes('--speak')) {
@@ -82,6 +97,8 @@ if (process.argv.includes('--speak')) {
     ['th', cfg.voiceIdTh, cfg.ttsModelsTh, 'สวัสดี ฉันคืออิคารัส'],
   ] as const) {
     if (!voice) continue;
+    let worked = false;
+    let lastWhy = '';
     for (const model of modelList) {
       const t0 = performance.now();
       try {
@@ -91,11 +108,15 @@ if (process.argv.includes('--speak')) {
         const ms = Math.round(performance.now() - t0);
         await reader.cancel();
         ok(`${lang} ${model}: first audio in ${ms} ms (${first.value?.byteLength ?? 0} bytes)`);
+        worked = true;
         break; // the first model that works is the one the server will use
       } catch (err) {
-        warn(`${lang} ${model}: ${redact((err as Error).message)} (statusCode ${(err as { statusCode?: number }).statusCode ?? 'n/a'})`);
+        const e = explain(err);
+        lastWhy = e.missingPermission ? `the key lacks "${e.missingPermission}"` : e.text;
+        warn(`${lang} ${model}: ${lastWhy}`);
       }
     }
+    if (!worked) bad(`${lang}: no model could speak. Last reason: ${lastWhy}`);
   }
 }
 

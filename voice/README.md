@@ -148,6 +148,59 @@ export function useIcarusVoice(serverUrl: string) {
 }
 ```
 
+## Getting text-to-speech working
+
+**Status on 15 Oct:** speech-to-text works on our key. Text-to-speech does not, and it is **not a code problem**. ElevenLabs rejects the account itself:
+
+> Unusual activity has been detected on your account, so Free Tier access has been disabled. This can be triggered by using a proxy or VPN, or by creating multiple free accounts. Please upgrade to a paid subscription to continue.
+
+To get real ElevenLabs voices you need one of these:
+
+1. **Upgrade the account** to a paid plan (Starter is about US$5 a month). Turn off any VPN or proxy first.
+2. **Use another key.** A teammate's account, or credits from the hackathon (ElevenLabs is a sponsor, so ask their team at the venue). Put that key in `voice/.env`.
+3. **Ask ElevenLabs support** to lift the free-tier block.
+
+Then:
+
+- Make the key with the permissions we use: **Text to Speech**, **Speech to Text**, and (only for `npm run check`) **Models: read** and **Voices: read**. Our current key is a restricted key without the last two. That is fine for the app.
+- Pick two voices on the ElevenLabs **Voices** page, copy each voice ID into `VOICE_ID_EN` and `VOICE_ID_TH` in `.env`. The Thai voice must be checked by a Thai speaker.
+- Restart with `npm run dev`, then run `npm run check -- --speak` to hear it work.
+
+**Until then, Icarus still talks.** When ElevenLabs text-to-speech fails, the module falls back to the browser's own voice (macOS has an English voice and a Thai one called Kanya). It does not sound like Icarus, but the whole flow works, including the money read-back.
+
+## Plug into the Oasis prototype
+
+The prototype (`Icarus Prototype.dc.html`) has its own assistant (`Icarus.setBackend`) and uses the browser's built-in voice by default. It has hooks for an external voice:
+
+- `Icarus.setTTS(async (speech, { lang, emotion, onProgress }) => {...}, stop)`: speak `speech`, resolve when done.
+- `Icarus.pushTranscript(text, isFinal)`: feed what the user said.
+
+Use our module in **`assistant: 'external'` mode**: it listens and speaks, and the prototype does the thinking.
+
+```js
+// Paste in the page's console, or put it in a <script type="module">. The voice server must be running.
+const { IcarusVoice } = await import('http://localhost:8787/icarus-voice.js');
+const voice = new IcarusVoice({ serverUrl: 'http://localhost:8787', language: 'en', assistant: 'external' });
+
+// Speech out: the prototype asks, we speak (ElevenLabs, or the browser voice if that fails).
+Icarus.setTTS(async (speech, { lang, onProgress }) => {
+  const t0 = Date.now();
+  const tick = setInterval(() => onProgress(Math.min(speech.length, Math.round(((Date.now() - t0) / 1000) * 15))), 110);
+  try { await voice.speak(speech, { language: lang }); } finally { clearInterval(tick); }
+}, () => voice.stopSpeaking());
+
+// Speech in: Scribe's transcripts drive the prototype's voice screen.
+voice.on('partialTranscript', ({ text }) => Icarus.pushTranscript(text, false));
+voice.on('finalTranscript', ({ text }) => Icarus.pushTranscript(text, true));
+
+// Mic on. This must happen inside a click.
+document.addEventListener('click', () => voice.start(), { once: true });
+```
+
+**Not tested against the prototype.** It needs its `support.js` runtime (not in Downloads), so I could not run it. Things that may get in the way: the page's security policy may block loading from `localhost`, and an embedded page needs permission to use the microphone. The prototype's default speech-in uses the browser's `SpeechRecognition`, which does **not** work in Brave. Scribe through this module does.
+
+If the prototype's backend returns a separate `speech` field (as its docs describe), our server speaks that instead of `text`. `emotion` is passed through on the `assistantReply` event.
+
 ## Connect the real assistant
 
 One config change in `.env`:
@@ -183,11 +236,15 @@ Gender particles (ครับ, ค่ะ) are left out on purpose. Add them to 
 
 All in `.env` (see `.env.example`, every line is explained). The ones you will touch:
 
-- `STT_VAD_SILENCE_SECS` (default 0.7): how long the user must be quiet before Icarus answers. Lower is faster, but cuts people off.
-- `TTS_MODEL_EN` / `TTS_MODEL_TH`: English uses Flash v2.5 (about 75 ms, no Thai). Thai uses v4 Turbo (about 100 ms) and falls back to v4, then v3 if a model is rejected.
+- `STT_VAD_SILENCE_SECS` (default 0.5): how long the user must be quiet before Icarus answers. **Measured on the live Scribe:** 0.7 s gives about 1150 ms to the final transcript, while 0.5 s and 0.3 s both give about 920 ms. Scribe has a floor, so going below 0.5 buys nothing and may cut people off.
+- `TTS_MODEL_EN` / `TTS_MODEL_TH`: English uses Flash v2.5 (about 75 ms, no Thai). Thai uses v4 Turbo (about 100 ms) and falls back to v4, then v3 if a model is rejected. A wrong voice ID is reported clearly (`bad_voice`) and does not trigger the fallback.
 - `ASSISTANT_MODE`: `mock` or `http`.
 
-Noise, confirmation and barge-in numbers are in `src/config/defaults.ts`. **They have not been tuned on a real microphone.** Expect to adjust them at the venue.
+Noise, confirmation and barge-in numbers are in `src/config/defaults.ts`.
+
+**Confidence.** Scribe's per-word confidence is low even for perfect speech (about 0.49 in English, 0.36 in Thai, measured live). We divide by a per-language reference so clean speech is about 1.0. That is `confidenceReference` in `defaults.ts`. It was measured with **macOS voices, not human voices**. The test page shows both numbers for every sentence (`confidence 0.93 (raw 0.44)`). Say a few sentences into a real mic and adjust the references if clean speech does not reach about 1.0.
+
+The loudness and echo numbers for barge-in have **not** been tuned on a real microphone. Expect to adjust them at the venue.
 
 ## Credits
 
@@ -205,36 +262,39 @@ Noise, confirmation and barge-in numbers are in `src/config/defaults.ts`. **They
 - Text-to-speech and the assistant go through our server.
 - There is **no login on the voice server**. Anyone who can reach it can use your credits. Run it on localhost or a private network. Set `ALLOWED_ORIGINS` to the real frontend origin if you deploy it.
 
-## What is mocked, and what I could not verify
+## What is mocked, and what is verified
 
 Read this before you demo.
 
 **Mocked**
 - The assistant (`src/server/assistant/mock.ts`). Canned replies. Its fee (1.5%) and total are made up.
 - The friction log (a file stub).
-- `FAKE_ELEVENLABS=1` mode (tones and scripted fake transcripts). For development only.
+- `FAKE_ELEVENLABS=1` mode (beeps and scripted fake transcripts). For development only.
 
-**Not verified: no ElevenLabs API key was available when this was built**
-- Nothing here has run against the live ElevenLabs API. Run `npm run check`, then `npm run bench`, first thing.
-- The docs list `eleven_v4_turbo` as available "via the Text to Dialogue websocket". They do not say it works on the plain streaming endpoint we use. The fallback chain (v4, v3) and `npm run check` cover this. If Thai fails, check this first.
-- Whether `languageCode: "th"` and the speed setting are accepted by the v4 models.
-- Scribe's per-word `logprob`. The docs call it a "confidence score" without a scale. We assume log probabilities. The test page shows each confidence so you can tune `confirm.minConfidence` (0.85) and `filter.minConfidence` (0.5).
-- Whether the timestamped transcript (the only one with confidence) always arrives promptly. If it is late, confidence is "unknown", and the confirm flow treats unknown as "not high".
-- Push to talk: the docs say Scribe starts transcribing after about 2 seconds of audio. Short push-to-talk clips may be slow or empty. Test it.
-- `filter_background_audio` and `no_verbatim` are switched on. Their effect on accuracy and latency is untested.
+**Verified against the live ElevenLabs API (15 Oct, with a restricted key)**
+- A single-use Scribe token can be minted, and `scribe_v2_realtime` accepts our connection: language, keyterms, VAD settings, timestamps and `no_verbatim`.
+- English and Thai are transcribed correctly. I streamed macOS voices to the live Scribe in real time (`npm run bench -- --say`). "Take me to gold." and "พาไปที่ทอง" both came back exactly right.
+- **Latency of speech-to-text** (English, after the user stops speaking, 3 runs each): about 1150 ms with 0.7 s silence, about 920 ms with 0.5 s or 0.3 s. The first partial transcript takes about 0.95 s in English and about 1.9 s in Thai.
+- **Confidence scale:** see Settings. It does carry signal: clean 0.49, 15 dB noise 0.42, 5 dB 0.35, 0 dB 0.20 (English).
+- Bugs the live API found: `filter_background_audio` cannot be combined with `include_timestamps` (we need the timestamps), and `commit_strategy=turn_prediction` is refused by `scribe_v2_realtime`. Both are fixed.
+
+**Not verified: text-to-speech, because the account is blocked** (see "Getting text-to-speech working")
+- Everything about ElevenLabs text-to-speech has only run against the fake: streaming through the SDK, Flash for English, the Thai model, `languageCode: "th"`, the speed setting, and real time to first audio.
+- The docs list `eleven_v4_turbo` as available "via the Text to Dialogue websocket" and do not say it works on the plain streaming endpoint we use. The fallback chain (v4, v3) covers this. If Thai fails once TTS works, check this first.
 - Whether the speech engine reads "1,015" correctly. Flash v2.5 has text normalisation off by default (turning it on needs an Enterprise plan). The card on screen always shows the exact numbers.
+- Push to talk: the docs say Scribe starts transcribing after about 2 seconds of audio. Short push-to-talk clips may be slow or empty. Test it.
 
 **Not verified: the real microphone**
-- The mic capture (`src/client/mic.ts`, an AudioWorklet) was built and bundled, but never run with a real microphone. It was tested with a synthetic mic in a real browser, and with fakes in unit tests.
-- Echo: with open speakers Icarus can hear itself. Use headphones, or push to talk in a noisy room. The echo filter and the stricter loudness check while Icarus speaks are untuned.
+- The mic capture (`src/client/mic.ts`, an AudioWorklet) was never run with a real microphone by me. It was tested with a synthetic mic in a real browser, and with fakes in unit tests. (Your own sessions in Brave did stream audio, so it ran there.)
+- Echo: with open speakers Icarus can hear itself. Use headphones, or push to talk in a noisy room.
+- Confidence was calibrated with synthetic voices. See Settings.
 
-**Not verified: Thai quality.** Thai strings, keyterms and wording are a first draft. Nobody has heard the Thai voice yet.
+**Not verified: Thai quality.** Thai strings, keyterms and wording are a first draft. Nobody has heard a Thai ElevenLabs voice yet.
 
-**Latency**
-- No real numbers yet. Run `npm run bench` with a key. It reports the time to first audio on the server side.
-- With fake services in a real browser, the app's own overhead was small (about 100 ms for the assistant call and the audio hop, plus the 700 ms silence setting). That says nothing about ElevenLabs.
-- From the docs: Scribe about 150 ms, Flash about 75 ms, v4 Turbo about 100 ms, all "excluding network". With the 700 ms silence setting that is roughly 1 second before the assistant and the network. **The 1.5 second goal depends on how fast the real assistant is.** A real LLM that takes 1 second or more will break it, unless the assistant streams (the contract does not).
-- Barge-in measured about 120 ms from the first loud sound to silence in a browser with the synthetic mic. A real mic and speakers add device delay (tens of milliseconds).
+**Time to first audio (the 1.5 second goal)**
+- Not measured end to end yet, because TTS is blocked. The parts we know: speech-to-text final about 0.92 s (at 0.5 s silence), mock assistant about 0.12 s, then text-to-speech first byte (the docs say about 75 to 100 ms of model time, plus network) and about 0.1 s in the browser. That adds up to roughly **1.3 to 1.5 s with the mock assistant. The goal is tight, and a real LLM will break it** unless the assistant streams (the contract does not). Run `npm run bench` once TTS works for the real number.
+- With fake services in a real browser, the app's own overhead was about 100 ms.
+- **Barge-in:** about 120 ms from the first loud sound to silence (synthetic mic, in a real browser). It relies on the loudness check, because the first transcript takes about 1 s, which is too slow on its own.
 
 **Other choices to know about**
 - ElevenLabs also has a hosted agent product with webhook tools, client tools, MCP and custom LLMs. I only checked the docs index. I kept the speech-to-text, assistant, text-to-speech pipeline so we control the money read-back and the confirm gate ourselves.

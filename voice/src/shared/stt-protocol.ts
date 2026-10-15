@@ -11,13 +11,12 @@ export interface SttUrlOptions {
   token: string;
   modelId?: string;
   languageCode?: string;
-  commitStrategy: 'manual' | 'vad' | 'turn_prediction';
+  commitStrategy: 'manual' | 'vad';
   vadSilenceSecs: number;
   vadThreshold: number;
   minSpeechMs: number;
   minSilenceMs: number;
   keyterms: string[];
-  filterBackground: boolean;
   noVerbatim: boolean;
   /** Ask Scribe to detect the language (used when the user picked 'auto'). */
   detectLanguage: boolean;
@@ -41,7 +40,8 @@ export function buildSttUrl(o: SttUrlOptions): string {
   p.set('include_timestamps', 'true');
   if (o.detectLanguage) p.set('include_language_detection', 'true');
   for (const term of o.keyterms) p.append('keyterms', term);
-  p.set('filter_background_audio', String(o.filterBackground));
+  // NOTE: filter_background_audio is NOT sent. ElevenLabs rejects it together with include_timestamps
+  // ("cannot be combined"), and we need the timestamps for the per-word confidence.
   p.set('no_verbatim', String(o.noVerbatim));
   p.set('token', o.token);
   return `${o.baseUrl.replace(/\/$/, '')}/v1/speech-to-text/realtime?${p.toString()}`;

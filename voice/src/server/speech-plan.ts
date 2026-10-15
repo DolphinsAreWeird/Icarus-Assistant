@@ -36,6 +36,8 @@ export function planSpeech(
     };
   }
 
-  const text = toSpeakable(reply.text, { lang: language, ...(now ? { now } : {}) });
+  // If the assistant wrote a separate spoken script, speak that. It still gets the same cleanup.
+  const spoken = typeof reply.speech === 'string' && reply.speech.trim() ? reply.speech : reply.text;
+  const text = toSpeakable(spoken, { lang: language, ...(now ? { now } : {}) });
   return { speech: text ? { text, language, kind: 'reply' } : null, preview: null };
 }

@@ -41,6 +41,14 @@ export interface AssistantRequest {
 export interface AssistantReply {
   /** What Icarus says (short). Always shown on screen. */
   text: string;
+  /**
+   * OPTIONAL. A separate script written for the voice: short sentences, rounded numbers,
+   * "baht" instead of the symbol. If present we speak this instead of `text`.
+   * (Oasis's prototype already defines this field. It is not in the context.md contract.)
+   */
+  speech?: string;
+  /** OPTIONAL. Mascot mood for the UI (happy, excited, curious, thinking). The voice layer passes it on. */
+  emotion?: string;
   /** Whether to read it aloud. */
   speak: boolean;
   ui_actions: UiAction[];
@@ -87,7 +95,7 @@ export interface ScribeTokenResponse {
   /** Full wss URL, including the single-use token. Never contains the API key. */
   url: string;
   /** 'manual' for push-to-talk, 'vad' for hands-free. */
-  commitStrategy: 'manual' | 'vad' | 'turn_prediction';
+  commitStrategy: 'manual' | 'vad';
   expiresInSec: number;
 }
 
@@ -99,8 +107,10 @@ export interface PartialTranscript {
 
 export interface FinalTranscript {
   text: string;
-  /** 0 to 1. null means Scribe did not tell us. Unknown is treated as NOT high. */
+  /** 0 to 1, where about 1 is a clean utterance (see confidenceReference). null means unknown, which is treated as NOT high. */
   confidence: number | null;
+  /** Scribe's own number (exp of the mean word log probability), before normalising. For tuning. */
+  rawConfidence?: number | null;
   /** The language we will use for the assistant and the reply voice. */
   language: Lang;
   /** Where the text came from. Only 'voice' may ever start a confirm countdown. */

@@ -31,6 +31,15 @@ export function confidenceFromWords(words: WordInfo[] | null | undefined): numbe
   return null;
 }
 
+/**
+ * Scale Scribe's raw score so that a clean utterance is about 1. `reference` is what clean speech
+ * scores in that language (config/defaults.ts, confidenceReference). null stays null.
+ */
+export function normalizeConfidence(raw: number | null, reference: number): number | null {
+  if (raw === null) return null;
+  return Math.min(1, Math.max(0, raw / reference));
+}
+
 /** Letters and digits only, lowercase. Makes Thai and English text comparable. */
 export function squash(text: string): string {
   return text.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');

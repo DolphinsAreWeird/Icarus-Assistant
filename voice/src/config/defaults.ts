@@ -5,6 +5,16 @@
 // Expect to adjust them at the venue. The test page shows what each one is doing.
 
 export const DEFAULTS = {
+  // ---- What a CLEAN utterance scores from Scribe, per language ----
+  // Scribe reports a per-word log probability. Measured on the live API (15 Oct 2026, macOS voices):
+  //   English "confirm": clean 0.49, 15 dB noise 0.42, 5 dB 0.35, 0 dB 0.20 (as exp of the mean).
+  //   Thai "ยืนยัน":     clean 0.36, 15 dB 0.30, 5 dB 0.04.
+  // So raw scores are low even for perfect speech. We divide by these numbers (capped at 1) so that
+  // "clean speech" is about 1.0, and the thresholds below mean what they say.
+  // CALIBRATED WITH SYNTHETIC VOICES ONLY. Re-measure with real human voices: the test page shows
+  // both numbers for every sentence ("confidence 0.93 (raw 0.44)").
+  confidenceReference: { en: 0.47, th: 0.35 } as Record<'en' | 'th', number>,
+
   // ---- Noise filter for final transcripts ----
   filter: {
     /** Drop a final transcript when Scribe's confidence is below this (0 to 1). */

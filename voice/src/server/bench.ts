@@ -27,7 +27,9 @@ export interface BenchRun {
   transcript: string | null;
   confidence: number | null;
   assistantMs: number;
-  ttsFirstByteMs: number;
+  /** null when TTS was unavailable (for example a blocked account). */
+  ttsFirstByteMs: number | null;
+  ttsError: string | null;
   ttsModel: string;
   totalToFirstAudioMs: number | null;
 }
@@ -39,6 +41,8 @@ export interface BenchOptions {
   runs: number;
   /** What the pretend user says. */
   utterances?: Record<Lang, string>;
+  /** Pre-made 16 kHz mono 16-bit PCM of the user's sentence. Skips the TTS step for the user's voice. */
+  utteranceAudio?: Partial<Record<Lang, Buffer>>;
   /** Silence sent before speech, to look like a mic that has been open for a while. Scribe starts after about 2 s of audio. */
   preRollSec?: number;
   log?: (line: string) => void;
@@ -86,8 +90,9 @@ export async function runBench(opts: BenchOptions): Promise<BenchRun[]> {
 
   for (const lang of opts.langs) {
     const text = utterances[lang];
-    log(`\n[${lang}] making the pretend user's audio: "${text}"`);
-    const speech = await makeUtterance(port, cfg, lang, text);
+    const premade = opts.utteranceAudio?.[lang];
+    log(`\n[${lang}] pretend user says: "${text}" (${premade ? 'audio supplied' : 'made with TTS'})`);
+    const speech = premade ?? (await makeUtterance(port, cfg, lang, text));
 
     for (let run = 1; run <= opts.runs; run++) {
       // ---- token and socket ----
@@ -98,13 +103,12 @@ export async function runBench(opts: BenchOptions): Promise<BenchRun[]> {
         baseUrl: cfg.sttWsBaseUrl,
         token,
         languageCode: lang,
-        commitStrategy: cfg.stt.commitStrategy === 'manual' ? 'vad' : cfg.stt.commitStrategy,
+        commitStrategy: cfg.stt.commitStrategy,
         vadSilenceSecs: cfg.stt.vadSilenceSecs,
         vadThreshold: cfg.stt.vadThreshold,
         minSpeechMs: cfg.stt.minSpeechMs,
         minSilenceMs: cfg.stt.minSilenceMs,
         keyterms: cfg.stt.keyterms,
-        filterBackground: cfg.stt.filterBackground,
         noVerbatim: cfg.stt.noVerbatim,
         detectLanguage: false,
       });
@@ -179,26 +183,33 @@ export async function runBench(opts: BenchOptions): Promise<BenchRun[]> {
       const assistantMs = Math.round(performance.now() - a0);
       const plan = planSpeech(reply, lang, heard ?? text);
 
-      // ---- TTS first byte for the reply (no cache) ----
+      // ---- TTS first byte for the reply (no cache). A failure here must not hide the STT numbers ----
       const speechText = plan.speech?.text ?? reply.text;
       const speechLang = plan.speech?.language ?? lang;
       const voiceId = speechLang === 'th' ? cfg.voiceIdTh : cfg.voiceIdEn;
       const model = (speechLang === 'th' ? cfg.ttsModelsTh : cfg.ttsModelsEn)[0] ?? '';
-      const s0 = performance.now();
-      const body = await port.streamSpeech({ voiceId: voiceId ?? '', text: speechText, modelId: model, outputFormat: cfg.ttsOutputFormat, ...(speechLang === 'th' ? { languageCode: 'th' } : {}) });
-      const reader = body.getReader();
-      await reader.read();
-      const ttsFirstByteMs = Math.round(performance.now() - s0);
-      await reader.cancel();
+      let ttsFirstByteMs: number | null = null;
+      let ttsError: string | null = null;
+      try {
+        if (!voiceId) throw new Error(`no voice set for ${speechLang}`);
+        const s0 = performance.now();
+        const body = await port.streamSpeech({ voiceId, text: speechText, modelId: model, outputFormat: cfg.ttsOutputFormat, ...(speechLang === 'th' ? { languageCode: 'th' } : {}) });
+        const reader = body.getReader();
+        await reader.read();
+        ttsFirstByteMs = Math.round(performance.now() - s0);
+        await reader.cancel();
+      } catch (err) {
+        ttsError = (err as Error).message.split('\n')[0]?.slice(0, 160) ?? 'failed';
+      }
 
+      const totalToFirstAudioMs = sttFinalMs !== null && ttsFirstByteMs !== null ? sttFinalMs + assistantMs + ttsFirstByteMs : null;
       const result: BenchRun = {
         lang, text, tokenMs, connectMs,
         firstPartialMs: firstPartialAt === null ? null : Math.round(firstPartialAt - firstSpeechAt),
-        sttFinalMs, transcript: heard, confidence, assistantMs, ttsFirstByteMs, ttsModel: model,
-        totalToFirstAudioMs: sttFinalMs === null ? null : sttFinalMs + assistantMs + ttsFirstByteMs,
+        sttFinalMs, transcript: heard, confidence, assistantMs, ttsFirstByteMs, ttsError, ttsModel: model, totalToFirstAudioMs,
       };
       results.push(result);
-      log(`[${lang}] run ${run}: heard "${heard ?? '(nothing)'}" | stt-final ${sttFinalMs ?? 'n/a'} ms | assistant ${assistantMs} ms | tts-first-byte ${ttsFirstByteMs} ms (${model}) | total ${result.totalToFirstAudioMs ?? 'n/a'} ms | confidence ${confidence === null ? 'n/a' : confidence.toFixed(3)}`);
+      log(`[${lang}] run ${run}: heard "${heard ?? '(nothing)'}" | first partial ${result.firstPartialMs ?? 'n/a'} ms | stt-final ${sttFinalMs ?? 'n/a'} ms | assistant ${assistantMs} ms | tts-first-byte ${ttsFirstByteMs === null ? `n/a (${ttsError})` : `${ttsFirstByteMs} ms (${model})`} | total ${totalToFirstAudioMs ?? 'n/a'} ms | confidence ${confidence === null ? 'n/a' : confidence.toFixed(3)}`);
     }
   }
   return results;
@@ -212,11 +223,16 @@ export function summarize(runs: BenchRun[]): string {
     if (rs.length === 0) continue;
     const totals = rs.map((r) => r.totalToFirstAudioMs).filter((x): x is number => x !== null);
     const stt = rs.map((r) => r.sttFinalMs).filter((x): x is number => x !== null);
-    const tts = rs.map((r) => r.ttsFirstByteMs);
-    lines.push(
-      `${lang.toUpperCase()}: ${rs.length} run(s). median to first audio ${med(totals) ?? 'n/a'} ms (min ${totals.length ? Math.min(...totals) : 'n/a'}, max ${totals.length ? Math.max(...totals) : 'n/a'}). ` +
-        `stt-final median ${med(stt) ?? 'n/a'} ms, tts-first-byte median ${med(tts) ?? 'n/a'} ms. Target 1500 ms: ${totals.length && (med(totals) ?? Infinity) <= 1500 ? 'MET' : 'NOT MET'}.`,
-    );
+    const partial = rs.map((r) => r.firstPartialMs).filter((x): x is number => x !== null);
+    const tts = rs.map((r) => r.ttsFirstByteMs).filter((x): x is number => x !== null);
+    const conf = rs.map((r) => r.confidence).filter((x): x is number => x !== null);
+    const head = `${lang.toUpperCase()}: ${rs.length} run(s). stt-final median ${med(stt) ?? 'n/a'} ms (min ${stt.length ? Math.min(...stt) : 'n/a'}, max ${stt.length ? Math.max(...stt) : 'n/a'}), first partial median ${med(partial) ?? 'n/a'} ms`;
+    const confText = conf.length ? `, confidence ${Math.min(...conf).toFixed(3)} to ${Math.max(...conf).toFixed(3)}` : '';
+    if (totals.length === 0) {
+      lines.push(`${head}${confText}. TTS was unavailable, so there is no time to first audio. ${rs.find((r) => r.ttsError)?.ttsError ?? ''}`.trim());
+    } else {
+      lines.push(`${head}, tts-first-byte median ${med(tts) ?? 'n/a'} ms${confText}. Median to first audio ${med(totals)} ms (min ${Math.min(...totals)}, max ${Math.max(...totals)}). Target 1500 ms: ${(med(totals) ?? Infinity) <= 1500 ? 'MET' : 'NOT MET'}.`);
+    }
   }
   return lines.join('\n');
 }

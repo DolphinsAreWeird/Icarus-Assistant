@@ -13,7 +13,7 @@ async function start(opts = {}) {
   await new Promise<void>((r) => server.listen(0, r));
   const port = (server.address() as AddressInfo).port;
   const url = (over: Partial<Parameters<typeof buildSttUrl>[0]> = {}) =>
-    buildSttUrl({ baseUrl: `ws://127.0.0.1:${port}`, token: 't', commitStrategy: 'vad', vadSilenceSecs: 0.3, vadThreshold: 0.4, minSpeechMs: 100, minSilenceMs: 100, keyterms: ['gold'], filterBackground: true, noVerbatim: true, detectLanguage: false, languageCode: 'en', ...over });
+    buildSttUrl({ baseUrl: `ws://127.0.0.1:${port}`, token: 't', commitStrategy: 'vad', vadSilenceSecs: 0.3, vadThreshold: 0.4, minSpeechMs: 100, minSilenceMs: 100, keyterms: ['gold'], noVerbatim: true, detectLanguage: false, languageCode: 'en', ...over });
   return { url };
 }
 afterEach(() => new Promise<void>((r) => { server?.closeAllConnections(); server?.close(() => r()); }));

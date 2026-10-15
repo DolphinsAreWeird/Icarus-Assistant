@@ -98,7 +98,6 @@ export function createApp(deps: AppDeps): express.Express {
         minSpeechMs: cfg.stt.minSpeechMs,
         minSilenceMs: cfg.stt.minSilenceMs,
         keyterms: cfg.stt.keyterms,
-        filterBackground: cfg.stt.filterBackground,
         noVerbatim: cfg.stt.noVerbatim,
         detectLanguage: language === 'auto',
       });
