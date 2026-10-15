@@ -41,6 +41,16 @@ describe('isEchoOf', () => {
   it('works for Thai', () => {
     expect(isEchoOf('ทองลดลง 2.3', 'วันนี้ ทองลดลง 2.3 เปอร์เซ็นต์', 6)).toBe(true);
   });
+  it('spots Thai echo even when Scribe spells it a little differently, or hears only a bit', () => {
+    const th = 'ได้เลย ใส่ทอง 1,000 บาท ค่าธรรมเนียม 15 บาท';
+    expect(isEchoOf('ได้เลยใส่ทอง', th, 8)).toBe(true);
+    expect(isEchoOf('ได้', th, 8)).toBe(true);
+    expect(isEchoOf('ใส่ทองพันบาท', th, 8)).toBe(true); // "1,000" heard as a word: most pairs still match
+  });
+  it('still lets a real Thai interruption through', () => {
+    expect(isEchoOf('หยุดก่อน', 'ได้เลย ใส่ทอง 1,000 บาท', 8)).toBe(false);
+    expect(isEchoOf('ขอดูบิตคอยน์แทน', 'ได้เลย ใส่ทอง 1,000 บาท', 8)).toBe(false);
+  });
 });
 
 describe('shouldAcceptFinal', () => {

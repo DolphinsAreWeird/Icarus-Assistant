@@ -52,8 +52,22 @@ export function squash(text: string): string {
  */
 export function isEchoOf(heard: string, currentlySaying: string, minChars: number): boolean {
   const h = squash(heard);
+  const said = squash(currentlySaying);
+  // Thai has no spaces, and Scribe's spelling of Icarus's own Thai voice drifts, so an exact match almost never
+  // happens and Icarus cut itself off a second into every Thai line. For Thai we match loosely: if most letter
+  // pairs in what was heard are in what Icarus is saying, it is echo. Short partials count too.
+  if (THAI.test(h) && THAI.test(said) && h.length >= 2) return pairOverlap(h, said) >= 0.6;
   if (h.length < minChars) return false;
-  return squash(currentlySaying).includes(h);
+  return said.includes(h);
+}
+
+const THAI = /[฀-๿]/;
+
+/** Share of the adjacent letter pairs in `a` that also appear somewhere in `b`. */
+function pairOverlap(a: string, b: string): number {
+  let hits = 0;
+  for (let i = 0; i < a.length - 1; i++) if (b.includes(a.slice(i, i + 2))) hits++;
+  return hits / (a.length - 1);
 }
 
 export interface FilterConfig {

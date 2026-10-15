@@ -514,7 +514,7 @@ input{font-family:inherit}
 </sc-if>
 
 <sc-if value="{{ isVoice }}">
-<div onClick="{{ stop }}" data-ui-id="icarus.voice_dock" style="position:absolute;left:10px;right:10px;top:52px;z-index:55;background:#fff;border-radius:28px;box-shadow:0 14px 40px rgba(150,60,85,.16),0 1px 3px rgba(150,60,85,.08);padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;animation:icDrop .35s cubic-bezier(.2,.8,.2,1)">
+<div onClick="{{ stop }}" data-ui-id="icarus.voice_dock" style="position:absolute;left:10px;right:10px;top:52px;transform:{{ dockShift }};transition:transform .4s cubic-bezier(.2,.8,.2,1);z-index:55;background:#fff;border-radius:28px;box-shadow:0 14px 40px rgba(150,60,85,.16),0 1px 3px rgba(150,60,85,.08);padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;animation:icFade .25s ease">
 <div style="display:flex;gap:12px;align-items:flex-start">
 <div onClick="{{ tapMascot }}" style="position:relative;width:78px;height:72px;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer">
 <div style="position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,#FDE3EA 0%,rgba(252,240,214,0) 70%)"></div>
@@ -696,7 +696,7 @@ class Component extends DCLogic {
  hlTarget(){const g=this.state.guide;if(g)return this.guideSteps(g.asset)[g.i].target;return this.state.flash;}
  measure(){const root=this.screenRef.current;if(!root)return;const id=this.hlTarget();let rect=null;
   if(id){const el=root.querySelector('[data-ui-id="'+id+'"]');if(el){const R=root.getBoundingClientRect(),k=R.width/393||1,r=el.getBoundingClientRect();rect={x:Math.round((r.left-R.left)/k)-5,y:Math.round((r.top-R.top)/k)-5,w:Math.round(r.width/k)+10,h:Math.round(r.height/k)+10};
-   const g=this.state.guide,gk=g?'g'+g.asset+g.i:(this.state.flash?'f'+this.state.flash+this.screenKey(this.state):null);if(gk&&this._scrolled!==gk){this._scrolled=gk;const sc=this.scrollRef.current,top=this.state.asst==='voice'?250:70,bot=g?540:722;if(sc&&sc.contains(el)&&(rect.y<top||rect.y+rect.h>bot)){sc.scrollTop+=rect.y-(g?170:top+20);requestAnimationFrame(()=>this.measure());return;}}}}
+   const g=this.state.guide,gk=g?'g'+g.asset+g.i:(this.state.flash?'f'+this.state.flash+this.screenKey(this.state):null);if(gk&&this._scrolled!==gk){this._scrolled=gk;const sc=this.scrollRef.current,vd=this.state.asst==='voice',top=vd&&!this._dockLow?250:70,bot=g?540:(vd&&this._dockLow?560:722);if(sc&&sc.contains(el)&&(rect.y<top||rect.y+rect.h>bot)){sc.scrollTop+=rect.y-(g?170:top+20);requestAnimationFrame(()=>this.measure());return;}}}}
   const c=this.state.hl;const same=(!c&&!rect)||(c&&rect&&c.x===rect.x&&c.y===rect.y&&c.w===rect.w&&c.h===rect.h);if(!same)this.setState({hl:rect});}
  flash(id){clearTimeout(this._ft);this.setState({flash:id});this._ft=setTimeout(()=>this.setState({flash:null}),3600);}
  // ---- assistant
@@ -879,6 +879,10 @@ class Component extends DCLogic {
   const navItem=t=>({bg:s.tab===t?GRAD:'transparent',fg:s.tab===t?'#fff':'#8A6B75',sh:'none'});
   const showNav=!(s.tab==='invest'&&(s.view==='asset'||s.view==='buy'));
   const sheetVisible=s.asst==='open';
+  // One voice window that slides (same window, same conversation; it is never re-created when it moves).
+  // Voice window: at the bottom while the user is at the top of a screen (charts live up there), at the top once they scroll down.
+  // The buy screen keeps it on top: its Confirm button sits at the bottom.
+  const dockLow=!s.dockUp&&scr!=='buy';this._dockLow=dockLow;
   const g=s.guide;let guide=null,tipTop=300;
   if(g){const steps=this.guideSteps(g.asset),stp=steps[g.i];guide={step:'Step '+(g.i+1)+' of '+steps.length,title:stp.title,text:stp.text,next:g.i===steps.length-1?'Finish':'Next',backOp:g.i>0?1:.35,dots:steps.map((x,i)=>({w:i===g.i?18:6,c:i<=g.i?BLUE:'#F0D6DD'}))};
    if(s.hl){tipTop=s.hl.y+s.hl.h+12+200<830?s.hl.y+s.hl.h+12:s.hl.y-12-200;tipTop=clamp(tipTop,58,620);}}
@@ -900,7 +904,7 @@ class Component extends DCLogic {
   return{
    screenRef:this.screenRef,scrollRef:this.scrollRef,msgsRef:this.msgsRef,
    onScreenClick:()=>{if(s.explain)this.setState({explain:null});},
-   onScroll:()=>{if(s.explain)this.setState({explain:null});if(this.hlTarget())this.measure();},
+   onScroll:()=>{const sc=this.scrollRef.current,t=sc?sc.scrollTop:0,up=this.state.dockUp?t>60:t>120;if(up!==!!this.state.dockUp)this.setState({dockUp:up});if(s.explain)this.setState({explain:null});if(this.hlTarget())this.measure();},
    stop:e=>e.stopPropagation(),
    isHome:scr==='home',isWallets:scr==='wallets',isInvest:scr==='invest',isAsset:scr==='asset',isPortfolio:scr==='portfolio',isPayments:scr==='payments',isCard:scr==='card',
    isBuyAmount:scr==='buy'&&s.buyStep==='amount',isBuyReview:scr==='buy'&&s.buyStep==='review',isBuyDone:scr==='buy'&&s.buyStep==='done',
@@ -936,7 +940,7 @@ class Component extends DCLogic {
    hasExplain:!!explain,exX:explain?clamp(explain.x-66,10,393-150):0,exY:explain?clamp(explain.y-56,60,780):0,
    askExplain:e=>{e.stopPropagation();const id=explain.id;const lbl={'home.balance':'my total balance','invest.portfolio_value':'my portfolio value','invest.chart':'the portfolio chart','asset.chart':'this '+a.name+' chart','asset.change24h':'the 24h change','buy.fee_line':'the transaction fee','portfolio.allocation':'my allocation','card.balance':'my card balance'}[id]||'this';this.setState({explain:null});this.send('What does '+lbl+' mean?',id);},
    hasToast:!!s.toast,toast:s.toast||'',
-   sheetVisible,isChat:s.asst==='open',isVoice:s.asst==='voice',sheetH:s.asst==='voice'?'92%':'68%',
+   sheetVisible,isChat:s.asst==='open',isVoice:s.asst==='voice',dockShift:dockLow?'translateY(calc(852px - 100% - 52px - '+(showNav?92:20)+'px))':'translateY(0)',sheetH:s.asst==='voice'?'92%':'68%',
    sheetAnim:s.closing?'icDown .22s ease forwards':'icUp .32s cubic-bezier(.2,.8,.2,1)',backdropAnim:s.closing?'icFadeOut .22s ease forwards':'icFade .25s ease',
    minimize:e=>{e&&e.stopPropagation();this.hideAsst('min');},closeAsst:e=>{e.stopPropagation();this.hideAsst('closed');},
    statusColor:this.backend?GREEN:'#C99A2E',statusText:this.backend?'Online':'Demo mode',backendText:this.backend?'connected':'demo responses (no backend set)',

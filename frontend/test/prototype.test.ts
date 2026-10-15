@@ -54,7 +54,7 @@ beforeEach(async () => {
   voice = new FakeVoice();
 
   // The bridge puts its look-alike in place before the prototype starts. (installVoice does this in the app.)
-  const Recognition = createScribeRecognition(voice);
+  const Recognition = createScribeRecognition(voice, undefined, () => (instance as { state?: { asst?: string } } | null)?.state?.asst === 'voice');
   Object.assign(window, { SpeechRecognition: Recognition, webkitSpeechRecognition: Recognition });
 
   const app = createDcApp(HTML);
@@ -183,5 +183,19 @@ describe('paired with our voice stack', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('the mic is only on while the voice window is open', () => {
+  it('turns the mic off and stops talking as soon as the user closes voice', async () => {
+    const c = instance as unknown as { startVoice: () => void; endVoice: () => void };
+    await act(async () => { c.startVoice(); await sleep(50); });
+    voice.endSpeech(); // greeting done, now listening
+    await act(async () => { await sleep(300); });
+    expect(voice.startCalls).toBeGreaterThan(0); // the mic is on
+    const before = voice.stopCalls;
+    await act(async () => { c.endVoice(); });
+    await act(async () => { await sleep(700); });
+    expect(voice.stopCalls).toBeGreaterThan(before);
   });
 });

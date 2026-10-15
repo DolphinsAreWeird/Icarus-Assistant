@@ -32,7 +32,12 @@ interface RecognitionResult extends Array<{ transcript: string }> {
 export type VoiceLike = Pick<IcarusVoice, 'on' | 'start' | 'stop' | 'setLanguage' | 'speak' | 'stopSpeaking'>;
 
 /** Looks like the browser's SpeechRecognition to the prototype, but listens through Scribe. */
-export function createScribeRecognition(voice: VoiceLike, onStatus: NonNullable<VoiceBridgeOptions['onStatus']> = () => undefined) {
+export function createScribeRecognition(
+  voice: VoiceLike,
+  onStatus: NonNullable<VoiceBridgeOptions['onStatus']> = () => undefined,
+  /** Is the prototype's voice window open? The mic is only allowed on while it is. */
+  isVoiceOpen: () => boolean = () => true,
+) {
   let active: ScribeRecognition | null = null;
   let stopTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -56,11 +61,21 @@ export function createScribeRecognition(voice: VoiceLike, onStatus: NonNullable<
 
     abort(): void {
       if (active === this) active = null;
-      // Keep the mic for a while: the prototype restarts listening in a moment, and Icarus can be interrupted while it speaks.
+      // While the voice window is open, keep the mic for a while: the prototype restarts listening in a moment,
+      // and Icarus can be interrupted while it speaks. Once the window is closed, the mic goes off at once and
+      // Icarus stops talking: it must not hear or answer the user when they did not open it.
+      // (The prototype closes the window just after it stops listening, so we check again shortly after.)
       if (stopTimer) clearTimeout(stopTimer);
-      stopTimer = setTimeout(() => {
-        if (!active) voice.stop();
-      }, MIC_LINGER_MS);
+      const lingerUntil = Date.now() + MIC_LINGER_MS;
+      const check = () => {
+        if (active) return;
+        if (!isVoiceOpen()) {
+          voice.stopSpeaking();
+          voice.stop();
+        } else if (Date.now() >= lingerUntil) voice.stop();
+        else stopTimer = setTimeout(check, 250);
+      };
+      stopTimer = setTimeout(check, 250);
     }
 
     stop(): void {
@@ -102,8 +117,32 @@ export function installVoice(options: VoiceBridgeOptions = {}): IcarusVoice {
   const voice = new IcarusVoice({ serverUrl: options.serverUrl ?? '', language: 'en', assistant: 'external' });
 
   // Speech in: replace the browser's recognition before the prototype looks for it.
-  const Recognition = createScribeRecognition(voice, onStatus);
+  const isVoiceOpen = () => (options.getComponent?.() as { state?: { asst?: string } } | null)?.state?.asst === 'voice';
+  const Recognition = createScribeRecognition(voice, onStatus, isVoiceOpen);
   Object.assign(window, { SpeechRecognition: Recognition, webkitSpeechRecognition: Recognition });
+
+  // Only one tab may listen and talk. With two tabs open, both heard the user and both answered out loud.
+  // The tab that starts listening tells the others to go quiet. A quiet tab stays quiet until the user
+  // clicks or types in it, or its prototype would restart listening by itself and the tabs would fight.
+  if (typeof BroadcastChannel !== 'undefined') {
+    const channel = new BroadcastChannel('icarus-voice');
+    let paused = false;
+    const resume = () => (paused = false);
+    window.addEventListener('pointerdown', resume, true);
+    window.addEventListener('keydown', resume, true);
+    const start = Recognition.prototype.start;
+    Recognition.prototype.start = function (this: InstanceType<typeof Recognition>) {
+      if (paused) return;
+      channel.postMessage('claim');
+      start.call(this);
+    };
+    channel.onmessage = () => {
+      paused = true;
+      voice.stopSpeaking();
+      voice.stop();
+      onStatus({ kind: 'info', text: 'Voice paused: Icarus is listening in another tab. Click here to take it back.' });
+    };
+  }
 
   // "Go back" is a voice command the module recognises. The prototype does the navigating.
   voice.on('command', ({ name }) => {
