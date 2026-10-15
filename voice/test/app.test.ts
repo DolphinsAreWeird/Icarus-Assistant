@@ -23,7 +23,7 @@ describe('/api/ask with the mock assistant', () => {
   it('explains', async () => {
     const r = await ask("what's this red number?");
     expect(r.reply.text).toContain('2.3%');
-    expect(r.speech).toEqual({ text: "That red number is today's change. Gold is down 2.3 percent since yesterday.", language: 'en', kind: 'reply' });
+    expect(r.speech).toEqual({ text: "That red number is today's change. Gold is down two point three percent since yesterday.", language: 'en', kind: 'reply' });
     expect(r.reply.ui_actions[0]).toMatchObject({ type: 'highlight', element_id: 'asset.change24h' });
   });
 
@@ -36,7 +36,7 @@ describe('/api/ask with the mock assistant', () => {
   it('prepares a trade and reads it back from the CARD numbers, not the reply sentence', async () => {
     const r = await ask('put 1,000 baht in gold');
     expect(r.speech).toEqual({
-      text: '1,000 baht into gold. Fee 15 baht. Total 1,015 baht. Say confirm or cancel.',
+      text: 'one thousand baht into gold. Fee fifteen baht. Total one thousand fifteen baht. Say confirm or cancel.',
       language: 'en',
       kind: 'readback',
     });
@@ -46,7 +46,7 @@ describe('/api/ask with the mock assistant', () => {
 
   it('reads back whatever amount the user said, exactly', async () => {
     const r = await ask('buy 2,500 baht of bitcoin');
-    expect(r.speech?.text).toBe('2,500 baht into Bitcoin. Fee 37.50 baht. Total 2,537.50 baht. Say confirm or cancel.');
+    expect(r.speech?.text).toBe('two thousand five hundred baht into Bitcoin. Fee thirty-seven point five zero baht. Total two thousand five hundred thirty-seven point five zero baht. Say confirm or cancel.');
   });
 
   it('speaks the assistant\'s own `speech` script when it provides one (as in the Oasis prototype)', async () => {

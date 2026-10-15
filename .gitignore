@@ -9,6 +9,7 @@
 # Dependencies and build output
 node_modules/
 voice/dist/
+frontend/dist/
 voice/public/test-page.js
 voice/public/test-page.js.map
 voice/public/icarus-voice.js

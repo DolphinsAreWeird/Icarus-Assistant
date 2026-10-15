@@ -219,6 +219,10 @@ export function createApp(deps: AppDeps): express.Express {
     res.status(204).end();
   });
 
+  // ---- the Icarus app (Oasis's prototype, built from ../frontend) at /app/ ----
+  // Same origin as the voice API, so there is no CORS to set up and the mic works on localhost.
+  app.use('/app', express.static(path.join(VOICE_ROOT, '..', 'frontend', 'dist')));
+
   // ---- test page and built browser module ----
   app.use(express.static(path.join(VOICE_ROOT, 'public')));
 

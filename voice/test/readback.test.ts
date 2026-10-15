@@ -19,22 +19,28 @@ describe('buildReadback', () => {
 
   it('keeps every number exact, never "about"', () => {
     const text = buildReadback({ ...gold, amount: 1234.56, fee: 18.52, total: 1253.08 }, 'en');
-    expect(text).toBe('1,234.56 baht into gold. Fee 18.52 baht. Total 1,253.08 baht. Say confirm or cancel.');
+    expect(text).toBe('one thousand two hundred thirty-four point five six baht into gold. Fee eighteen point five two baht. Total one thousand two hundred fifty-three point zero eight baht. Say confirm or cancel.');
     expect(text).not.toMatch(/about|around|roughly/i);
   });
 
-  it('shows two decimals so 1015.5 is never read as 1,015', () => {
-    expect(buildReadback({ ...gold, total: 1015.5 }, 'en')).toContain('Total 1,015.50 baht.');
+  it('says both decimal digits so 1015.5 is never mistaken for 1,015', () => {
+    expect(buildReadback({ ...gold, total: 1015.5 }, 'en')).toContain('Total one thousand fifteen point five zero baht.');
+  });
+
+  it('speaks English amounts as WORDS, never digits (the live voice misread "1,015" as "1,215")', () => {
+    const text = buildReadback(gold, 'en');
+    expect(text).not.toMatch(/\d/);
+    expect(text).toContain('Total one thousand fifteen baht.');
   });
 
   it('names the asset and currency in words', () => {
     const text = buildReadback({ ...gold, asset: 'Bitcoin', currency: 'USD', amount: 50, fee: 1, total: 51 }, 'en');
-    expect(text).toBe('50 dollars into Bitcoin. Fee 1 dollars. Total 51 dollars. Say confirm or cancel.');
+    expect(text).toBe('fifty dollars into Bitcoin. Fee one dollar. Total fifty-one dollars. Say confirm or cancel.');
   });
 
   it('reads sells and deposits', () => {
-    expect(buildReadback({ ...gold, side: 'sell' }, 'en')).toMatch(/^Selling 1,000 baht of gold\./);
-    expect(buildReadback({ ...gold, side: 'deposit' }, 'en')).toMatch(/^Deposit 1,000 baht\./);
+    expect(buildReadback({ ...gold, side: 'sell' }, 'en')).toMatch(/^Selling one thousand baht of gold\./);
+    expect(buildReadback({ ...gold, side: 'deposit' }, 'en')).toMatch(/^Deposit one thousand baht\./);
   });
 
   it('builds a Thai read-back with the same exact numbers', () => {

@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Mali:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBEAEF url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22520%22%20height%3D%22360%22%3E%3Cg%20fill%3D%22%23fff%22%20opacity%3D%22.85%22%3E%3Cpath%20d%3D%22M60%20120a26%2026%200%200%201%2040-22%2034%2034%200%200%201%2062%208%2022%2022%200%200%201%204%2044H66a24%2024%200%200%201-6-30z%22%2F%3E%3Cpath%20d%3D%22M330%20280a20%2020%200%200%201%2031-17%2027%2027%200%200%201%2049%206%2017%2017%200%200%201%203%2034h-78a19%2019%200%200%201-5-23z%22%2F%3E%3C%2Fg%3E%3Cpath%20fill%3D%22%23F6A6B8%22%20opacity%3D%22.55%22%20d%3D%22M420%2070c-6-9-20-4-18%206%201%207%2018%2018%2018%2018s17-11%2018-18c2-10-12-15-18-6z%22%2F%3E%3Cpath%20fill%3D%22%23F6A6B8%22%20opacity%3D%22.45%22%20d%3D%22M150%20260c-4-6-14-3-13%204%201%205%2013%2013%2013%2013s12-8%2013-13c1-7-9-10-13-4z%22%2F%3E%3C%2Fsvg%3E") repeat;font-family:'Fredoka','Mali',system-ui,sans-serif;color:#4A2E36;-webkit-font-smoothing:antialiased}
+a{color:#C94F72;text-decoration:none}a:hover{color:#C94F72}
+*{box-sizing:border-box}*::-webkit-scrollbar{width:0;height:0}
+input{font-family:inherit}
+@keyframes icIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+@keyframes icUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes icDown{from{transform:none}to{transform:translateY(100%)}}
+@keyframes icFade{from{opacity:0}to{opacity:1}}
+@keyframes icFadeOut{from{opacity:1}to{opacity:0}}
+@keyframes icPulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.75);opacity:0}}
+@keyframes icWave{0%,100%{transform:scaleY(.28)}50%{transform:scaleY(1)}}
+@keyframes icDot{0%,80%,100%{opacity:.25}40%{opacity:1}}
+@keyframes icPop{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes icBlink{50%{opacity:0}}
+@keyframes icBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes icLean{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes icTalk{from{transform:scale(1,1) translateY(0)}to{transform:scale(1.035,.965) translateY(-3px)}}
+@keyframes icBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@keyframes icDrop{from{opacity:0;transform:translateY(-18px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes icRing{0%{transform:scale(.85);opacity:.6}100%{transform:scale(1.3);opacity:0}}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:32px;padding:32px 20px">
+<div style="flex:none;width:417px;height:876px;border-radius:66px;background:#F4C3CF;padding:12px;box-shadow:0 30px 80px rgba(150,60,85,.22),inset 0 0 0 2px #EBAFBF">
+<div ref="{{ screenRef }}" onClick="{{ onScreenClick }}" data-screen-label="Phone" style="position:relative;width:393px;height:852px;border-radius:54px;overflow:hidden;background:#FFF7F9">
+
+<div style="position:absolute;top:0;left:0;right:0;height:54px;z-index:30;background:#FFF7F9;display:flex;align-items:center;justify-content:space-between;padding:6px 34px 0 46px">
+<div style="font-size:17px;font-weight:600">7:11</div>
+<div style="position:absolute;left:50%;top:11px;width:124px;height:36px;margin-left:-62px;border-radius:20px;background:#000"></div>
+<div style="display:flex;align-items:center;gap:6px">
+<div style="display:flex;align-items:flex-end;gap:2px;height:12px"><div style="width:3px;height:4px;border-radius:1px;background:#4A2E36"></div><div style="width:3px;height:6px;border-radius:1px;background:#4A2E36"></div><div style="width:3px;height:9px;border-radius:1px;background:#4A2E36"></div><div style="width:3px;height:12px;border-radius:1px;background:#4A2E36"></div></div>
+<svg width="16" height="12" viewBox="0 0 16 12" fill="#4A2E36"><path d="M8 11.5 5.6 8.9a3.4 3.4 0 0 1 4.8 0zM3.4 6.7a6.6 6.6 0 0 1 9.2 0l1.4-1.5a8.6 8.6 0 0 0-12 0zM.6 3.9a10.6 10.6 0 0 1 14.8 0L16 3.2A11.6 11.6 0 0 0 0 3.2z"></path></svg>
+<div style="width:27px;height:13px;border-radius:4px;background:#4A2E36;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">50</div>
+</div>
+</div>
+
+<div ref="{{ scrollRef }}" onScroll="{{ onScroll }}" style="position:absolute;top:54px;left:0;right:0;bottom:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none">
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Home" style="padding:6px 18px 130px;display:flex;flex-direction:column;gap:14px;animation:icIn .28s ease">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px">
+<div style="display:flex;align-items:center;gap:12px">
+<div style="width:48px;height:48px;border-radius:50%;background:repeating-linear-gradient(135deg,#F0D6DD 0 4px,#F8E6EB 4px 8px);display:flex;align-items:center;justify-content:center;font:500 9px ui-monospace,Menlo,monospace;color:#8A6B75">photo</div>
+<div><div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:5px;color:#C94F72">Welcome!<svg width="14" height="13" viewBox="0 0 24 22" style="display:block"><path d="M12 21S1 14 1 7a5.5 5.5 0 0 1 11-1.5A5.5 5.5 0 0 1 23 7c0 7-11 14-11 14z" fill="#F6A6B8"></path></svg></div><div style="font-size:21px;font-weight:500;letter-spacing:-.2px">John Doe</div></div>
+</div>
+<div onClick="{{ onBell }}" style="position:relative;width:46px;height:46px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(150,60,85,.06);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A2E36" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><div style="position:absolute;top:-4px;right:-4px;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:#D32F2F;color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;border:2px solid #FFF7F9">27</div></div>
+</div>
+<div data-ui-id="home.balance" onClick="{{ tapBalance }}" style="position:relative;overflow:visible;background:#fff;border-radius:28px;padding:22px 22px 20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);cursor:pointer">
+<div style="position:absolute;right:14px;top:10px;pointer-events:none"><svg width="86" height="40" viewBox="0 0 86 40" style="display:block"><path d="M14 36a12 12 0 0 1 4-23 17 17 0 0 1 31-5 13 13 0 0 1 21 8 10 10 0 0 1 2 20z" fill="#FDECF1"></path></svg></div><div style="position:absolute;left:-6px;top:-10px;transform:rotate(-18deg);pointer-events:none"><svg width="34" height="22" viewBox="0 0 34 22" style="display:block"><path d="M17 11C13 3 3 1 2 7s5 12 15 4zM17 11c4-8 14-10 15-4s-5 12-15 4z" fill="#F6A6B8" stroke="#C94F72" stroke-width="1.6" stroke-linejoin="round"></path><ellipse cx="17" cy="11" rx="4" ry="4.6" fill="#EE8AA3" stroke="#C94F72" stroke-width="1.6"></ellipse></svg></div><div style="position:relative;font-size:16px;color:#4A2E36">Total Balance</div>
+<div style="display:flex;align-items:center;gap:12px;margin-top:10px"><div style="font-size:48px;font-weight:500;letter-spacing:-1.4px;line-height:1">{{ totalBal }}</div><div onClick="{{ toggleHide }}" style="cursor:pointer;display:flex"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4A2E36" stroke-width="1.7"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px">
+<div><div style="font-size:14px;color:#6E5560">Crypto Wallet</div><div style="font-size:17px;font-weight:600;margin-top:2px">{{ cryptoBal }}</div></div>
+<div><div style="font-size:14px;color:#6E5560">Spending Wallet</div><div style="font-size:17px;font-weight:600;margin-top:2px">{{ spendBal }}</div></div>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+<div onClick="{{ onReceive }}" style="height:58px;border-radius:29px;background:#fff;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C94F72" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"></path></svg>Receive</div>
+<div onClick="{{ goPayments }}" style="height:58px;border-radius:29px;background:#fff;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C94F72" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4M3 7h18M7 21l-4-4 4-4M21 17H3"></path></svg>Swap</div>
+<div onClick="{{ onSend }}" style="height:58px;border-radius:29px;background:#fff;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C94F72" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>Send</div>
+</div>
+<div style="font-size:20px;margin:6px 2px 0">Spending Breakdown</div>
+<div style="background:#fff;border-radius:24px;padding:20px 20px 16px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:15px;color:#4A2E36">Monthly Spending</div>
+<div style="font-size:30px;margin-top:2px;letter-spacing:-.4px">$8,448.60</div>
+<div style="position:relative;margin-top:18px;padding-right:40px">
+<div style="position:relative;height:120px;border-bottom:1px solid #F6E4E9">
+<div style="position:absolute;left:0;right:-40px;top:0;border-top:1px solid #F6E4E9"></div>
+<div style="position:absolute;left:0;right:-40px;top:50%;border-top:1px solid #F6E4E9"></div>
+<div style="position:absolute;right:-40px;top:-8px;font-size:12px;color:#8A6B75">$4k</div>
+<div style="position:absolute;right:-40px;top:52px;font-size:12px;color:#8A6B75">$2k</div>
+<div style="position:absolute;right:-40px;bottom:-8px;font-size:12px;color:#8A6B75">$0</div>
+<div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-around">
+<div title="$1,650.00" style="width:50px;height:41%;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#F6A6B8,#E67895)"></div>
+<div title="$2,410.00" style="width:50px;height:60%;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#F6A6B8,#E67895)"></div>
+<div title="$3,020.00" style="width:50px;height:75.5%;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#F6A6B8,#E67895)"></div>
+<div title="$1,368.60" style="width:50px;height:34%;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#F6A6B8,#E67895)"></div>
+</div>
+</div>
+<div style="display:flex;justify-content:space-around;margin-top:8px;font-size:13px;color:#6E5560"><div style="width:50px;text-align:center">Wk 1</div><div style="width:50px;text-align:center">Wk 2</div><div style="width:50px;text-align:center">Wk 3</div><div style="width:50px;text-align:center">Wk 4</div></div>
+</div>
+</div>
+<div style="font-size:20px;margin:6px 2px 0">Recent Transactions</div>
+<div style="background:#fff;border-radius:24px;padding:4px 18px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<sc-for list="{{ txList }}" as="t" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-top:{{ t.border }}">
+<div style="width:44px;height:44px;border-radius:50%;background:{{ t.bg }};color:{{ t.fg }};display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;flex:none">{{ t.mono }}</div>
+<div style="flex:1;min-width:0"><div style="font-size:17px">{{ t.title }}</div><div style="font-size:14px;color:#8A6B75">{{ t.sub }}</div></div>
+<div style="font-size:16px;color:{{ t.color }}">{{ t.amt }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isWallets }}">
+<div data-screen-label="Wallets" style="padding:6px 18px 130px;display:flex;flex-direction:column;gap:14px;animation:icIn .28s ease">
+<div style="font-size:30px;font-weight:500;letter-spacing:-.4px;padding:6px 2px">Wallets</div>
+<div style="background:#fff;border-radius:24px;padding:4px 18px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<sc-for list="{{ walletRows }}" as="w" hint-placeholder-count="4">
+<div onClick="{{ w.onClick }}" style="display:flex;align-items:center;gap:14px;padding:16px 0;border-top:{{ w.border }};cursor:pointer">
+<div style="width:44px;height:44px;border-radius:50%;background:#FDECF1;display:flex;align-items:center;justify-content:center;color:#C94F72;font-size:16px;font-weight:600;flex:none">{{ w.mono }}</div>
+<div style="flex:1"><div style="font-size:17px">{{ w.name }}</div><div style="font-size:14px;color:#8A6B75">{{ w.sub }}</div></div>
+<div style="font-size:17px;font-weight:500">{{ w.bal }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isInvest }}">
+<div data-screen-label="Invest" style="padding:6px 18px 130px;display:flex;flex-direction:column;gap:14px;animation:icIn .28s ease">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px">
+<div style="font-size:30px;font-weight:500;letter-spacing:-.4px">Invest</div>
+<div onClick="{{ onBell }}" style="position:relative;width:46px;height:46px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(150,60,85,.06);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A2E36" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><div style="position:absolute;top:-4px;right:-4px;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:#D32F2F;color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;border:2px solid #FFF7F9">27</div></div>
+</div>
+<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:16px;color:#4A2E36">Investment Portfolio</div><div onClick="{{ openPortfolio }}" style="font-size:14px;color:#C94F72;cursor:pointer;display:flex;align-items:center;gap:2px">Portfolio<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C94F72" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"></path></svg></div></div>
+<div data-ui-id="invest.portfolio_value" onClick="{{ tapPfValue }}" style="margin-top:8px;cursor:pointer;display:inline-block">
+<div style="font-size:40px;font-weight:500;letter-spacing:-1px;line-height:1.05">{{ pfValue }}</div>
+<div style="margin-top:6px;font-size:15px;font-weight:500;color:{{ pfChColor }}">{{ pfChange }} <span style="color:#8A6B75;font-weight:400">{{ pfPeriodName }}</span></div>
+</div>
+<div data-ui-id="invest.chart" onClick="{{ tapPfChart }}" onPointerMove="{{ pfChart.onMove }}" onPointerLeave="{{ pfChart.onLeave }}" style="position:relative;height:150px;margin-top:14px;cursor:crosshair;touch-action:pan-y">
+<svg width="313" height="150" viewBox="0 0 313 150" style="display:block;overflow:visible"><defs><linearGradient id="gI" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C94F72" stop-opacity=".16"></stop><stop offset="1" stop-color="#C94F72" stop-opacity="0"></stop></linearGradient></defs><path d="{{ pfChart.area }}" fill="url(#gI)"></path><path d="{{ pfChart.line }}" fill="none" stroke="#C94F72" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path><line x1="{{ pfChart.sx }}" x2="{{ pfChart.sx }}" y1="0" y2="150" stroke="#C94F72" stroke-opacity="{{ pfChart.lop }}" stroke-dasharray="3 3"></line><circle cx="{{ pfChart.sx }}" cy="{{ pfChart.sy }}" r="5" fill="#fff" stroke="#C94F72" stroke-width="2.5" opacity="{{ pfChart.op }}"></circle></svg>
+<div style="position:absolute;top:-10px;left:{{ pfChart.tipX }}px;width:124px;text-align:center;opacity:{{ pfChart.op }};pointer-events:none;background:#4A2E36;color:#fff;border-radius:10px;padding:4px 6px;font-size:12px;line-height:1.3"><div style="font-weight:600">{{ pfChart.val }}</div><div style="opacity:.75">{{ pfChart.label }}</div></div>
+</div>
+<div style="display:flex;gap:4px;margin-top:12px"><sc-for list="{{ pfChart.periods }}" as="p" hint-placeholder-count="6"><div onClick="{{ p.onClick }}" style="flex:1;height:34px;border-radius:17px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;cursor:pointer;background:{{ p.bg }};color:{{ p.fg }}">{{ p.label }}</div></sc-for></div>
+</div>
+<div style="display:flex;gap:8px;overflow-x:auto;margin:0 -18px;padding:2px 18px"><sc-for list="{{ filters }}" as="f" hint-placeholder-count="4"><div onClick="{{ f.onClick }}" style="flex:none;height:40px;padding:0 20px;border-radius:20px;display:flex;align-items:center;font-size:15px;cursor:pointer;background:{{ f.bg }};color:{{ f.fg }};box-shadow:0 1px 2px rgba(150,60,85,.05)">{{ f.label }}</div></sc-for></div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin:4px 2px 0"><div style="font-size:20px">Explore Assets</div><div style="font-size:12px;color:#8A6B75">Demo prices · not live</div></div>
+<div style="background:#fff;border-radius:24px;padding:4px 14px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<sc-for list="{{ assetRows }}" as="a" hint-placeholder-count="5">
+<div data-ui-id="invest.asset.{{ a.id }}" onClick="{{ a.onOpen }}" style="display:flex;align-items:center;gap:12px;padding:14px 4px;border-top:{{ a.border }};cursor:pointer">
+<div style="width:44px;height:44px;border-radius:50%;background:{{ a.bg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex:none">{{ a.mono }}</div>
+<div style="flex:1;min-width:0"><div style="font-size:17px">{{ a.name }}</div><div style="font-size:14px;color:#8A6B75">{{ a.ticker }}</div></div>
+<svg width="60" height="28" viewBox="0 0 60 28" style="flex:none"><path d="{{ a.spark }}" fill="none" stroke="{{ a.color }}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<div style="text-align:right;min-width:94px"><div style="font-size:16px;font-weight:500">{{ a.price }}</div><div style="font-size:14px;color:{{ a.color }}">{{ a.change }}</div></div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAsset }}">
+<div data-screen-label="Asset detail" style="padding:6px 18px 130px;display:flex;flex-direction:column;gap:14px;animation:icIn .28s ease">
+<div style="display:flex;align-items:center;justify-content:space-between">
+<div onClick="{{ goBack }}" style="width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(150,60,85,.06);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A2E36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></div>
+<div style="font-size:18px;font-weight:500">{{ asset.name }}</div><div style="width:44px"></div>
+</div>
+<div style="display:flex;align-items:center;gap:12px;padding:0 2px"><div style="width:52px;height:52px;border-radius:50%;background:{{ asset.bg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600">{{ asset.mono }}</div><div><div style="font-size:21px;font-weight:500">{{ asset.name }}</div><div style="font-size:14px;color:#8A6B75">{{ asset.ticker }} · {{ asset.type }}</div></div></div>
+<div style="padding:0 2px"><div style="font-size:40px;font-weight:500;letter-spacing:-1px;line-height:1.05">{{ asset.price }}</div>
+<div data-ui-id="asset.change24h" onClick="{{ tapChange }}" style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;height:32px;padding:0 12px;border-radius:16px;background:{{ asset.chBg }};color:{{ asset.chColor }};font-size:14px;font-weight:500;cursor:pointer">{{ asset.change24 }}<span style="font-weight:400;opacity:.8">24h</span></div></div>
+<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="display:flex;justify-content:space-between;font-size:14px;color:#6E5560"><div>{{ asset.periodName }}</div><div style="color:{{ asset.pChColor }};font-weight:500">{{ asset.pChange }}</div></div>
+<div data-ui-id="asset.chart" onClick="{{ tapChart }}" onPointerMove="{{ aChart.onMove }}" onPointerLeave="{{ aChart.onLeave }}" style="position:relative;height:170px;margin-top:14px;cursor:crosshair;touch-action:pan-y">
+<svg width="313" height="170" viewBox="0 0 313 170" style="display:block;overflow:visible"><defs><linearGradient id="gA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C94F72" stop-opacity=".16"></stop><stop offset="1" stop-color="#C94F72" stop-opacity="0"></stop></linearGradient></defs><path d="{{ aChart.area }}" fill="url(#gA)"></path><path d="{{ aChart.line }}" fill="none" stroke="#C94F72" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path><line x1="{{ aChart.sx }}" x2="{{ aChart.sx }}" y1="0" y2="170" stroke="#C94F72" stroke-opacity="{{ aChart.lop }}" stroke-dasharray="3 3"></line><circle cx="{{ aChart.sx }}" cy="{{ aChart.sy }}" r="5" fill="#fff" stroke="#C94F72" stroke-width="2.5" opacity="{{ aChart.op }}"></circle></svg>
+<div style="position:absolute;top:-10px;left:{{ aChart.tipX }}px;width:124px;text-align:center;opacity:{{ aChart.op }};pointer-events:none;background:#4A2E36;color:#fff;border-radius:10px;padding:4px 6px;font-size:12px;line-height:1.3"><div style="font-weight:600">{{ aChart.val }}</div><div style="opacity:.75">{{ aChart.label }}</div></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:12px;color:#8A6B75;margin-top:6px"><div>L {{ asset.lo }}</div><div>H {{ asset.hi }}</div></div>
+<div style="display:flex;gap:4px;margin-top:12px"><sc-for list="{{ aChart.periods }}" as="p" hint-placeholder-count="6"><div onClick="{{ p.onClick }}" style="flex:1;height:34px;border-radius:17px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;cursor:pointer;background:{{ p.bg }};color:{{ p.fg }}">{{ p.label }}</div></sc-for></div>
+</div>
+<div style="background:#fff;border-radius:24px;padding:18px 20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:16px;font-weight:500">Historical performance</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px"><sc-for list="{{ asset.perf }}" as="h" hint-placeholder-count="4"><div><div style="font-size:13px;color:#8A6B75">{{ h.label }}</div><div style="font-size:16px;font-weight:500;color:{{ h.color }}">{{ h.val }}</div></div></sc-for></div>
+</div>
+<div style="background:#fff;border-radius:24px;padding:18px 20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:16px;font-weight:500">Your holdings</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><div><div style="font-size:13px;color:#8A6B75">Quantity</div><div style="font-size:16px;font-weight:500">{{ asset.qty }}</div></div><div><div style="font-size:13px;color:#8A6B75">Value</div><div style="font-size:16px;font-weight:500">{{ asset.value }}</div></div></div>
+<div style="display:flex;justify-content:space-between;font-size:13px;color:#6E5560;margin-top:14px"><div>Portfolio allocation</div><div style="font-weight:500;color:#4A2E36">{{ asset.alloc }}</div></div>
+<div style="height:8px;border-radius:4px;background:#F9E9EE;margin-top:6px;overflow:hidden"><div style="height:100%;width:{{ asset.allocW }}%;border-radius:4px;background:linear-gradient(90deg,#E67895,#C94F72)"></div></div>
+</div>
+<div style="background:#fff;border-radius:24px;padding:18px 20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:16px;font-weight:500">About {{ asset.name }}</div>
+<div style="font-size:15px;line-height:1.5;color:#5E4650;margin-top:8px;text-wrap:pretty">{{ asset.desc }}</div>
+</div>
+<div style="background:#fff;border-radius:24px;padding:8px 20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:16px;font-weight:500;padding:10px 0 4px">Market information</div>
+<sc-for list="{{ asset.info }}" as="r" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;padding:11px 0;border-top:1px solid #F8E8EC;font-size:15px"><div style="color:#6E5560">{{ r.k }}</div><div style="font-weight:500">{{ r.v }}</div></div></sc-for>
+</div>
+<div style="font-size:12px;color:#8A6B75;text-align:center;padding:0 10px">Prices shown are demo data, not live market prices.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBuyAmount }}">
+<div data-screen-label="Buy amount" style="padding:6px 18px 140px;display:flex;flex-direction:column;gap:14px;animation:icIn .28s ease">
+<div style="display:flex;align-items:center;justify-content:space-between">
+<div onClick="{{ goBack }}" style="width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(150,60,85,.06);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A2E36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></div>
+<div style="font-size:18px;font-weight:500">Buy {{ asset.name }}</div><div style="width:44px"></div>
+</div>
+<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:15px;color:#4A2E36">Amount in THB</div>
+<div data-ui-id="buy.amount_input" style="display:flex;align-items:center;gap:6px;margin-top:10px;padding:8px 16px;border-radius:18px;background:#FFF2F5;border:1.5px solid {{ buy.border }}">
+<span style="font-size:34px;font-weight:500;color:#8A6B75">฿</span>
+<input value="{{ buyAmount }}" onChange="{{ onAmount }}" placeholder="0" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font-size:40px;font-weight:500;color:#4A2E36;letter-spacing:-.8px;padding:0">
+</div>
+<div style="display:flex;gap:8px;margin-top:12px"><sc-for list="{{ quick }}" as="q" hint-placeholder-count="4"><div onClick="{{ q.onClick }}" style="flex:1;height:36px;border-radius:18px;border:1px solid #F2DCE2;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;background:{{ q.bg }};color:{{ q.fg }}">{{ q.label }}</div></sc-for></div>
+<div style="display:flex;flex-direction:column;gap:9px;margin-top:16px;font-size:15px">
+<div style="display:flex;justify-content:space-between"><div style="color:#6E5560">Estimated quantity</div><div style="font-weight:500">{{ buy.qty }}</div></div>
+<div style="display:flex;justify-content:space-between"><div style="color:#6E5560">Price</div><div>{{ buy.unitPrice }}</div></div>
+<div style="display:flex;justify-content:space-between"><div style="color:#6E5560">Transaction fee (1%)</div><div>{{ buy.fee }}</div></div>
+</div>
+<sc-if value="{{ buy.hasErr }}"><div style="margin-top:12px;font-size:14px;color:#C8312E">{{ buy.err }}</div></sc-if>
+</div>
+<div style="font-size:18px;margin:4px 2px 0">Pay with</div>
+<div style="display:flex;flex-direction:column;gap:10px"><sc-for list="{{ walletOpts }}" as="w" hint-placeholder-count="2">
+<div onClick="{{ w.onClick }}" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:20px;background:#fff;border:1.5px solid {{ w.border }};cursor:pointer;box-shadow:0 1px 2px rgba(150,60,85,.04)">
+<div style="width:40px;height:40px;border-radius:50%;background:#FDECF1;color:#C94F72;display:flex;align-items:center;justify-content:center;font-weight:600">{{ w.mono }}</div>
+<div style="flex:1"><div style="font-size:16px">{{ w.name }}</div><div style="font-size:13px;color:#8A6B75">{{ w.sub }}</div></div>
+<div style="width:22px;height:22px;border-radius:50%;border:2px solid {{ w.border }};display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border-radius:50%;background:{{ w.dot }}"></div></div>
+</div>
+</sc-for></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBuyReview }}">
+<div data-screen-label="Buy review" style="padding:6px 18px 150px;display:flex;flex-direction:column;gap:14px;animation:icIn .28s ease">
+<div style="display:flex;align-items:center;justify-content:space-between">
+<div onClick="{{ goBack }}" style="width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(150,60,85,.06);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A2E36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></div>
+<div style="font-size:18px;font-weight:500">Review purchase</div><div style="width:44px"></div>
+</div>
+<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);display:flex;flex-direction:column;align-items:center;gap:6px">
+<div style="width:52px;height:52px;border-radius:50%;background:{{ asset.bg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600">{{ asset.mono }}</div>
+<div style="font-size:15px;color:#6E5560;margin-top:4px">Buy {{ asset.name }}</div>
+<div style="font-size:38px;font-weight:500;letter-spacing:-.8px">{{ buy.amt }}</div>
+<div style="font-size:14px;color:#8A6B75">≈ {{ buy.qty }}</div>
+</div>
+<div style="background:#fff;border-radius:24px;padding:6px 20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);font-size:15px">
+<div style="display:flex;justify-content:space-between;padding:12px 0"><div style="color:#6E5560">Asset</div><div>{{ asset.name }} ({{ asset.ticker }})</div></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #F8E8EC"><div style="color:#6E5560">Purchase amount</div><div>{{ buy.amt }}</div></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #F8E8EC"><div style="color:#6E5560">Estimated quantity</div><div>{{ buy.qty }}</div></div>
+<div data-ui-id="buy.fee_line" onClick="{{ tapFee }}" style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #F8E8EC;cursor:pointer"><div style="color:#6E5560;display:flex;align-items:center;gap:6px">Transaction fee (1%)<span style="width:16px;height:16px;border-radius:50%;border:1.3px solid #AE939B;font-size:10px;display:flex;align-items:center;justify-content:center;color:#8A6B75">?</span></div><div>{{ buy.fee }}</div></div>
+<div style="display:flex;justify-content:space-between;padding:14px 0;border-top:1px solid #F8E8EC;font-size:17px;font-weight:600"><div>Total</div><div>{{ buy.total }}</div></div>
+</div>
+<div style="background:#fff;border-radius:24px;padding:6px 20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);font-size:15px">
+<div style="display:flex;justify-content:space-between;padding:12px 0"><div style="color:#6E5560">Pay from</div><div>{{ buy.wallet }}</div></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #F8E8EC"><div style="color:#6E5560">Available balance</div><div>{{ buy.avail }}</div></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #F8E8EC"><div style="color:#6E5560">Balance after</div><div>{{ buy.after }}</div></div>
+</div>
+<div style="font-size:12.5px;line-height:1.5;color:#8A6B75;padding:0 6px;text-wrap:pretty">Prices are demo data. The final quantity may differ slightly when the order fills. This purchase is simulated and no real money moves.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBuyDone }}">
+<div data-screen-label="Buy complete" style="padding:40px 18px 130px;display:flex;flex-direction:column;align-items:center;gap:14px;animation:icIn .28s ease">
+<img src="mascot/bow/star.png" alt="Icarus celebrating" style="width:150px;height:auto">
+<div style="font-size:26px;font-weight:500;margin-top:8px">Purchase complete</div>
+<div style="font-size:15px;color:#6E5560;text-align:center">You bought ≈ {{ done.qty }} of {{ done.name }}</div>
+<div style="align-self:stretch;background:#fff;border-radius:24px;padding:6px 20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);font-size:15px;margin-top:8px">
+<div style="display:flex;justify-content:space-between;padding:12px 0"><div style="color:#6E5560">Amount</div><div>{{ done.amt }}</div></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #F8E8EC"><div style="color:#6E5560">Fee</div><div>{{ done.fee }}</div></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #F8E8EC;font-weight:600"><div>Total paid</div><div>{{ done.total }}</div></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #F8E8EC"><div style="color:#6E5560">Status</div><div style="color:#1E9E55">Simulated · complete</div></div>
+</div>
+<div style="align-self:stretch;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px">
+<div onClick="{{ doneHome }}" style="height:54px;border-radius:27px;background:#fff;box-shadow:0 1px 2px rgba(150,60,85,.05),0 4px 14px rgba(150,60,85,.05);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer">Done</div>
+<div onClick="{{ openPortfolio }}" style="height:54px;border-radius:27px;background:#C94F72;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer">View portfolio</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPortfolio }}">
+<div data-screen-label="Portfolio" style="padding:6px 18px 130px;display:flex;flex-direction:column;gap:14px;animation:icIn .28s ease">
+<div style="display:flex;align-items:center;justify-content:space-between">
+<div onClick="{{ goBack }}" style="width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(150,60,85,.06);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A2E36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></div>
+<div style="font-size:18px;font-weight:500">Portfolio</div><div style="width:44px"></div>
+</div>
+<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:16px;color:#4A2E36">Total investment value</div>
+<div style="font-size:40px;font-weight:500;letter-spacing:-1px;margin-top:6px;line-height:1.05">{{ pfValue }}</div>
+<div style="margin-top:6px;font-size:15px;font-weight:500;color:{{ pfChColor }}">{{ pfChange }} <span style="color:#8A6B75;font-weight:400">{{ pfPeriodName }}</span></div>
+<div data-ui-id="portfolio.chart" onClick="{{ tapPfChart }}" onPointerMove="{{ pfChart.onMove }}" onPointerLeave="{{ pfChart.onLeave }}" style="position:relative;height:150px;margin-top:14px;cursor:crosshair;touch-action:pan-y">
+<svg width="313" height="150" viewBox="0 0 313 150" style="display:block;overflow:visible"><defs><linearGradient id="gP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C94F72" stop-opacity=".16"></stop><stop offset="1" stop-color="#C94F72" stop-opacity="0"></stop></linearGradient></defs><path d="{{ pfChart.area }}" fill="url(#gP)"></path><path d="{{ pfChart.line }}" fill="none" stroke="#C94F72" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path><line x1="{{ pfChart.sx }}" x2="{{ pfChart.sx }}" y1="0" y2="150" stroke="#C94F72" stroke-opacity="{{ pfChart.lop }}" stroke-dasharray="3 3"></line><circle cx="{{ pfChart.sx }}" cy="{{ pfChart.sy }}" r="5" fill="#fff" stroke="#C94F72" stroke-width="2.5" opacity="{{ pfChart.op }}"></circle></svg>
+<div style="position:absolute;top:-10px;left:{{ pfChart.tipX }}px;width:124px;text-align:center;opacity:{{ pfChart.op }};pointer-events:none;background:#4A2E36;color:#fff;border-radius:10px;padding:4px 6px;font-size:12px;line-height:1.3"><div style="font-weight:600">{{ pfChart.val }}</div><div style="opacity:.75">{{ pfChart.label }}</div></div>
+</div>
+<div style="display:flex;gap:4px;margin-top:12px"><sc-for list="{{ pfChart.periods }}" as="p" hint-placeholder-count="6"><div onClick="{{ p.onClick }}" style="flex:1;height:34px;border-radius:17px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;cursor:pointer;background:{{ p.bg }};color:{{ p.fg }}">{{ p.label }}</div></sc-for></div>
+</div>
+<div data-ui-id="portfolio.allocation" onClick="{{ tapAlloc }}" style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);cursor:pointer">
+<div style="font-size:16px;font-weight:500">Asset allocation</div>
+<div style="display:flex;align-items:center;gap:20px;margin-top:14px">
+<div style="position:relative;width:132px;height:132px;flex:none">
+<svg width="132" height="132" viewBox="0 0 132 132" style="transform:rotate(-90deg)"><circle cx="66" cy="66" r="52" fill="none" stroke="#F9E9EE" stroke-width="18"></circle><sc-for list="{{ donut }}" as="d"><circle cx="66" cy="66" r="52" fill="none" stroke="{{ d.color }}" stroke-width="18" stroke-dasharray="{{ d.dash }}" stroke-dashoffset="{{ d.off }}"></circle></sc-for></svg>
+<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:12px;color:#8A6B75">Assets</div><div style="font-size:20px;font-weight:500">{{ heldCount }}</div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px"><sc-for list="{{ allocList }}" as="l" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:8px;font-size:14px"><div style="width:10px;height:10px;border-radius:3px;background:{{ l.color }}"></div><div style="flex:1">{{ l.name }}</div><div style="font-weight:500">{{ l.pct }}</div></div></sc-for></div>
+</div>
+</div>
+<div style="font-size:18px;margin:4px 2px 0">Holdings</div>
+<div style="background:#fff;border-radius:24px;padding:4px 16px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<sc-for list="{{ allocList }}" as="l" hint-placeholder-count="4">
+<div onClick="{{ l.onOpen }}" style="display:flex;align-items:center;gap:12px;padding:14px 0;border-top:{{ l.border }};cursor:pointer">
+<div style="width:42px;height:42px;border-radius:50%;background:{{ l.bg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600">{{ l.mono }}</div>
+<div style="flex:1"><div style="font-size:16px">{{ l.name }}</div><div style="font-size:13px;color:#8A6B75">{{ l.qty }}</div></div>
+<div style="text-align:right"><div style="font-size:16px;font-weight:500">{{ l.value }}</div><div style="font-size:13px;color:{{ l.chColor }}">{{ l.change }}</div></div>
+</div>
+</sc-for>
+</div>
+<div style="font-size:18px;margin:4px 2px 0">Transaction history</div>
+<div style="background:#fff;border-radius:24px;padding:4px 16px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<sc-for list="{{ invTx }}" as="t" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-top:{{ t.border }}">
+<div style="width:42px;height:42px;border-radius:50%;background:{{ t.bg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600">{{ t.mono }}</div>
+<div style="flex:1"><div style="font-size:16px">{{ t.title }}</div><div style="font-size:13px;color:#8A6B75">{{ t.sub }}</div></div>
+<div style="font-size:15px">{{ t.amt }}</div>
+</div>
+</sc-for>
+</div>
+<div style="font-size:12px;color:#8A6B75;text-align:center;padding:0 10px">Factual summary of demo holdings. Not investment advice.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPayments }}">
+<div data-screen-label="Payments" style="padding:6px 18px 130px;display:flex;flex-direction:column;gap:14px;animation:icIn .28s ease">
+<div style="font-size:30px;font-weight:500;letter-spacing:-.4px;padding:6px 2px">Payments</div>
+<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:16px;font-weight:500">Swap</div>
+<div data-ui-id="swap.from_asset" style="margin-top:12px;padding:14px 16px;border-radius:18px;background:#FFF2F5;display:flex;align-items:center;gap:12px">
+<div style="width:40px;height:40px;border-radius:50%;background:#26A17B;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">₮</div>
+<div style="flex:1"><div style="font-size:13px;color:#8A6B75">From</div><div style="font-size:17px">USDT</div></div>
+<div style="text-align:right"><div style="font-size:22px;font-weight:500">500.00</div><div style="font-size:12px;color:#8A6B75">Balance 2,140.00</div></div>
+</div>
+<div style="display:flex;justify-content:center;margin:-8px 0;position:relative;z-index:1"><div style="width:38px;height:38px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(150,60,85,.1);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C94F72" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20V4M3 8l4-4 4 4M17 4v16M13 16l4 4 4-4"></path></svg></div></div>
+<div data-ui-id="swap.to_asset" style="padding:14px 16px;border-radius:18px;background:#FFF2F5;display:flex;align-items:center;gap:12px">
+<div style="width:40px;height:40px;border-radius:50%;background:#F7931A;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">₿</div>
+<div style="flex:1"><div style="font-size:13px;color:#8A6B75">To</div><div style="font-size:17px">BTC</div></div>
+<div style="text-align:right"><div style="font-size:22px;font-weight:500">≈ 0.007416</div><div style="font-size:12px;color:#8A6B75">1 BTC = $67,420.15</div></div>
+</div>
+<div onClick="{{ onSwap }}" style="margin-top:14px;height:52px;border-radius:26px;background:#C94F72;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer">Preview swap</div>
+</div>
+<div style="font-size:20px;margin:6px 2px 0">Recent Payments</div>
+<div style="background:#fff;border-radius:24px;padding:4px 18px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<sc-for list="{{ txList }}" as="t" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-top:{{ t.border }}">
+<div style="width:44px;height:44px;border-radius:50%;background:{{ t.bg }};color:{{ t.fg }};display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;flex:none">{{ t.mono }}</div>
+<div style="flex:1;min-width:0"><div style="font-size:17px">{{ t.title }}</div><div style="font-size:14px;color:#8A6B75">{{ t.sub }}</div></div>
+<div style="font-size:16px;color:{{ t.color }}">{{ t.amt }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isCard }}">
+<div data-screen-label="Card" style="padding:14px 18px 130px;display:flex;flex-direction:column;gap:14px;animation:icIn .28s ease">
+<div style="background:#fff;border-radius:28px;padding:16px 16px 20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="position:relative;height:222px;border-radius:20px;background-color:#E8809B;background-image:radial-gradient(circle at 20px 20px,rgba(255,255,255,.22) 0 6px,transparent 7px);background-size:40px 40px;padding:20px 22px;display:flex;flex-direction:column;justify-content:space-between;color:#fff;opacity:{{ cardOpacity }}">
+<div style="display:flex;justify-content:flex-end"><div style="height:26px;padding:0 10px;border:1px dashed rgba(255,255,255,.35);border-radius:6px;font:500 10px ui-monospace,Menlo,monospace;display:flex;align-items:center;color:rgba(255,255,255,.6)">network logo</div></div>
+<div style="display:flex;align-items:center;justify-content:space-between;font-size:20px;letter-spacing:3px"><div>••••</div><div>••••</div><div>••••</div><div style="letter-spacing:1px">1112</div></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><div style="height:26px;padding:0 10px;border:1px dashed rgba(255,255,255,.35);border-radius:6px;font:500 10px ui-monospace,Menlo,monospace;display:flex;align-items:center;color:rgba(255,255,255,.6)">brand logo</div><div style="font-size:15px;letter-spacing:.5px">JOHN DOE</div></div>
+<sc-if value="{{ frozen }}"><div style="position:absolute;inset:0;border-radius:20px;background:rgba(18,26,51,.55);display:flex;align-items:center;justify-content:center;font-size:16px;letter-spacing:.5px">Frozen</div></sc-if>
+</div>
+<div data-ui-id="card.balance" onClick="{{ tapCardBal }}" style="margin-top:16px;cursor:pointer"><div style="font-size:15px;color:#6E5560">Card Balance</div><div style="display:flex;align-items:center;gap:10px;margin-top:2px"><div style="font-size:28px;letter-spacing:-.4px">{{ spendBal }}</div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A2E36" stroke-width="1.7"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></div></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px">
+<div onClick="{{ onTopUp }}" style="height:54px;border-radius:27px;border:1px solid #F6E1E7;display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C94F72" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Top up</div>
+<div onClick="{{ toggleFreeze }}" style="height:54px;border-radius:27px;border:1px solid #F6E1E7;display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C94F72" stroke-width="1.6" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>{{ freezeLabel }}</div>
+<div onClick="{{ onRemove }}" style="height:54px;border-radius:27px;border:1px solid #F6E1E7;display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C94F72" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"></path></svg>Remove</div>
+</div>
+<div onClick="{{ onAddWallet }}" style="margin-top:12px;height:54px;border-radius:27px;background:#4A2E36;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;font-weight:600;cursor:pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M3 10h18"></path></svg>Add to Wallet</div>
+</div>
+<div style="font-size:20px;margin:6px 2px 0">Cards Transactions</div>
+<div style="background:#fff;border-radius:24px;padding:4px 18px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<sc-for list="{{ txList }}" as="t" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-top:{{ t.border }}">
+<div style="width:44px;height:44px;border-radius:50%;background:{{ t.bg }};color:{{ t.fg }};display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;flex:none">{{ t.mono }}</div>
+<div style="flex:1;min-width:0"><div style="font-size:17px">{{ t.title }}</div><div style="font-size:14px;color:#8A6B75">{{ t.sub }}</div></div>
+<div style="font-size:16px;color:{{ t.color }}">{{ t.amt }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</div>
+
+<sc-if value="{{ isAsset }}">
+<div style="position:absolute;left:0;right:0;bottom:0;padding:14px 18px 30px;background:linear-gradient(180deg,rgba(244,244,245,0),#FFF7F9 28%);display:grid;grid-template-columns:1fr 1fr;gap:12px;z-index:20">
+<div onClick="{{ onSell }}" style="height:56px;border-radius:28px;background:#fff;box-shadow:0 1px 2px rgba(150,60,85,.05),0 4px 14px rgba(150,60,85,.06);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:500;cursor:pointer">Sell</div>
+<div data-ui-id="asset.buy_button" onClick="{{ startBuy }}" style="height:56px;border-radius:28px;background:#C94F72;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:500;cursor:pointer">Buy</div>
+</div>
+</sc-if>
+<sc-if value="{{ isBuyAmount }}">
+<div style="position:absolute;left:0;right:0;bottom:0;padding:14px 18px 30px;background:linear-gradient(180deg,rgba(244,244,245,0),#FFF7F9 28%);z-index:20">
+<div data-ui-id="buy.review_button" onClick="{{ toReview }}" style="height:56px;border-radius:28px;background:#C94F72;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:500;cursor:pointer;opacity:{{ buy.btnOp }}">Review purchase</div>
+</div>
+</sc-if>
+<sc-if value="{{ isBuyReview }}">
+<div style="position:absolute;left:0;right:0;bottom:0;padding:14px 18px 30px;background:linear-gradient(180deg,rgba(244,244,245,0),#FFF7F9 28%);z-index:20">
+<div data-ui-id="buy.confirm_button" onClick="{{ confirm }}" style="height:56px;border-radius:28px;background:#C94F72;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:500;cursor:pointer">Confirm purchase · {{ buy.total }}</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;left:16px;right:16px;bottom:26px;height:64px;border-radius:32px;background:#fff;box-shadow:0 8px 30px rgba(150,60,85,.10),0 1px 2px rgba(150,60,85,.06);display:flex;align-items:center;padding:3px;gap:2px;z-index:25">
+<div onClick="{{ goHome }}" style="flex:1;height:58px;border-radius:29px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;background:{{ nav.home.bg }};color:{{ nav.home.fg }};box-shadow:{{ nav.home.sh }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z"></path><path d="M9.5 21v-5.5h5V21"></path></svg><div style="font-size:12.5px;font-weight:500">Home</div></div>
+<div onClick="{{ goWallets }}" style="flex:1;height:58px;border-radius:29px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;background:{{ nav.wallets.bg }};color:{{ nav.wallets.fg }};box-shadow:{{ nav.wallets.sh }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2.5"></rect><path d="M3 10h18M16 15h2"></path></svg><div style="font-size:12.5px;font-weight:500">Wallets</div></div>
+<div onClick="{{ goInvest }}" style="flex:1;height:58px;border-radius:29px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;background:{{ nav.invest.bg }};color:{{ nav.invest.fg }};box-shadow:{{ nav.invest.sh }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"></path><path d="M15 7h6v6"></path></svg><div style="font-size:12.5px;font-weight:500">Invest</div></div>
+<div onClick="{{ goPayments }}" style="flex:1;height:58px;border-radius:29px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;background:{{ nav.payments.bg }};color:{{ nav.payments.fg }};box-shadow:{{ nav.payments.sh }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20V4M3 8l4-4 4 4M17 4v16M13 16l4 4 4-4"></path></svg><div style="font-size:12.5px;font-weight:500">Payments</div></div>
+<div onClick="{{ goCard }}" style="flex:1;height:58px;border-radius:29px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;background:{{ nav.card.bg }};color:{{ nav.card.fg }};box-shadow:{{ nav.card.sh }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="5" width="19" height="14" rx="2.5"></rect><path d="M2.5 10h19"></path></svg><div style="font-size:12.5px;font-weight:500">Card</div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasHl }}">
+<div style="position:absolute;left:{{ hl.x }}px;top:{{ hl.y }}px;width:{{ hl.w }}px;height:{{ hl.h }}px;border:2px solid #C94F72;border-radius:20px;box-shadow:0 0 0 6px rgba(217,96,127,.14);pointer-events:none;z-index:36;transition:all .3s cubic-bezier(.2,.8,.2,1)"></div>
+</sc-if>
+
+<sc-if value="{{ showFab }}" hint-placeholder-val="{{ true }}">
+<div onClick="{{ fabTap }}" title="Talk to Icarus" style="position:absolute;right:16px;bottom:{{ fabBottom }}px;width:58px;height:58px;z-index:40;cursor:pointer;transition:bottom .25s">
+<sc-if value="{{ fabRing }}"><div style="position:absolute;inset:0;border-radius:19px;background:#F6A6B8;animation:icPulse 1.8s ease-out infinite"></div></sc-if>
+<img src="mascot/bow/icon.png" alt="Icarus" style="position:absolute;inset:0;width:58px;height:58px;border-radius:19px;object-fit:cover;border:3px solid #fff;box-shadow:0 8px 22px rgba(201,79,114,.28);animation:icBob 3s ease-in-out infinite">
+<sc-if value="{{ fabDot }}"><div style="position:absolute;top:1px;right:1px;width:12px;height:12px;border-radius:50%;background:#1E9E55;border:2px solid #fff"></div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasBubble }}"><div onClick="{{ openAsst }}" style="position:absolute;right:84px;bottom:{{ bubbleBottom }}px;max-width:250px;z-index:41;background:#fff;border-radius:18px 18px 6px 18px;padding:10px 13px;font-size:14px;line-height:1.4;color:#4A2E36;box-shadow:0 8px 24px rgba(150,60,85,.16);animation:icPop .25s ease;cursor:pointer;text-wrap:pretty">{{ bubble }}</div></sc-if>
+
+<sc-if value="{{ hasGuide }}">
+<div onClick="{{ stop }}" style="position:absolute;left:14px;right:14px;top:{{ tipTop }}px;z-index:45;background:#fff;border-radius:22px;padding:16px;box-shadow:0 12px 40px rgba(150,60,85,.18);transition:top .3s cubic-bezier(.2,.8,.2,1)">
+<div style="display:flex;align-items:center;gap:8px">
+<img src="mascot/bow/icon.png" alt="" style="width:28px;height:28px;border-radius:9px;object-fit:cover">
+<div style="flex:1;font-size:13px;color:#6E5560">Icarus guide · {{ guide.step }}</div>
+<div onClick="{{ exitGuide }}" style="font-size:13px;color:#C94F72;cursor:pointer;font-weight:500">Exit guide</div>
+</div>
+<div style="font-size:17px;font-weight:600;margin-top:10px">{{ guide.title }}</div>
+<div style="font-size:15px;line-height:1.45;color:#5E4650;margin-top:4px;text-wrap:pretty">{{ guide.text }}</div>
+<div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+<div style="display:flex;gap:5px;flex:1"><sc-for list="{{ guide.dots }}" as="d"><div style="width:{{ d.w }}px;height:6px;border-radius:3px;background:{{ d.c }}"></div></sc-for></div>
+<div onClick="{{ guideBack }}" style="height:38px;padding:0 16px;border-radius:19px;border:1px solid #F2DCE2;display:flex;align-items:center;font-size:14px;cursor:pointer;opacity:{{ guide.backOp }}">Back</div>
+<div onClick="{{ guideNext }}" style="height:38px;padding:0 18px;border-radius:19px;background:#C94F72;color:#fff;display:flex;align-items:center;font-size:14px;cursor:pointer">{{ guide.next }}</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasExplain }}">
+<div onClick="{{ askExplain }}" style="position:absolute;left:{{ exX }}px;top:{{ exY }}px;z-index:46;height:40px;padding:0 16px 0 6px;border-radius:20px;background:#fff;box-shadow:0 8px 24px rgba(150,60,85,.2);display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;cursor:pointer;animation:icPop .2s ease">
+<img src="mascot/bow/icon.png" alt="" style="width:30px;height:30px;border-radius:10px;object-fit:cover">Ask Icarus</div>
+</sc-if>
+
+<sc-if value="{{ hasToast }}">
+<div style="position:absolute;top:62px;left:50%;transform:translateX(-50%);z-index:70;max-width:340px;padding:10px 16px;border-radius:18px;background:#4A2E36;color:#fff;font-size:14px;text-align:center;animation:icPop .2s ease">{{ toast }}</div>
+</sc-if>
+
+<sc-if value="{{ sheetVisible }}">
+<div onClick="{{ minimize }}" style="position:absolute;inset:0;background:rgba(120,50,70,.24);z-index:50;animation:{{ backdropAnim }}"></div>
+<div onClick="{{ stop }}" style="position:absolute;left:0;right:0;bottom:0;height:{{ sheetH }};z-index:55;background:#fff;border-radius:30px 30px 0 0;box-shadow:0 -10px 40px rgba(150,60,85,.12);display:flex;flex-direction:column;animation:{{ sheetAnim }};transition:height .35s cubic-bezier(.2,.8,.2,1)">
+<div style="display:flex;justify-content:center;padding-top:8px"><div style="width:38px;height:5px;border-radius:3px;background:#F0D6DD"></div></div>
+<div style="display:flex;align-items:center;gap:12px;padding:10px 18px 12px">
+<img src="mascot/bow/icon.png" alt="Icarus" style="width:44px;height:44px;border-radius:14px;object-fit:cover;flex:none">
+<div style="flex:1;min-width:0"><div style="font-size:18px;font-weight:600;line-height:1.1">Icarus</div><div style="font-size:13px;color:#8A6B75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Your financial companion</div><div style="font-size:12px;color:#8A6B75;display:flex;align-items:center;gap:5px;margin-top:1px;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:{{ statusColor }}"></span>{{ statusText }}</div></div>
+<div onClick="{{ minimize }}" style="width:36px;height:36px;border-radius:50%;background:#FFF7F9;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A2E36" stroke-width="1.8" stroke-linecap="round"><path d="M5 12h14"></path></svg></div>
+<div onClick="{{ closeAsst }}" style="width:36px;height:36px;border-radius:50%;background:#FFF7F9;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A2E36" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></div>
+</div>
+
+<sc-if value="{{ isChat }}">
+<div ref="{{ msgsRef }}" style="flex:1;overflow-y:auto;scrollbar-width:none;padding:4px 18px 12px;display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ messages }}" as="m">
+<sc-if value="{{ m.isUser }}"><div style="align-self:flex-end;max-width:80%;background:#C94F72;color:#fff;padding:11px 15px;border-radius:20px 20px 6px 20px;font-size:15.5px;line-height:1.4;animation:icPop .2s ease">{{ m.text }}</div></sc-if>
+<sc-if value="{{ m.isIcarus }}">
+<div style="align-self:flex-start;max-width:92%;display:flex;flex-direction:column;gap:8px;animation:icPop .25s ease">
+<sc-if value="{{ m.showPrompts }}"><img src="mascot/bow/hero.png" alt="Icarus waving" style="width:104px;height:104px;object-fit:contain;margin:4px 0 -6px"></sc-if>
+<sc-if value="{{ m.showLabel }}"><div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#8A6B75"><img src="mascot/bow/icon.png" alt="" style="width:20px;height:20px;border-radius:7px;object-fit:cover">Icarus</div></sc-if>
+<div style="background:#FFF7F9;padding:12px 15px;border-radius:20px 20px 20px 6px;font-size:15.5px;line-height:1.45;color:#4A2E36;text-wrap:pretty">{{ m.text }}</div>
+<sc-if value="{{ m.hasCard }}">
+<div style="background:#fff;border:1px solid #F6E4E9;border-radius:22px;padding:16px;box-shadow:0 4px 16px rgba(150,60,85,.06);display:flex;flex-direction:column;gap:9px;width:300px;font-size:14.5px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><div style="width:38px;height:38px;border-radius:50%;background:{{ m.card.bg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">{{ m.card.mono }}</div><div><div style="font-size:16px;font-weight:600">Purchase preview</div><div style="font-size:12.5px;color:#8A6B75">Not placed · needs your confirmation</div></div></div>
+<div style="display:flex;justify-content:space-between"><div style="color:#6E5560">Asset</div><div>{{ m.card.name }}</div></div>
+<div style="display:flex;justify-content:space-between"><div style="color:#6E5560">Action</div><div>Buy</div></div>
+<div style="display:flex;justify-content:space-between"><div style="color:#6E5560">Amount</div><div>{{ m.card.amt }}</div></div>
+<div style="display:flex;justify-content:space-between"><div style="color:#6E5560">Estimated quantity</div><div>{{ m.card.qty }}</div></div>
+<div style="display:flex;justify-content:space-between"><div style="color:#6E5560">Estimated fee</div><div>{{ m.card.fee }}</div></div>
+<div style="display:flex;justify-content:space-between;border-top:1px solid #F8E8EC;padding-top:9px;font-weight:600;font-size:15.5px"><div>Total</div><div>{{ m.card.total }}</div></div>
+<sc-if value="{{ m.card.isOpen }}"><div style="display:grid;grid-template-columns:1fr 1.4fr;gap:8px;margin-top:4px"><div onClick="{{ m.card.onCancel }}" style="height:44px;border-radius:22px;border:1px solid #F2DCE2;display:flex;align-items:center;justify-content:center;cursor:pointer">Cancel</div><div onClick="{{ m.card.onReview }}" style="height:44px;border-radius:22px;background:#C94F72;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:500">Review Purchase</div></div></sc-if>
+<sc-if value="{{ m.card.isReviewed }}"><div style="font-size:13px;color:#C94F72;margin-top:2px">Opened for review. Confirm on the review screen.</div></sc-if>
+<sc-if value="{{ m.card.isCancelled }}"><div style="font-size:13px;color:#8A6B75;margin-top:2px">Cancelled · nothing was purchased</div></sc-if>
+</div>
+</sc-if>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<div onClick="{{ m.onPlay }}" style="height:28px;padding:0 10px 0 6px;border-radius:14px;background:#FDECF1;color:#C94F72;display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+<sc-if value="{{ m.notPlaying }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="#C94F72"><path d="M8 5v14l11-7z"></path></svg></sc-if>
+<sc-if value="{{ m.playing }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="#C94F72"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg></sc-if>
+<div style="display:flex;align-items:center;gap:2px;height:12px"><div style="width:2px;height:5px;background:#C94F72;border-radius:1px"></div><div style="width:2px;height:10px;background:#C94F72;border-radius:1px"></div><div style="width:2px;height:7px;background:#C94F72;border-radius:1px"></div><div style="width:2px;height:12px;background:#C94F72;border-radius:1px"></div><div style="width:2px;height:6px;background:#C94F72;border-radius:1px"></div></div>{{ m.dur }}</div>
+<sc-if value="{{ m.demo }}"><div style="height:22px;padding:0 8px;border-radius:11px;border:1px dashed #E6C9D1;color:#8A6B75;font-size:11px;display:flex;align-items:center">Demo response</div></sc-if>
+<sc-if value="{{ m.hasSources }}"><div style="font-size:11.5px;color:#8A6B75">Based on: {{ m.sources }}</div></sc-if>
+</div>
+<sc-if value="{{ m.showPrompts }}"><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ prompts }}" as="p"><div onClick="{{ p.on }}" style="height:36px;padding:0 14px;border-radius:18px;border:1px solid #F7D2DC;color:#C94F72;background:#fff;display:flex;align-items:center;font-size:14px;cursor:pointer">{{ p.t }}</div></sc-for></div></sc-if>
+<sc-if value="{{ m.hasSugg }}"><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ m.sugg }}" as="g"><div onClick="{{ g.on }}" style="height:34px;padding:0 13px;border-radius:17px;border:1px solid #F7D2DC;color:#C94F72;background:#fff;display:flex;align-items:center;font-size:13.5px;cursor:pointer">{{ g.t }}</div></sc-for></div></sc-if>
+</div>
+</sc-if>
+</sc-for>
+<sc-if value="{{ typing }}"><div style="align-self:flex-start;background:#FFF7F9;padding:14px 16px;border-radius:20px 20px 20px 6px;display:flex;gap:5px"><div style="width:7px;height:7px;border-radius:50%;background:#8A6B75;animation:icDot 1.2s infinite"></div><div style="width:7px;height:7px;border-radius:50%;background:#8A6B75;animation:icDot 1.2s .15s infinite"></div><div style="width:7px;height:7px;border-radius:50%;background:#8A6B75;animation:icDot 1.2s .3s infinite"></div></div></sc-if>
+</div>
+<div style="padding:10px 16px 30px;border-top:1px solid #F8EAEE;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#6E5560;padding-left:4px"><span style="width:6px;height:6px;border-radius:50%;background:#C94F72"></span>Viewing: {{ ctxLabel }}</div>
+<div style="display:flex;align-items:center;gap:8px">
+<div style="flex:1;height:50px;border-radius:25px;background:#FFF7F9;display:flex;align-items:center;padding:0 6px 0 18px;gap:6px">
+<input value="{{ input }}" onChange="{{ onInput }}" onKeyDown="{{ onKey }}" placeholder="Ask Icarus anything…" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font-size:15.5px;color:#4A2E36">
+<div onClick="{{ startVoice }}" style="width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(150,60,85,.08)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C94F72" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"></rect><path d="M19 10.5v.5a7 7 0 0 1-14 0v-.5M12 18v3.5"></path></svg></div>
+</div>
+<div onClick="{{ sendInput }}" style="width:50px;height:50px;border-radius:50%;background:linear-gradient(160deg,#E67895,#C94F72);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></div>
+</div>
+</div>
+</sc-if>
+
+</div>
+</sc-if>
+
+<sc-if value="{{ isVoice }}">
+<div onClick="{{ stop }}" data-ui-id="icarus.voice_dock" style="position:absolute;left:10px;right:10px;top:52px;z-index:55;background:#fff;border-radius:28px;box-shadow:0 14px 40px rgba(150,60,85,.16),0 1px 3px rgba(150,60,85,.08);padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;animation:icDrop .35s cubic-bezier(.2,.8,.2,1)">
+<div style="display:flex;gap:12px;align-items:flex-start">
+<div onClick="{{ tapMascot }}" style="position:relative;width:78px;height:72px;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer">
+<div style="position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,#FDE3EA 0%,rgba(252,240,214,0) 70%)"></div>
+<sc-if value="{{ vv.ring }}"><div style="position:absolute;left:50%;top:50%;width:66px;height:66px;margin:-33px 0 0 -33px;border-radius:50%;border:2px solid #F6A6B8;animation:icRing 1.9s ease-out infinite"></div></sc-if>
+<div role="img" aria-label="Icarus" style="position:relative;width:78px;height:66px;background-image:url({{ vv.img }});background-size:contain;background-repeat:no-repeat;background-position:center bottom;transform-origin:50% 90%;animation:{{ vv.anim }}"></div>
+</div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding-top:2px">
+<div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#6E5560;white-space:nowrap;overflow:hidden"><span style="width:7px;height:7px;border-radius:50%;background:{{ vv.dot }};flex:none"></span>{{ vv.status }}</div>
+<sc-if value="{{ vv.hasYou }}"><div style="font-size:13px;color:#AE939B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">You · {{ vv.you }}</div></sc-if>
+<div style="font-size:17px;line-height:1.35;max-height:{{ vv.capMax }}px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end"><div style="text-wrap:pretty"><span style="color:{{ vv.captionColor }}">{{ vv.spoken }}</span><span style="color:#E0C8CF">{{ vv.rest }}</span></div></div>
+</div>
+</div>
+<sc-if value="{{ vv.hasChips }}"><div style="display:flex;gap:8px;overflow-x:auto;margin:0 -14px;padding:0 14px;scrollbar-width:none"><sc-for list="{{ vv.chips }}" as="p"><div onClick="{{ p.on }}" style="flex:none;white-space:nowrap;height:34px;padding:0 13px;border-radius:17px;border:1px solid #F7D2DC;color:#C94F72;display:flex;align-items:center;font-size:13.5px;cursor:pointer">“{{ p.t }}”</div></sc-for></div></sc-if>
+<div style="display:flex;align-items:center;gap:8px">
+<div style="display:flex;padding:3px;border-radius:16px;background:#FFF7F9"><div onClick="{{ setEn }}" style="height:28px;padding:0 11px;border-radius:14px;display:flex;align-items:center;font-size:12.5px;cursor:pointer;background:{{ langEn.bg }};color:{{ langEn.fg }};box-shadow:{{ langEn.sh }}">EN</div><div onClick="{{ setTh }}" style="height:28px;padding:0 11px;border-radius:14px;display:flex;align-items:center;font-size:12.5px;cursor:pointer;background:{{ langTh.bg }};color:{{ langTh.fg }};box-shadow:{{ langTh.sh }}">ไทย</div></div>
+<div style="flex:1"></div>
+<div onClick="{{ toggleMute }}" title="Mute microphone" style="width:40px;height:40px;border-radius:50%;background:{{ muteBg }};border:1px solid #F6E1E7;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A2E36" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"></rect><path d="M19 10.5v.5a7 7 0 0 1-14 0v-.5M12 18v3.5"></path><path d="M3 3l18 18" opacity="{{ muteOp }}"></path></svg></div>
+<div onClick="{{ toText }}" title="Switch to chat" style="width:40px;height:40px;border-radius:50%;border:1px solid #F6E1E7;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;font-weight:600">Aa</div>
+<div onClick="{{ endVoice }}" title="End conversation" style="width:40px;height:40px;border-radius:50%;background:#4A2E36;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></div>
+</div>
+</div>
+</sc-if>
+
+<div style="position:absolute;bottom:8px;left:50%;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:#4A2E36;z-index:80;pointer-events:none"></div>
+</div>
+</div>
+
+<sc-if value="{{ showConsole }}" hint-placeholder-val="{{ true }}">
+<div style="flex:0 1 350px;min-width:280px;display:flex;flex-direction:column;gap:14px">
+<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="display:flex;align-items:center;gap:10px"><img src="mascot/bow/icon.png" alt="" style="width:36px;height:36px;border-radius:12px"><div style="font-size:20px;font-weight:500">Icarus demo console</div></div>
+<div style="font-size:14px;line-height:1.45;color:#6E5560;margin-top:4px;text-wrap:pretty">Hackathon scenarios. Prices, balances and assistant replies are demo data.</div>
+<div style="display:flex;flex-direction:column;margin-top:10px">
+<sc-for list="{{ scenarios }}" as="c" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #F8E8EC">
+<div style="width:30px;height:30px;border-radius:50%;background:#FDECF1;color:#C94F72;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex:none">{{ c.k }}</div>
+<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:500">{{ c.title }}</div><div style="font-size:12.5px;color:#8A6B75;line-height:1.35">{{ c.sub }}</div></div>
+<div onClick="{{ c.on }}" style="height:34px;padding:0 14px;border-radius:17px;background:#C94F72;color:#fff;display:flex;align-items:center;font-size:13px;cursor:pointer;flex:none">{{ c.btn }}</div>
+</div>
+</sc-for>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #F8E8EC">
+<div style="width:30px;height:30px;border-radius:50%;background:#FDECF1;color:#C94F72;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex:none">E</div>
+<div style="flex:1"><div style="font-size:15px;font-weight:500">Business dashboard</div><div style="font-size:12.5px;color:#8A6B75">Shows questions and friction from this session.</div></div>
+<a href="Icarus Business Dashboard.dc.html" style="height:34px;padding:0 14px;border-radius:17px;border:1px solid #F7D2DC;display:flex;align-items:center;font-size:13px;flex:none">Open</a>
+</div>
+</div>
+</div>
+<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:16px;font-weight:500">Stopwatch</div><div style="font-size:13px;color:#8A6B75">{{ timerMode }}</div></div>
+<div style="font-size:40px;font-weight:500;letter-spacing:-1px;margin-top:4px;font-variant-numeric:tabular-nums">{{ timerText }}</div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;font-size:14px">
+<div style="display:flex;align-items:center;gap:10px"><div style="width:110px;color:#6E5560">A · Manual</div><div style="flex:1;height:8px;border-radius:4px;background:#F9E9EE;overflow:hidden"><div style="height:100%;width:{{ resA.w }}%;background:#AE939B;border-radius:4px"></div></div><div style="width:56px;text-align:right;font-weight:500">{{ resA.t }}</div></div>
+<div style="display:flex;align-items:center;gap:10px"><div style="width:110px;color:#6E5560">B · With Icarus</div><div style="flex:1;height:8px;border-radius:4px;background:#F9E9EE;overflow:hidden"><div style="height:100%;width:{{ resB.w }}%;background:linear-gradient(90deg,#E67895,#C94F72);border-radius:4px"></div></div><div style="width:56px;text-align:right;font-weight:500">{{ resB.t }}</div></div>
+</div>
+<div style="font-size:13px;color:#C94F72;margin-top:10px;min-height:18px">{{ ratioText }}</div>
+<div onClick="{{ resetTimer }}" style="margin-top:6px;font-size:13px;color:#8A6B75;cursor:pointer">Reset times</div>
+</div>
+<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">
+<div style="font-size:16px;font-weight:500">Integration</div>
+<div style="display:flex;align-items:center;gap:8px;font-size:14px;margin-top:6px"><span style="width:8px;height:8px;border-radius:50%;background:{{ statusColor }}"></span>AI backend: {{ backendText }}</div>
+<div style="font:12px/1.6 ui-monospace,Menlo,monospace;color:#5E4650;margin-top:10px;background:#FFF2F5;border-radius:12px;padding:10px 12px;word-break:break-word">Icarus.setBackend(async (q, ctx) =&gt; ({ text, speech, emotion, speak, ui_actions, sources }))<br>Icarus.setTTS(async (speech, { lang, emotion, onProgress }) =&gt; {…}, stop)<br>Icarus.pushTranscript(text, isFinal)</div>
+<div style="font-size:12.5px;color:#6E5560;margin-top:8px;line-height:1.5"><span style="font-weight:500">speech</span> is a separate spoken script for TTS: short sentences, rounded numbers, “baht” instead of ฿, one follow-up question. <span style="font-weight:500">emotion</span> sets the mascot pose: happy, excited, curious, thinking.</div>
+<div style="font-size:12.5px;color:#8A6B75;margin-top:8px;line-height:1.5">Actions: navigate · open_asset · set_period · set_filter · start_buy · type_amount · select_wallet · review · cancel_buy · toggle_freeze · highlight. Icarus runs them in order while it speaks, then stops at Confirm.</div>
+<div style="font-size:12.5px;color:#8A6B75;margin-top:8px;line-height:1.5">UI ids: home.balance · asset.chart · asset.change24h · buy.amount_input · buy.fee_line · buy.confirm_button · swap.from_asset · swap.to_asset · portfolio.allocation</div>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;fabOpens&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;voice&quot;,&quot;chat&quot;],&quot;default&quot;:&quot;voice&quot;,&quot;tsType&quot;:&quot;'voice'|'chat'&quot;},&quot;showConsole&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;browserSTT&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;browserTTS&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const RATE=36.5,FEE=0.01,MIN_BUY=100,GREEN='#1E9E55',RED='#C8312E',BLUE='#C94F72';
+const GRAD='#C94F72';
+const NOW=new Date(2026,9,15,7,11).getTime();
+const PERIODS=['1D','1W','1M','3M','1Y','ALL'];
+const PDAYS={'1D':1,'1W':7,'1M':30,'3M':90,'1Y':365,'ALL':1825};
+const PNAME={'1D':'today','1W':'the past week','1M':'the past month','3M':'the past 3 months','1Y':'the past year','ALL':'the past 5 years'};
+const PLABEL={'1D':'Today','1W':'Past week','1M':'Past month','3M':'Past 3 months','1Y':'Past year','ALL':'All time'};
+const PTH={'1D':'วันนี้','1W':'1 สัปดาห์ที่ผ่านมา','1M':'1 เดือนที่ผ่านมา','3M':'3 เดือนที่ผ่านมา','1Y':'1 ปีที่ผ่านมา','ALL':'5 ปีที่ผ่านมา'};
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const ASSETS={
+ BTC:{id:'BTC',name:'Bitcoin',th:'บิทคอยน์',ticker:'BTC',type:'Crypto',price:67420.15,vol:.035,mono:'₿',bg:'#F7931A',unit:'BTC',dec:6,ch:{'1D':1.84,'1W':4.2,'1M':8.9,'3M':12.4,'1Y':61.0,'ALL':410},desc:'Bitcoin is a digital currency that runs on a public network instead of a bank. Its price can move a lot in a short time, so it is considered a higher-risk asset.',info:[['Market cap','$1.33T'],['24h volume','$31.2B']]},
+ ETH:{id:'ETH',name:'Ethereum',th:'อีเธอเรียม',ticker:'ETH',type:'Crypto',price:3512.40,vol:.04,mono:'Ξ',bg:'#627EEA',unit:'ETH',dec:5,ch:{'1D':-0.62,'1W':-2.1,'1M':3.8,'3M':-5.6,'1Y':28.4,'ALL':260},desc:'Ethereum is a blockchain network that runs apps and smart contracts. ETH is the currency used on it. Like Bitcoin, its price can change quickly.',info:[['Market cap','$422B'],['24h volume','$14.8B']]},
+ XAU:{id:'XAU',name:'Gold',th:'ทองคำ',ticker:'XAU',type:'Gold',price:2358.70,vol:.009,mono:'Au',bg:'#C99A2E',unit:'oz',dec:6,ch:{'1D':0.48,'1W':1.2,'1M':3.4,'3M':6.8,'1Y':18.2,'ALL':42.0},desc:'Gold is a precious metal people have used to store value for centuries. Its price is quoted per troy ounce (about 31.1 grams) and usually moves more slowly than crypto or individual stocks.',info:[['Quoted per','1 troy ounce'],['Market','Spot gold']]},
+ AAPL:{id:'AAPL',name:'Apple',th:'แอปเปิล',ticker:'AAPL',type:'Stocks',price:228.35,vol:.018,mono:'A',bg:'#4A2E36',unit:'shares',dec:4,ch:{'1D':1.12,'1W':2.6,'1M':4.1,'3M':7.9,'1Y':21.5,'ALL':180},desc:'Apple is a company listed on the US stock market. Buying AAPL means owning a small part of the company. You can buy fractions of a share.',info:[['Market cap','$3.47T'],['Exchange','NASDAQ']]},
+ TSLA:{id:'TSLA',name:'Tesla',th:'เทสลา',ticker:'TSLA',type:'Stocks',price:242.80,vol:.035,mono:'T',bg:'#C8312E',unit:'shares',dec:4,ch:{'1D':-2.31,'1W':-4.8,'1M':6.2,'3M':-11.3,'1Y':9.7,'ALL':320},desc:'Tesla is a company listed on the US stock market. Its share price has historically moved more than many large companies, both up and down.',info:[['Market cap','$775B'],['Exchange','NASDAQ']]}
+};
+const ORDER=['BTC','ETH','XAU','AAPL','TSLA'];
+const INIT_HOLD={BTC:3860.40/67420.15,ETH:482.55/3512.40,XAU:289.50/2358.70,AAPL:193.05/228.35,TSLA:0};
+const PF_CH={'1D':2.67,'1W':3.9,'1M':7.6,'3M':10.2,'1Y':48.5,'ALL':64.0};
+const ALLOC_C=['#C94F72','#C94F72','#EF94AB','#F9C9D5','#FCE1E8'];
+const INIT_TX=[{id:'t1',asset:'BTC',thb:20000,qty:0.0081,date:'Sep 28'},{id:'t2',asset:'ETH',thb:5000,qty:0.039,date:'Sep 12'},{id:'t3',asset:'XAU',thb:3000,qty:0.0348,date:'Aug 30'},{id:'t4',asset:'AAPL',thb:2000,qty:0.2402,date:'Aug 9'}];
+const HOME_TX=[{mono:'⇄',bg:'#4A2E36',fg:'#fff',title:'Transfer to Michael T.',sub:'Today • 5:11 AM',amt:'-$50.00',color:RED},{mono:'♪',bg:'#F0445E',fg:'#fff',title:'Music subscription',sub:'Yesterday • 4:44 PM',amt:'-$10.99',color:RED},{mono:'P',bg:'#5BC0F8',fg:'#0B3A75',title:'Payment received',sub:'Yesterday • 12:01 AM',amt:'+$334.76',color:GREEN},{mono:'R',bg:'#F2E200',fg:'#4A2E36',title:'Bank transfer',sub:'Aug 8 • 9:44 AM',amt:'-$100.00',color:RED}];
+const STORE='icarus.demo.events';
+const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const usd=n=>(n<0?'-':'')+'$'+fmt(Math.abs(n));
+const thb=n=>'฿'+fmt(n);
+const pct=n=>(n>=0?'+':'-')+fmt(Math.abs(n))+'%';
+const qf=(q,a)=>fmt(q,a.dec)+' '+a.unit;
+const sUSD=n=>'$'+Math.round(Math.abs(n)).toLocaleString('en-US');const sTHB=n=>Math.round(n).toLocaleString('en-US')+' baht';const sTHBth=n=>Math.round(n).toLocaleString('en-US')+' บาท';const sPct=n=>fmt(Math.abs(n),1).replace(/\.0$/,'')+' percent';
+const uid=()=>Math.random().toString(36).slice(2,9);
+const hash=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;};
+const mkRng=seed=>()=>{seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const WELCOME=()=>({id:'w',role:'icarus',text:"Hi John! I'm Icarus. I can help you understand what you're seeing or guide you through your next step.",prompts:true});
+const PHRASES={en:['Show me gold','Put 1,000 baht in gold','Switch to one year','Freeze my card','What does this chart mean?'],th:['ดูราคาทองคำ','ลงทุนทองคำ 1,000 บาท','ดูย้อนหลัง 1 ปี','ล็อกบัตรของฉัน']};
+function detectAsset(t){if(/gold|xau|ทอง/.test(t))return'XAU';if(/bitcoin|btc|บิท/.test(t))return'BTC';if(/ethereum|\beth\b|อีเธอ/.test(t))return'ETH';if(/apple|aapl|แอปเปิล/.test(t))return'AAPL';if(/tesla|tsla|เทสลา/.test(t))return'TSLA';return null;}
+
+class Component extends DCLogic {
+ constructor(p){super(p);this.screenRef=React.createRef();this.scrollRef=React.createRef();this.msgsRef=React.createRef();this.backend=null;this.cache={};this.state=this.fresh();}
+ fresh(){return{tab:'home',view:'invest',assetId:'XAU',period:'1M',pfPeriod:'1D',filter:'All',buyStep:'amount',buyAmount:'',walletId:'thb',hold:{...INIT_HOLD},thbBal:48250,usdBal:17388,txs:INIT_TX.slice(),lastBuy:null,viaIcarus:false,asst:'closed',closing:false,messages:[WELCOME()],input:'',typing:false,lang:'en',voice:null,guide:null,flash:null,hl:null,explain:null,scrub:null,toast:null,playing:null,timer:null,results:{A:null,B:null},hideBal:false,frozen:false,now:0};}
+ componentDidMount(){
+  this.tick=setInterval(()=>{if(this.state.timer)this.setState({now:Date.now()});},100);
+  window.Icarus={
+   getContext:()=>this.getContext(),
+   setBackend:fn=>{this.backend=fn;this.forceUpdate();},
+   receiveResponse:r=>{this.applyResponse(r,false);this.runActions(this.splitActs(r).acts);if(this.state.voice)this.say(r.speech||r.text,r.emotion);},
+   runActions:list=>this.runActions(list),
+   send:t=>this.send(t),
+   highlight:id=>this.flash(id),
+   open:()=>this.openAsst(),
+   startVoice:()=>this.startVoice(),
+   pushTranscript:(text,isFinal)=>{if(!this.state.voice)this.startVoice();this.setVoice({transcript:text,phase:'hearing'});if(isFinal)this.finishUtterance(text);},
+   setVoicePhase:ph=>this.setVoice({phase:ph}),
+   setTTS:(fn,stop)=>{window.Icarus._tts=fn;window.Icarus._ttsStop=stop;},
+   UI_IDS:['home.balance','asset.chart','asset.change24h','buy.amount_input','buy.fee_line','buy.confirm_button','swap.from_asset','swap.to_asset','portfolio.allocation','invest.asset.<TICKER>','asset.buy_button','buy.review_button']
+  };
+ }
+ componentWillUnmount(){clearInterval(this.tick);this.stopVoiceStuff();}
+ screenKey(s){return s.tab+'/'+(s.tab==='invest'?s.view+(s.view==='buy'?s.buyStep:'')+s.assetId:'');}
+ screenName(s=this.state){return s.tab!=='invest'?s.tab:s.view;}
+ componentDidUpdate(){
+  const s=this.state,p=this._prev,key=this.screenKey(s);
+  try{
+   if(p&&key!==p.key){if(this.scrollRef.current)this.scrollRef.current.scrollTop=0;this.log('screen_view',{});}
+   if(p&&(s.messages.length!==p.msgs||s.typing!==p.typing||(s.asst!==p.asst&&s.asst==='open'))){setTimeout(()=>{const mm=this.msgsRef.current;if(mm)mm.scrollTop=mm.scrollHeight;},40);}
+  }catch(e){}
+  this._prev={key,msgs:s.messages.length,typing:s.typing,asst:s.asst};
+  this.measure();
+ }
+ log(type,data){try{const arr=JSON.parse(localStorage.getItem(STORE)||'[]');arr.push({t:Date.now(),type,screen:this.screenName(),...data});localStorage.setItem(STORE,JSON.stringify(arr.slice(-400)));}catch(e){}}
+ toast(t){clearTimeout(this._tt);this.setState({toast:t});this._tt=setTimeout(()=>this.setState({toast:null}),2600);}
+ // ---- data
+ series(key,start,end,vol,p,n=48){const ck=key+p+n+start.toFixed(2)+end.toFixed(2);if(this.cache[ck])return this.cache[ck];const r=mkRng(hash(key+p));const w=[0];for(let i=1;i<n;i++)w.push(w[i-1]+(r()-.5));const amp=end*vol*Math.min(3,Math.sqrt(PDAYS[p]/30))*.35;const out=w.map((v,i)=>{const t=i/(n-1);return start+(end-start)*t+(v-(w[0]+(w[n-1]-w[0])*t))*amp;});this.cache[ck]=out;return out;}
+ assetSeries(id,p,n){const a=ASSETS[id];return this.series(id,a.price/(1+a.ch[p]/100),a.price,a.vol,p,n);}
+ pfSummary(){const s=this.state;const items=ORDER.map(id=>({id,name:ASSETS[id].name,qty:s.hold[id]||0,value:(s.hold[id]||0)*ASSETS[id].price}));const value=items.reduce((x,i)=>x+i.value,0);items.forEach(i=>i.pct=value?i.value/value*100:0);return{value,items:items.filter(i=>i.value>0).sort((a,b)=>b.value-a.value)};}
+ pfSeries(p,v){const start=p==='1D'?v-125.30:v/(1+PF_CH[p]/100);return this.series('PF',start,v,.02,p);}
+ chartStats(id,p){const arr=this.assetSeries(id,p);return{start:arr[0],end:arr[arr.length-1],hi:Math.max(...arr),lo:Math.min(...arr),pct:ASSETS[id].ch[p]};}
+ dateLabel(p,i,n){const d=new Date(NOW-PDAYS[p]*86400000*(1-i/(n-1)));if(p==='1D')return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');if(p==='1Y'||p==='ALL')return MON[d.getMonth()]+' '+d.getFullYear();return MON[d.getMonth()]+' '+d.getDate();}
+ chart(key,arr,p,setP,H=150){const W=313,n=arr.length,min=Math.min(...arr),max=Math.max(...arr);const X=i=>i/(n-1)*W,Y=v=>10+(1-(v-min)/((max-min)||1))*(H-20);let line='';arr.forEach((v,i)=>{line+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);});const s=this.state.scrub,has=!!(s&&s.key===key);let sx=0,sy=0,val='',label='';if(has){const i=clamp(s.i,0,n-1);sx=X(i);sy=Y(arr[i]);val=usd(arr[i]);label=this.dateLabel(p,i,n);}
+  return{line,area:line+'L'+W+' '+H+'L0 '+H+'Z',op:has?1:0,lop:has?.35:0,sx,sy,val,label,tipX:clamp(sx-62,-4,W-120),
+   onMove:e=>{const r=e.currentTarget.getBoundingClientRect();const i=clamp(Math.round((e.clientX-r.left)/r.width*(n-1)),0,n-1);const c=this.state.scrub;if(!c||c.key!==key||c.i!==i)this.setState({scrub:{key,i}});},
+   onLeave:()=>this.setState({scrub:null}),
+   periods:PERIODS.map(x=>({label:x,bg:x===p?GRAD:'transparent',fg:x===p?'#fff':'#6E5560',onClick:e=>{e.stopPropagation();setP(x);this.log('period',{period:x});}}))};}
+ spark(id){const arr=this.assetSeries(id,'1W',24),min=Math.min(...arr),max=Math.max(...arr);return arr.map((v,i)=>(i?'L':'M')+(i/23*60).toFixed(1)+' '+(3+(1-(v-min)/((max-min)||1))*22).toFixed(1)).join('');}
+ walletAvail(id){return id==='thb'?this.state.thbBal:this.state.usdBal*RATE;}
+ calc(id,amt,wid){const a=ASSETS[id];amt=+amt||0;const fee=Math.round(amt*FEE*100)/100,total=amt+fee,qty=amt/RATE/a.price,avail=this.walletAvail(wid);const err=amt>0&&amt<MIN_BUY?'Minimum purchase is ฿100.':total>avail?'Not enough balance in this wallet.':'';return{a,amt,fee,total,qty,avail,ok:amt>=MIN_BUY&&total<=avail,err};}
+ // ---- navigation
+ goTab(t){this.setState({tab:t,view:'invest',scrub:null,explain:null});}
+ openAsset(id){const g=this.state.guide;this.setState({tab:'invest',view:'asset',assetId:id,scrub:null});if(g&&g.i===0&&g.asset===id)this.advance(1);}
+ advance(i){const g=this.state.guide;if(!g)return;this.setState({guide:{...g,i}});this.log('guide_step',{step:i+1,asset:g.asset,via:'tap'});}
+ startBuy(){const g=this.state.guide;const patch={view:'buy',buyStep:'amount',viaIcarus:false};if(!this.state.buyAmount)patch.buyAmount='';this.setState(patch);if(g&&g.i===1)this.advance(2);}
+ toReview(){const s=this.state;const c=this.calc(s.assetId,parseFloat(s.buyAmount),s.walletId);if(!c.ok){this.toast(c.err||'Enter an amount of at least ฿100');return;}this.setState({buyStep:'review'});if(s.guide&&s.guide.i===3)this.advance(4);}
+ confirm(){const s=this.state;const c=this.calc(s.assetId,parseFloat(s.buyAmount),s.walletId);if(!c.ok)return;
+  const patch={buyStep:'done',hold:{...s.hold,[s.assetId]:(s.hold[s.assetId]||0)+c.qty},lastBuy:{asset:s.assetId,amt:c.amt,fee:c.fee,total:c.total,qty:c.qty},txs:[{id:uid(),asset:s.assetId,thb:c.amt,qty:c.qty,date:'Today, 7:11 AM'},...s.txs],guide:null,hl:null};
+  if(s.walletId==='thb')patch.thbBal=s.thbBal-c.total;else patch.usdBal=s.usdBal-c.total/RATE;
+  if(s.timer){const ms=Date.now()-s.timer.start;patch.results={...s.results,[s.timer.mode]:ms};patch.timer=null;this.log('timer',{mode:s.timer.mode,ms});}
+  this.setState(patch);this.log('purchase',{asset:s.assetId,amount:c.amt,via:s.viaIcarus?'icarus':'manual'});}
+ goBack(){const s=this.state;if(s.view==='asset'||s.view==='portfolio')this.setState({view:'invest'});else if(s.view==='buy'){if(s.buyStep==='amount')this.setState({view:'asset'});else if(s.buyStep==='review')this.setState({buyStep:'amount'});else this.setState({view:'asset',buyStep:'amount'});}}
+ // ---- guide
+ guideSteps(id){const a=ASSETS[id];return[
+  {target:'invest.asset.'+id,title:'Find '+a.name,text:'Tap '+a.name+' in the asset list to open its details.',go:{tab:'invest',view:'invest',filter:'All'}},
+  {target:'asset.buy_button',title:'Start a purchase',text:"Tap Buy. You'll choose an amount on the next screen.",go:{tab:'invest',view:'asset',assetId:id}},
+  {target:'buy.amount_input',title:'Enter an amount',text:'Type how much you want to invest in baht. The estimated quantity updates as you type.',go:{tab:'invest',view:'buy',assetId:id,buyStep:'amount'}},
+  {target:'buy.review_button',title:'Review your order',text:'Choose the wallet to pay from, then tap Review purchase.',go:{tab:'invest',view:'buy',assetId:id,buyStep:'amount'},fill:true},
+  {target:'buy.confirm_button',title:'Confirm when you are ready',text:'Check the amount, fee and total. Nothing is bought until you tap Confirm purchase yourself.',go:{tab:'invest',view:'buy',assetId:id,buyStep:'review'},fill:true}];}
+ startGuide(id){this.setGuide(id,0);this.log('guide_start',{asset:id});}
+ setGuide(id,i){const st=this.guideSteps(id)[i];const patch={...st.go,guide:{asset:id,i},explain:null,flash:null};if(this.state.asst==='open'||this.state.asst==='voice')this.hideAsst('min');if(st.fill&&!(parseFloat(this.state.buyAmount)>=MIN_BUY))patch.buyAmount='1000';this._scrolled=null;this.setState(patch);this.log('guide_step',{step:i+1,asset:id});}
+ exitGuide(done){const g=this.state.guide;this.setState({guide:null,hl:null});this.log(done?'guide_complete':'guide_exit',{step:g?g.i+1:0});if(done)this.pushIcarus({text:"That's the whole flow: pick an asset, tap Buy, enter an amount, review, then confirm. Nothing was purchased during the guide.",demo:!this.backend});}
+ hlTarget(){const g=this.state.guide;if(g)return this.guideSteps(g.asset)[g.i].target;return this.state.flash;}
+ measure(){const root=this.screenRef.current;if(!root)return;const id=this.hlTarget();let rect=null;
+  if(id){const el=root.querySelector('[data-ui-id="'+id+'"]');if(el){const R=root.getBoundingClientRect(),k=R.width/393||1,r=el.getBoundingClientRect();rect={x:Math.round((r.left-R.left)/k)-5,y:Math.round((r.top-R.top)/k)-5,w:Math.round(r.width/k)+10,h:Math.round(r.height/k)+10};
+   const g=this.state.guide,gk=g?'g'+g.asset+g.i:(this.state.flash?'f'+this.state.flash+this.screenKey(this.state):null);if(gk&&this._scrolled!==gk){this._scrolled=gk;const sc=this.scrollRef.current,top=this.state.asst==='voice'?250:70,bot=g?540:722;if(sc&&sc.contains(el)&&(rect.y<top||rect.y+rect.h>bot)){sc.scrollTop+=rect.y-(g?170:top+20);requestAnimationFrame(()=>this.measure());return;}}}}
+  const c=this.state.hl;const same=(!c&&!rect)||(c&&rect&&c.x===rect.x&&c.y===rect.y&&c.w===rect.w&&c.h===rect.h);if(!same)this.setState({hl:rect});}
+ flash(id){clearTimeout(this._ft);this.setState({flash:id});this._ft=setTimeout(()=>this.setState({flash:null}),3600);}
+ // ---- assistant
+ openAsst(){this.setState({asst:'open',closing:false,explain:null});this.log('assistant_open',{});}
+ hideAsst(to){if(this.state.asst==='voice')this.stopVoiceStuff();this.setState({closing:true});setTimeout(()=>this.setState({asst:to,closing:false,voice:null}),220);}
+ pushIcarus(m){this.setState(s=>({messages:[...s.messages,{id:uid(),role:'icarus',...m}]}));}
+ getContext(){const s=this.state,scr=this.screenName(s),a=ASSETS[s.assetId];
+  const label={home:'Home',wallets:'Wallets',payments:'Payments',card:'Card',invest:'Invest · portfolio '+s.pfPeriod+' chart',portfolio:'Portfolio · '+s.pfPeriod+' chart',asset:a.name+' · '+s.period+' chart',buy:'Buy '+a.name+' · '+({amount:'amount',review:'review',done:'complete'}[s.buyStep])}[scr];
+  const st=this.chartStats(a.id,s.period),c=this.calc(a.id,parseFloat(s.buyAmount)||0,s.walletId),pf=this.pfSummary();
+  return{screen:scr,label,language:s.lang,asset:{id:a.id,name:a.name,price_usd:a.price,change_24h_pct:a.ch['1D']},period:s.period,chart:{start:st.start,end:st.end,high:st.hi,low:st.lo,change_pct:st.pct},buy:scr==='buy'?{amount_thb:c.amt,fee_thb:c.fee,total_thb:c.total,est_qty:c.qty,wallet:s.walletId}:null,portfolio:{value_usd:pf.value,allocation:pf.items.map(i=>({id:i.id,pct:+i.pct.toFixed(1)}))},data_source:'demo'};}
+ send(text,focus){text=(text||'').trim();if(!text)return;if(this.state.asst==='voice'){this.finishUtterance(text,focus);return;}
+  const ctx=this.getContext();if(focus)ctx.focus=focus;
+  this.setState(s=>({messages:[...s.messages,{id:uid(),role:'user',text}],input:'',typing:true,asst:'open',closing:false}));
+  this.log(focus?'explain_ask':'question',{text,target:focus||null,context:ctx.label});
+  const demo=!this.backend;const run=()=>focus&&demo?this.rExplain(focus,this.state.lang==='th'):demo?this.demoRespond(text,ctx):this.backend(text,ctx);
+  Promise.resolve().then(run).then(r=>setTimeout(()=>{this.applyResponse(r,demo);const sp=this.splitActs(r);const acting=sp.acts.some(a=>a.type!=='highlight');
+    if(acting)setTimeout(()=>{this.hideAsst('min');this.bubble(r.speech||r.text);this.runActions(sp.acts);},450);else this.runActions(sp.acts);
+    if(sp.guide)setTimeout(()=>this.startGuide(sp.guide.asset||'XAU'),900);},demo?650:0)).catch(()=>this.setState({typing:false}));}
+ bubble(t){clearTimeout(this._bt);this.setState({fabBubble:t});this._bt=setTimeout(()=>this.setState({fabBubble:null}),7000);}
+ applyResponse(r,demo){if(!r)return null;this._offer=r.offer||null;const msg={id:uid(),role:'icarus',speech:r.speech||r.text,text:r.text||'',sources:r.sources||[],demo:!!demo,suggestions:r.suggestions||[]};
+  (r.ui_actions||[]).forEach(a=>{if(a.type==='show_card'&&a.card==='purchase_preview'){msg.card={asset:a.data.asset,amount:a.data.amount,status:'open'};}});
+  if((r.ui_actions||[]).some(a=>a.type==='review'||a.type==='show_card'))this.log('preview_shown',{asset:this.state.assetId});
+  this.setState(s=>({typing:false,messages:[...s.messages,msg]}));return msg;}
+ splitActs(r){const all=(r&&r.ui_actions)||[];return{guide:all.find(a=>a.type==='start_guide'),acts:all.filter(a=>a.type!=='start_guide'&&a.type!=='show_card')};}
+ runActions(acts,done){clearTimeout(this._at);const q=(acts||[]).slice();const step=()=>{if(!q.length){done&&done();return;}const a=q.shift();let w=400;try{w=this.doAction(a);}catch(e){}this._at=setTimeout(step,w);};step();}
+ doAction(a){const s=this.state,fl=(id,d)=>setTimeout(()=>this.flash(id),d||280);this.log('action',{action:a.type});
+  switch(a.type){
+   case 'navigate':this.setState({view:'invest',...a.to,explain:null,scrub:null});if(a.flash)fl(a.flash);return 650;
+   case 'back':this.goBack();return 500;
+   case 'open_asset':this.setState({tab:'invest',view:'asset',assetId:a.asset,scrub:null,explain:null});this._lastAsset=a.asset;return 750;
+   case 'set_period':if(this.screenName()==='asset'){this.setState({period:a.period});fl('asset.chart');}else{this.setState({pfPeriod:a.period});fl('invest.chart');}return 600;
+   case 'set_filter':this.setState({tab:'invest',view:'invest',filter:a.filter});return 600;
+   case 'start_buy':this.setState({tab:'invest',view:'buy',assetId:a.asset||s.assetId,buyStep:'amount',buyAmount:'',viaIcarus:true});fl('buy.amount_input',300);return 650;
+   case 'type_amount':{const str=String(Math.round(a.value));this.setState({tab:'invest',view:'buy',buyStep:'amount',buyAmount:'',viaIcarus:true});let i=0;clearInterval(this._ty);this._ty=setInterval(()=>{i++;this.setState({buyAmount:str.slice(0,i)});if(i>=str.length)clearInterval(this._ty);},110);return str.length*110+450;}
+   case 'select_wallet':this.setState({walletId:a.wallet});return 450;
+   case 'review':this.setState({buyStep:'review'});fl('buy.confirm_button',350);return 600;
+   case 'cancel_buy':this.setState({view:'asset',buyStep:'amount',buyAmount:''});return 500;
+   case 'toggle_freeze':this.setState({tab:'card',frozen:!!a.value});return 600;
+   case 'hide_balance':this.setState({hideBal:!!a.value});return 300;
+   case 'highlight':fl(a.target,100);return 400;
+   default:return 200;}}
+ R(text,o={}){return{text,speech:o.say||text,emotion:o.emo||'happy',speak:true,ui_actions:o.ui||[],sources:o.src||[],suggestions:o.sugg||[],offer:o.offer||null};}
+ demoRespond(q,ctx){const s=this.state,raw=q.trim(),t=raw.toLowerCase().replace(/[.!?]+$/,''),th=/[\u0E00-\u0E7F]/.test(q)||s.lang==='th';const has=re=>re.test(t);
+  const asset=detectAsset(t),ctxAsset=(ctx.screen==='asset'||ctx.screen==='buy')?ctx.asset.id:null,ref=asset||ctxAsset||this._lastAsset||null,onBuy=ctx.screen==='buy';
+  const P=x=>sPct(x).replace('percent','เปอร์เซ็นต์');
+  if(has(/^(yes|yeah|yep|sure|ok|okay|please|go on|do that|ใช่|ได้|โอเค)/)&&t.length<26&&this._offer){const o=this._offer;this._offer=null;return this.demoRespond(o,ctx);}
+  if(has(/^(no|nope|nah|not now|ไม่)/)&&t.length<16){this._offer=null;return this.R('No problem. Anything else?',{say:th?'ได้เลย มีอะไรอีกไหม':'No problem. Anything else?'});}
+  if(has(/^(hi|hello|hey|สวัสดี)/)&&t.length<20)return this.R('Hi John! What would you like to do?',{say:th?'สวัสดีจอห์น ให้ช่วยอะไรดี':'Hi John! What would you like to do?'});
+  if(has(/thank|ขอบคุณ/))return this.R('Anytime!',{say:th?'ยินดีเลย':'Anytime!'});
+  if(has(/what can you do|what do you do|ช่วยอะไรได้/))return this.R('I can open any asset, change the chart period, set up a purchase, freeze your card, and explain anything on screen. Just say it.',{say:"I can open any asset, change the chart, set up a purchase, freeze your card, or explain what you're looking at. Just tell me.",sugg:['Show me gold','Put 1,000 baht in gold']});
+  if(has(/(confirm|place (the|my) order|complete (the )?purchase|ยืนยัน|ซื้อเลย)/)||(onBuy&&has(/^(buy it|do it|go ahead)/)))return this.R("That last step is yours: tap Confirm purchase on screen. I never confirm purchases for you.",{say:th?'ขั้นตอนสุดท้ายต้องให้คุณแตะยืนยันเองนะ':"That last step is yours. Just tap Confirm purchase on screen.",emo:'curious',ui:onBuy&&s.buyStep==='review'?[{type:'highlight',target:'buy.confirm_button'}]:[]});
+  if(has(/^(cancel|never ?mind|forget it|stop|ยกเลิก)/)){if(onBuy)return this.R('Cancelled. Nothing was bought.',{say:th?'ยกเลิกแล้ว ไม่มีการซื้อ':'Okay, cancelled. Nothing was bought.',emo:'curious',ui:[{type:'cancel_buy'}]});return this.R('Okay.',{say:th?'ได้เลย':'Okay.'});}
+  let amt=null;const mm=raw.replace(/,/g,'').match(/(\d+(?:\.\d+)?)\s*(k\b|พัน)?/i);if(mm)amt=parseFloat(mm[1])*(mm[2]?1000:1);else if(has(/หนึ่งพัน|one thousand|a thousand/))amt=1000;
+  const wantUsd=has(/spending|usd|dollar wallet/),wantThb=has(/thb wallet|baht wallet|กระเป๋าเงินบาท/);
+  const per=has(/(all time|all-time|\bmax\b|everything|5 years|ทั้งหมด)/)?'ALL':has(/(3 months|three months|quarter|\b3 ?m\b|3 เดือน)/)?'3M':has(/(year|\b1 ?y\b|12 months|ปี)/)?'1Y':has(/(week|\b1 ?w\b|7 days|สัปดาห์)/)?'1W':has(/(month|\b1 ?m\b|30 days|เดือน)/)?'1M':has(/(today|24 ?h|one day|\b1 ?d\b|วันนี้)/)?'1D':null;
+  const buyVerb=has(/(put|buy|invest|purchase|get me|ซื้อ|ลงทุน|ใส่)/);
+  if(amt!=null&&buyVerb&&!(per&&amt<10))return this.rBuy(ref||'XAU',amt,wantUsd?'usd':'thb',th,ctx);
+  if(onBuy&&amt!=null&&amt>=10&&!per)return this.rBuy(ctx.asset.id,amt,wantUsd?'usd':wantThb?'thb':s.walletId,th,ctx);
+  if(onBuy&&(wantUsd||wantThb))return this.rBuy(ctx.asset.id,parseFloat(s.buyAmount)||1000,wantUsd?'usd':'thb',th,ctx);
+  if(has(/step by step|walk me through|teach me|tutorial|guide me|สอนทีละ/))return this.rGuide(ref||'XAU',th);
+  if(has(/how (do i|to|can i) (buy|invest)|show me how|วิธีซื้อ/)){const a=ASSETS[ref||'XAU'];return this.R('Easy. Just tell me how much, like “put 1,000 baht in '+a.name.toLowerCase()+"”, and I'll set it up. You only tap Confirm at the end.",{say:th?'ง่ายมาก แค่บอกจำนวนเงิน เดี๋ยวฉันจัดการให้ เอา'+a.th+' 1,000 บาทเลยไหม':"Easy. Just tell me how much, and I'll set it up for you. Want me to do 1,000 baht of "+a.name+' now?',offer:'put 1000 baht in '+a.name.toLowerCase(),sugg:['Yes, 1,000 baht','Walk me through it step by step'],ui:ctx.screen==='asset'?[]:[{type:'open_asset',asset:a.id}]});}
+  if(has(/unfreeze|un-freeze|ปลดล็อก/))return this.R('Your card is active again.',{say:th?'ปลดล็อกบัตรแล้ว':'Done. Your card is active again.',ui:[{type:'toggle_freeze',value:false}]});
+  if(has(/freeze|lock (my )?card|ล็อก/))return this.R('Your card is frozen. New payments are blocked until you unfreeze it. Your balance is unchanged.',{say:th?'ล็อกบัตรแล้ว บอกได้เลยถ้าอยากปลดล็อก':'Done. Your card is frozen. Just say unfreeze when you need it.',ui:[{type:'toggle_freeze',value:true}],sugg:['Unfreeze my card']});
+  if(has(/hide (my )?balances?|ซ่อน/))return this.R('Balances hidden.',{say:th?'ซ่อนยอดเงินแล้ว':'Done, your balances are hidden.',ui:[{type:'navigate',to:{tab:'home'}},{type:'hide_balance',value:true}]});
+  if(has(/(show|unhide) (my )?balances?/)&&s.hideBal)return this.R('Balances visible.',{say:'Okay, showing your balances.',ui:[{type:'hide_balance',value:false}]});
+  if(per&&(asset||['asset','invest','portfolio'].includes(ctx.screen)||has(/(show|switch|change|zoom|view|past|last|over|ดู|ย้อนหลัง)/))){
+   const id=asset||(ctx.screen==='asset'?ctx.asset.id:null);
+   if(id){const a=ASSETS[id],arr=this.assetSeries(id,per),c=a.ch[per],up=c>=0,acts=[];if(!(ctx.screen==='asset'&&ctx.asset.id===id))acts.push({type:'open_asset',asset:id});acts.push({type:'set_period',period:per});this._lastAsset=id;
+    return this.R(a.name+' over '+PNAME[per]+': '+usd(arr[0])+' → '+usd(a.price)+' ('+pct(c)+').',{say:th?'นี่คือ'+a.th+'ช่วง'+PTH[per]+' '+(up?'ขึ้น':'ลง')+' '+P(c):"Here's "+a.name+' over '+PNAME[per]+". It's "+(up?'up ':'down ')+sPct(c)+', from about '+sUSD(arr[0])+' to '+sUSD(a.price)+'.',ui:acts,src:['Demo market data · '+a.ticker+' '+per],sugg:['Put 1,000 baht in '+a.name.toLowerCase(),'What does this chart mean?']});}
+   const acts=['invest','portfolio'].includes(ctx.screen)?[]:[{type:'navigate',to:{tab:'invest',view:'invest'}}];acts.push({type:'set_period',period:per});const pfv=this.pfSummary().value,arr=this.pfSeries(per,pfv),d=per==='1D'?125.30:pfv-arr[0];
+   return this.R('Your portfolio over '+PNAME[per]+': '+(d>=0?'+':'-')+usd(Math.abs(d))+'.',{say:th?'นี่คือพอร์ตของคุณช่วง'+PTH[per]:"Here's your portfolio over "+PNAME[per]+". It's "+(d>=0?'up ':'down ')+'about '+sUSD(d)+'.',ui:acts});}
+  const filt=has(/crypto|คริปโต/)?'Crypto':has(/stocks?|shares|หุ้น/)?'Stocks':null;
+  if(filt&&!asset&&has(/(only|just|show|filter|list|ดู)/))return this.R('Showing '+filt.toLowerCase()+' only.',{say:th?'นี่คือรายการ'+(filt==='Crypto'?'คริปโต':'หุ้น'):'Here are the '+filt.toLowerCase()+' assets.',ui:[{type:'set_filter',filter:filt}]});
+  if(has(/compare|\bvs\b|versus|เทียบ/))return this.rCompare(th);
+  if(has(/should i|recommend|best (one|asset|investment)|advice|good time|ควร|แนะนำ/))return this.R("I can't tell you what to buy or sell. I can explain how an asset has moved, what the fees are, or how your portfolio is split, so you can decide.",{say:th?'ฉันแนะนำไม่ได้ว่าควรซื้ออะไร แต่อธิบายได้ว่าราคาเปลี่ยนไปอย่างไร หรือค่าธรรมเนียมเท่าไหร่':"I can't tell you what to buy. But I can explain how prices have moved, or what you'd pay in fees.",emo:'curious',sugg:['Compare assets','Explain my portfolio']});
+  if(has(/portfolio|allocation|holdings|what do i own|พอร์ต/)){const r=this.rExplain('portfolio.allocation',th);if(ctx.screen!=='portfolio')r.ui_actions=[{type:'navigate',to:{tab:'invest',view:'portfolio'}},...r.ui_actions];return r;}
+  if(has(/fee|ค่าธรรมเนียม/))return this.rExplain('buy.fee_line',th);
+  if(has(/(my )?balance|how much (money )?do i have|ยอดเงิน/)){const r=this.rExplain('home.balance',th);if(ctx.screen!=='home')r.ui_actions=[{type:'navigate',to:{tab:'home'}},...r.ui_actions];return r;}
+  if(asset&&!has(/(chart|mean|explain|กราฟ|อธิบาย)/)){const a=ASSETS[asset],c=a.ch['1D'];this._lastAsset=asset;return this.R(a.name+' is at '+usd(a.price)+', '+pct(c)+' today (demo price).',{say:th?a.th+'ตอนนี้ราคาประมาณ '+sUSD(a.price)+' วันนี้'+(c>=0?'ขึ้น':'ลง')+' '+P(c):"Here's "+a.name+". It's at about "+sUSD(a.price)+', '+(c>=0?'up ':'down ')+sPct(c)+' today. Want to buy some, or should I explain the chart?',offer:'Explain this chart',ui:ctx.screen==='asset'&&ctx.asset.id===asset?[]:[{type:'open_asset',asset}],src:['Demo price · '+a.ticker],sugg:['Put 1,000 baht in '+a.name.toLowerCase(),'Explain the chart','Show one year']});}
+  if(has(/^(back|go back|ย้อนกลับ)/))return this.R('Okay.',{say:th?'ได้เลย':'Okay.',ui:[{type:'back'}]});
+  const go=has(/(go|take me|open|show|switch|ไป|เปิด)/);
+  const tab=has(/\bhome\b|หน้าแรก/)?'home':has(/wallet|กระเป๋า/)?'wallets':has(/payment|swap|send money|โอน/)?'payments':has(/\bcards?\b|บัตร/)?'card':has(/invest|market|ตลาด/)?'invest':null;
+  if(tab&&(go||t.split(' ').length<=3)){const names={home:'Home',wallets:'your wallets',payments:'Payments',card:'your card',invest:'Invest'};return this.R('Opened '+names[tab]+'.',{say:th?'เปิดให้แล้ว':"Here's "+names[tab]+'.',ui:[{type:'navigate',to:{tab}}]});}
+  if(has(/24|today/)&&ctx.screen==='asset')return this.rExplain('asset.change24h',th);
+  if(has(/chart|mean|explain|what is this|what's this|what am i looking|กราฟ|หมายถึง|อธิบาย/))return this.rExplain({asset:'asset.chart',invest:'invest.chart',portfolio:'invest.chart',buy:'buy.fee_line',home:'home.balance',card:'card.balance'}[ctx.screen]||'none',th);
+  return this.R("I didn't catch that. You can say things like “show me gold”, “switch to one year” or “put 1,000 baht in gold”.",{say:th?'ขอโทษนะ ฟังไม่ทัน ลองพูดว่า ดูราคาทองคำ หรือ ลงทุนทองคำ 1,000 บาท':"Sorry, I didn't catch that. Try something like, show me gold, or put 1,000 baht in gold.",emo:'curious',sugg:['Show me gold','Put 1,000 baht in gold']});}
+ rBuy(id,amt,wallet,th,ctx){const a=ASSETS[id];this._lastAsset=id;
+  if(amt<MIN_BUY)return this.R('The minimum purchase is ฿100.',{say:th?'ขั้นต่ำคือ 100 บาท':'The minimum is 100 baht. Should I set up 100 baht of '+a.name+' instead?',emo:'curious',offer:'put 100 baht in '+a.name.toLowerCase(),sugg:['Yes, 100 baht']});
+  const c=this.calc(id,amt,wallet);if(!c.ok){const other=wallet==='thb'?'usd':'thb',c2=this.calc(id,amt,other);return this.R('There isn\'t enough in that wallet for '+thb(c.total)+'.',{say:"There isn't enough in that wallet."+(c2.ok?' Want me to use your '+(other==='usd'?'spending':'baht')+' wallet instead?':''),emo:'curious',offer:c2.ok?'put '+amt+' baht in '+a.name.toLowerCase()+' from my '+(other==='usd'?'spending':'thb')+' wallet':null});}
+  const onThis=ctx.screen==='buy'&&ctx.asset.id===id,acts=[];if(!onThis){if(!(ctx.screen==='asset'&&ctx.asset.id===id))acts.push({type:'open_asset',asset:id});acts.push({type:'start_buy',asset:id});}
+  acts.push({type:'type_amount',value:amt},{type:'select_wallet',wallet},{type:'review'});
+  const wn=wallet==='thb'?'THB Wallet':'Spending Wallet';
+  return this.R('Ready to review: '+thb(amt)+' of '+a.name+' (≈ '+qf(c.qty,a)+'), fee '+thb(c.fee)+', total '+thb(c.total)+' from your '+wn+". Tap Confirm purchase when you're happy.",{say:th?'เตรียม'+a.th+' '+sTHBth(amt)+' ให้แล้ว รวมค่าธรรมเนียม '+sTHBth(c.total)+' แตะยืนยันได้เลยเมื่อพร้อม':(onThis?'Updated. ':'Okay, ')+sTHB(amt)+' of '+a.name+". With the fee, that's "+sTHB(c.total)+". It's on screen now. Tap Confirm when you're happy.",emo:'excited',ui:acts,src:['Demo price · '+a.ticker+' '+usd(a.price),'Fee 1% (demo)'],sugg:['Make it 2,000','Use my spending wallet','What is the fee?']});}
+ rGuide(id,th){const a=ASSETS[id];return this.R("I'll walk you through buying "+a.name+" on the real screens. Follow the blue outline. You can go back, skip ahead or exit at any time.",{say:th?'ได้เลย ทำตามกรอบสีน้ำเงินบนหน้าจอนะ':'Sure, let me show you. Just follow the blue outline on screen.',ui:[{type:'start_guide',asset:id}]});}
+ rPurchase(id,amt,th){const a=ASSETS[id];if(amt<MIN_BUY)return this.R('The minimum purchase is ฿100. Want me to prepare ฿100 of '+a.name+' instead?',{say:'The minimum is 100 baht. Should I set up 100 baht of '+a.name+' instead?',emo:'curious',offer:'Put 100 baht in '+a.name.toLowerCase(),sugg:['Yes, ฿100 is fine']});
+  const c=this.calc(id,amt,'thb');
+  return this.R("Sure. I'll prepare that for you. You can review everything before confirming.",{say:th?'เรียบร้อย เตรียม'+a.th+' '+sTHBth(amt)+' ให้แล้ว รวมค่าธรรมเนียมเป็น '+sTHBth(c.total)+' ตรวจดูแล้วแตะรีวิวได้เลย':"Okay. I've set up "+sTHB(amt)+" of "+a.name+". With the fee, that's "+sTHB(c.total)+" in total. Have a look, and tap Review when you're ready.",emo:'excited',ui:[{type:'show_card',card:'purchase_preview',data:{asset:id,amount:amt}}],src:['Demo price · '+a.ticker+' '+usd(a.price),'Fee 1% (demo)']});}
+ rCompare(th){const p=this.state.period;const list=ORDER.map(id=>ASSETS[id].name+' '+pct(ASSETS[id].ch[p])).join(', ');const top=ORDER.map(id=>ASSETS[id]).sort((x,y)=>Math.abs(y.ch[p])-Math.abs(x.ch[p]))[0],g=ASSETS.XAU;
+  return this.R('Here is how the assets moved over '+PNAME[p]+': '+list+'. In this demo data Gold has the smallest day-to-day swings, while Bitcoin, Ethereum and Tesla move the most. Past movement does not predict future prices.',{say:th?'ช่วง'+PTH[p]+' '+top.th+'เปลี่ยนแปลงมากที่สุด '+(top.ch[p]>=0?'ขึ้น':'ลง')+' '+sPct(top.ch[p]).replace('percent','เปอร์เซ็นต์')+' ส่วนทองคำนิ่งกว่า รายละเอียดอยู่บนหน้าจอแล้ว':'Over '+PNAME[p]+', '+top.name+' moved the most, '+(top.ch[p]>=0?'up ':'down ')+sPct(top.ch[p])+'. Gold was steadier, '+(g.ch[p]>=0?'up ':'down ')+sPct(g.ch[p])+". I've put the full list on screen.",emo:'happy',src:['Demo market data · '+p],sugg:['Explain my portfolio','Show me how to buy']});}
+ rExplain(id,th){const s=this.state,a=ASSETS[s.assetId],pf=this.pfSummary();
+  if(id==='asset.chart'){const st=this.chartStats(a.id,s.period),up=st.pct>=0;
+   return this.R("You're looking at "+a.name+' ('+a.ticker+') over '+PNAME[s.period]+'. The price went from '+usd(st.start)+' to '+usd(st.end)+', '+(up?'up ':'down ')+fmt(Math.abs(st.pct))+'%. The highest point was '+usd(st.hi)+' and the lowest was '+usd(st.lo)+'. When the line rises from left to right, the price increased over that period.',
+    {say:th?'นี่คือราคา'+a.th+'ช่วง'+PTH[s.period]+' จากประมาณ '+sUSD(st.start)+' เป็น '+sUSD(st.end)+' '+(up?'ขึ้น':'ลง')+' '+sPct(st.pct).replace('percent','เปอร์เซ็นต์')+' อยากให้อธิบายการเปลี่ยนแปลงใน 24 ชั่วโมงไหม':'This is '+a.name+' over '+PNAME[s.period]+'. It went from about '+sUSD(st.start)+' to '+sUSD(st.end)+". That's "+(up?'up ':'down ')+sPct(st.pct)+'. Want me to explain the 24-hour change too?',
+     offer:'Explain the 24h change',ui:[{type:'highlight',target:'asset.chart'}],src:['asset.chart · '+a.ticker+' '+s.period+' (demo)'],sugg:['Yes, the 24h change','Explain my '+a.name+' holdings']});}
+  if(id==='asset.change24h'){const c=a.ch['1D'],abs=a.price-a.price/(1+c/100),per=a.unit==='oz'?'ounce':a.unit==='shares'?'share':'coin';return this.R(a.name+' is '+pct(c)+' over the last 24 hours. That is '+(c>=0?'+':'-')+usd(Math.abs(abs))+' per '+per+'. A 24-hour change only describes the last day, so it can look very different from the longer charts.',{say:'In the last 24 hours, '+a.name+' is '+(c>=0?'up ':'down ')+sPct(c)+". That's about "+sUSD(abs)+' per '+per+'. It only covers one day, so the longer charts can look quite different.',ui:[{type:'highlight',target:'asset.change24h'}],src:['asset.change24h · demo'],sugg:['Explain this chart']});}
+  if(id==='invest.chart'||id==='invest.portfolio_value'){const arr=this.pfSeries(s.pfPeriod,pf.value),abs=s.pfPeriod==='1D'?125.30:pf.value-arr[0],p=abs/(pf.value-abs)*100;return this.R('Your investments are worth '+usd(pf.value)+'. Over '+PNAME[s.pfPeriod]+' that is '+(abs>=0?'up ':'down ')+usd(Math.abs(abs))+' ('+pct(p)+'). The line shows the combined value of everything you hold, so a big move in one asset moves the whole line.',{say:'Your investments are worth about '+sUSD(pf.value)+'. Over '+PNAME[s.pfPeriod]+", that's "+(abs>=0?'up ':'down ')+sUSD(abs)+'. Want me to break down what you own?',offer:'Explain my portfolio',ui:[{type:'highlight',target:id}],src:['Portfolio · '+s.pfPeriod+' (demo)'],sugg:['Yes, break it down','Compare assets']});}
+  if(id==='portfolio.allocation'){const parts=pf.items.map(i=>Math.round(i.pct)+'% '+(th?ASSETS[i.id].th:i.name));const none=ORDER.filter(x=>!(s.hold[x]>0)).map(x=>ASSETS[x].name);const top=pf.items[0];
+   return this.R(th?'พอร์ตของคุณมีมูลค่า '+usd(pf.value)+' แบ่งเป็น '+parts.join(', ')+' นี่เป็นข้อมูลสรุป ไม่ใช่คำแนะนำการลงทุน':'Your portfolio is worth '+usd(pf.value)+'. About '+parts[0]+(parts.length>1?', then '+parts.slice(1).join(', '):'')+'.'+(none.length?" You don't currently hold "+none.join(' or ')+'.':'')+' This is a summary of your holdings, not investment advice.',{say:th?'พอร์ตของคุณมีมูลค่าประมาณ '+sUSD(pf.value)+' ส่วนใหญ่ประมาณ '+Math.round(top.pct)+' เปอร์เซ็นต์ อยู่ใน'+ASSETS[top.id].th+' อยากให้เปรียบเทียบสินทรัพย์ไหม':'Your portfolio is worth about '+sUSD(pf.value)+'. Most of it, about '+Math.round(top.pct)+' percent, is in '+top.name+'. Would you like me to compare your assets?',offer:'Compare assets',ui:[{type:'highlight',target:'portfolio.allocation'}],src:['portfolio.allocation · demo holdings'],sugg:['Yes, compare them']});}
+  if(id==='buy.fee_line'){const amt=parseFloat(s.buyAmount)>0?parseFloat(s.buyAmount):1000,c=this.calc(a.id,amt,s.walletId);return this.R('The transaction fee is 1% of the amount you buy. For '+thb(c.amt)+' that is '+thb(c.fee)+', so the total taken from your wallet is '+thb(c.total)+'. You receive about '+qf(c.qty,a)+' of '+a.name+'.',{say:'The fee is 1 percent. So for '+sTHB(c.amt)+', you pay '+sTHB(c.fee)+' in fees, and '+sTHB(c.total)+' in total.',ui:[{type:'highlight',target:'buy.fee_line'}],src:['Fee schedule · 1% (demo)'],sugg:['Show me how to buy']});}
+  if(id==='home.balance')return this.R('Your total balance is $28,399.67. It adds your Crypto Wallet ($11,011.67) and your Spending Wallet ($17,388.00). Your investments ('+usd(pf.value)+') are tracked separately on the Invest tab.',{say:'Your total balance is about $28,400, across your crypto and spending wallets. Your investments are on the Invest tab.',ui:[{type:'highlight',target:'home.balance'}],src:['home.balance'],sugg:['Explain my portfolio']});
+  if(id==='card.balance')return this.R('Your card spends from the Spending Wallet, which holds $17,388.00. Freezing the card blocks new payments without changing the balance.',{say:'Your card uses your spending wallet, which has about $17,388. Freezing it pauses payments, but keeps your money.',ui:[{type:'highlight',target:'card.balance'}],src:['card.balance']});
+  return this.R("I can explain balances, charts, fees and your portfolio. Open one of those screens, or tap an element and choose Ask Icarus.",{say:'I can explain balances, charts, fees and your portfolio. Just tap something and choose Ask Icarus.',emo:'curious',sugg:['Explain my portfolio','Show me how to buy']});}
+ reviewCard(m){this.setState(s=>({tab:'invest',view:'buy',assetId:m.card.asset,buyStep:'review',buyAmount:String(m.card.amount),walletId:'thb',viaIcarus:true,messages:s.messages.map(x=>x.id===m.id?{...x,card:{...x.card,status:'reviewed'}}:x)}));this.hideAsst('min');this.log('preview_review',{asset:m.card.asset});}
+ cancelCard(m){this.setState(s=>({messages:s.messages.map(x=>x.id===m.id?{...x,card:{...x.card,status:'cancelled'}}:x)}));this.pushIcarus({text:"Okay, I've cancelled that preview. Nothing was purchased.",demo:!this.backend});if(this.state.voice)this.say(this.state.lang==='th'?'ยกเลิกแล้ว ไม่มีการซื้อเกิดขึ้น':"Okay, cancelled. Nothing was bought.",'curious');this.log('preview_cancel',{});}
+ // ---- voice
+ ttsSpeak(text,opts,onProg,done){let fired=false,gotB=false;const t0=Date.now();const fin=()=>{if(fired)return;fired=true;clearTimeout(this._st);clearInterval(this._pi);onProg&&onProg(text.length);done&&done();};
+  this._pi=setInterval(()=>{if(!gotB&&onProg)onProg(Math.min(text.length,Math.round((Date.now()-t0)/1000*15)));},110);
+  this._st=setTimeout(fin,Math.min(22000,1600+text.length*70));
+  const ext=window.Icarus&&window.Icarus._tts;
+  if(ext){gotB=true;Promise.resolve(ext(text,{...opts,onProgress:i=>onProg&&onProg(i)})).then(fin,fin);return;}
+  try{const ss=window.speechSynthesis;if(ss&&this.props.browserTTS!==false){ss.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=/[\u0E00-\u0E7F]/.test(text)?'th-TH':'en-US';u.rate=1.04;u.pitch=1.1;u.onboundary=e=>{gotB=true;onProg&&onProg(e.charIndex+(e.charLength||0));};u.onend=fin;ss.speak(u);}}catch(e){}}
+ speak(text,done){this.ttsSpeak(text,{lang:this.state.lang},null,done);}
+ stopTTS(){clearTimeout(this._st);clearInterval(this._pi);try{window.speechSynthesis&&window.speechSynthesis.cancel();}catch(e){}try{window.Icarus&&window.Icarus._ttsStop&&window.Icarus._ttsStop();}catch(e){}}
+ srAvail(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition)&&this.props.browserSTT!==false&&!this._recDisabled;}
+ startRec(){if(!this.srAvail()||this._rec)return;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  try{const r=new SR();r.lang=this.state.lang==='th'?'th-TH':'en-US';r.interimResults=true;r.continuous=false;this._recGot=false;
+   r.onresult=e=>{let txt='',fin=false;for(let i=0;i<e.results.length;i++){txt+=e.results[i][0].transcript;if(e.results[i].isFinal)fin=true;}clearTimeout(this._sl);this.setVoice({phase:'hearing',transcript:txt});if(fin&&!this._recGot){this._recGot=true;this.finishUtterance(txt.trim());}};
+   r.onerror=ev=>{if(ev.error==='not-allowed'||ev.error==='service-not-allowed'||ev.error==='audio-capture'){this._recDisabled=true;this.setVoice({sttOff:true});}};
+   r.onend=()=>{this._rec=null;const v=this.state.voice;if(!v)return;if(v.phase==='hearing'&&!this._recGot&&v.transcript){this.finishUtterance(v.transcript.trim());return;}if(v.phase==='listening'&&!v.muted&&!this._recDisabled)setTimeout(()=>{const w=this.state.voice;if(w&&w.phase==='listening'&&!w.muted)this.startRec();},350);};
+   r.start();this._rec=r;}catch(e){this._recDisabled=true;this.setVoice({sttOff:true});}}
+ stopRec(){const r=this._rec;this._rec=null;if(r){r.onend=null;try{r.abort();}catch(e){}}}
+ stopVoiceStuff(){clearInterval(this._vt);clearTimeout(this._sl);clearTimeout(this._at);this._vtok=null;this.stopTTS();this.stopRec();}
+ greeting(ctx,th){const a=ASSETS[this.state.assetId];if(th)return 'สวัสดีจอห์น ให้ช่วยอะไรดี';
+  return{asset:'Hi John. Want me to buy some '+a.name+', or explain the chart?',buy:"I'm here. Tell me an amount, or ask about the fee.",portfolio:'Hi John. Ask me anything about your portfolio.'}[ctx.screen]||'Hi John. What can I do for you?';}
+ startVoice(){const th=this.state.lang==='th',ctx=this.getContext();this.stopVoiceStuff();
+  this.setState({asst:'voice',closing:false,fabBubble:null,voice:{phase:'speaking',transcript:'',you:'',line:'',said:0,muted:false,emotion:'happy',chips:[],sttOff:!this.srAvail()}},()=>this.say(this.greeting(ctx,th),'happy'));this.log('voice_start',{lang:this.state.lang});}
+ setVoice(p){this.setState(s=>({voice:s.voice?{...s.voice,...p}:s.voice}));}
+ listen(){this.setVoice({phase:'listening'});this.armSleep();const v=this.state.voice;if(v&&!v.muted)setTimeout(()=>this.startRec(),60);}
+ say(line,emo,after){const tok=uid();this._vtok=tok;this.stopRec();this.setVoice({phase:'speaking',line,said:0,emotion:emo||'happy'});
+  this.ttsSpeak(line,{lang:this.state.lang,emotion:emo},i=>{if(this._vtok===tok)this.setVoice({said:i});},()=>{if(this._vtok!==tok)return;this.setVoice({said:line.length});this.listen();after&&after();});}
+ armSleep(){clearTimeout(this._sl);this._sl=setTimeout(()=>{const v=this.state.voice;if(v&&v.phase==='listening'){this.stopRec();this.setVoice({phase:'asleep'});}},30000);}
+ tapMascot(){const v=this.state.voice;if(!v)return;if(v.phase==='speaking'){this._vtok=null;this.stopTTS();this.setVoice({said:v.line.length});this.listen();this.log('voice_interrupt',{});}else if(v.phase==='asleep')this.listen();}
+ toggleMute(){const v=this.state.voice;if(!v)return;const m=!v.muted;this.setVoice({muted:m});if(m)this.stopRec();else if(v.phase==='listening')setTimeout(()=>this.startRec(),60);}
+ setLang(l){this.setState({lang:l},()=>{const v=this.state.voice;if(v&&v.phase==='listening'){this.stopRec();this.startRec();}});}
+ simulate(phrase){const v=this.state.voice;if(!v||v.muted)return;if(v.phase==='speaking'){this._vtok=null;this.stopTTS();}this.stopRec();clearInterval(this._vt);clearTimeout(this._sl);let i=0;this.setVoice({phase:'hearing',transcript:'',chips:[]});
+  this._vt=setInterval(()=>{i+=2;this.setVoice({transcript:phrase.slice(0,i)});if(i>=phrase.length){clearInterval(this._vt);this.finishUtterance(phrase);}},38);}
+ finishUtterance(text,focus){if(!text)return;const tok=uid();this._vtok=tok;clearTimeout(this._sl);this.stopRec();
+  this.setState(s=>({voice:s.voice?{...s.voice,phase:'thinking',transcript:'',you:text,line:'',chips:[]}:s.voice,messages:[...s.messages,{id:uid(),role:'user',text}]}));
+  const ctx=this.getContext(),demo=!this.backend;this.log(focus?'explain_ask':'question',{text,target:focus||null,context:ctx.label,mode:'voice'});
+  Promise.resolve().then(()=>focus&&demo?this.rExplain(focus,this.state.lang==='th'):demo?this.demoRespond(text,ctx):this.backend(text,ctx)).then(r=>setTimeout(()=>{if(this._vtok!==tok||!r)return;
+   const sp=this.splitActs(r);this.applyResponse(r,demo);this.setVoice({chips:(r.suggestions||[]).slice(0,3)});this.runActions(sp.acts);
+   this.say(r.speech||r.text,r.emotion||'happy',sp.guide?()=>this.startGuide(sp.guide.asset||'XAU'):null);},demo?500:0));}
+ endVoice(){this.stopVoiceStuff();this.setState({asst:'closed',voice:null});}
+ toText(){this.stopVoiceStuff();this.setState({asst:'open',voice:null});}
+ playMsg(m){if(this.state.playing===m.id){this.stopTTS();this.setState({playing:null});return;}this.setState({playing:m.id});this.speak(m.speech||m.text,()=>this.setState(s=>s.playing===m.id?{playing:null}:null));}
+ // ---- scenarios
+ scenario(k){const s=this.state;if(k==='B2'){if(s.asst==='voice')this.simulate('Put 1,000 baht in gold');else this.send('Put 1,000 baht in gold');this.log('scenario',{k});return;}
+  this.stopVoiceStuff();const base={tab:'home',view:'invest',buyStep:'amount',buyAmount:'',guide:null,hl:null,explain:null,flash:null,voice:null,asst:'closed',closing:false,messages:[WELCOME()],viaIcarus:false,scrub:null,fabBubble:null,frozen:false,hideBal:false};
+  if(k==='A')this.setState({...base,timer:{mode:'A',start:Date.now()}},()=>this.toast('Scenario A: buy ฿1,000 of Gold manually'));
+  if(k==='B')this.setState({...base,timer:{mode:'B',start:Date.now()}},()=>this.startVoice());
+  if(k==='C')this.setState({...base,tab:'invest',view:'asset',assetId:'XAU',period:'1M'},()=>{this.flash('asset.chart');this.toast('Tap the chart, then Ask Icarus');});
+  if(k==='D')this.setState({...base,tab:'invest',view:'invest'},()=>{this.startVoice();});
+  if(k==='G')this.setState({...base,tab:'invest',view:'invest',asst:'open'},()=>setTimeout(()=>this.send('Walk me through buying gold step by step'),400));
+  this.log('scenario',{k});}
+ explainTap(id){return e=>{e.stopPropagation();const R=this.screenRef.current.getBoundingClientRect(),k=R.width/393||1;this.setState({explain:{id,x:(e.clientX-R.left)/k,y:(e.clientY-R.top)/k}});this.log('explain_tap',{target:id});};}
+
+ renderVals(){
+  const s=this.state,scr=this.screenName(),a=ASSETS[s.assetId],pf=this.pfSummary(),th=s.lang==='th';
+  const pfArr=this.pfSeries(s.pfPeriod,pf.value),pfChart=this.chart('pf',pfArr,s.pfPeriod,p=>this.setState({pfPeriod:p}));
+  const pfAbs=s.pfPeriod==='1D'?125.30:pf.value-pfArr[0],pfPct=pfAbs/(pf.value-pfAbs)*100;
+  const aChart=this.chart('asset',this.assetSeries(a.id,s.period),s.period,p=>this.setState({period:p}),170);
+  const st=this.chartStats(a.id,s.period),c24=a.ch['1D'],abs24=a.price-a.price/(1+c24/100),d1=this.chartStats(a.id,'1D');
+  const aVal=(s.hold[a.id]||0)*a.price,aAlloc=pf.value?aVal/pf.value*100:0;
+  const filt={All:ORDER,Crypto:['BTC','ETH'],Stocks:['AAPL','TSLA'],Gold:['XAU']}[s.filter];
+  const c=this.calc(a.id,parseFloat(s.buyAmount)||0,s.walletId),amtNum=parseFloat(s.buyAmount)||0;
+  const wName={thb:'THB Wallet',usd:'Spending Wallet'}[s.walletId];
+  const navItem=t=>({bg:s.tab===t?GRAD:'transparent',fg:s.tab===t?'#fff':'#8A6B75',sh:'none'});
+  const showNav=!(s.tab==='invest'&&(s.view==='asset'||s.view==='buy'));
+  const sheetVisible=s.asst==='open';
+  const g=s.guide;let guide=null,tipTop=300;
+  if(g){const steps=this.guideSteps(g.asset),stp=steps[g.i];guide={step:'Step '+(g.i+1)+' of '+steps.length,title:stp.title,text:stp.text,next:g.i===steps.length-1?'Finish':'Next',backOp:g.i>0?1:.35,dots:steps.map((x,i)=>({w:i===g.i?18:6,c:i<=g.i?BLUE:'#F0D6DD'}))};
+   if(s.hl){tipTop=s.hl.y+s.hl.h+12+200<830?s.hl.y+s.hl.h+12:s.hl.y-12-200;tipTop=clamp(tipTop,58,620);}}
+  const v=s.voice;let vv={img:'mascot/bow/curious.png',anim:'none',status:'',dot:BLUE,ring:false,spoken:'',rest:'',captionColor:'#4A2E36',hasYou:false,you:'',hasChips:false,chips:[]};
+  if(v){const ph=v.muted&&v.phase!=='speaking'?'muted':v.phase;const compact=scr==='buy'&&s.buyStep==='review';
+   const img=ph==='thinking'?'working':ph==='asleep'?'sleepy':ph==='speaking'?({happy:'happy',excited:'excited',curious:'curious',star:'star'}[v.emotion]||'happy'):'curious';
+   const anim={listening:'icBob 2.6s ease-in-out infinite',hearing:'icLean 1.3s ease-in-out infinite',thinking:'icBob 1.1s ease-in-out infinite',speaking:'icTalk .34s ease-in-out infinite alternate',asleep:'icBreath 3.2s ease-in-out infinite',muted:'none'}[ph];
+   const status={listening:v.sttOff?(th?'กำลังฟัง · แตะประโยคตัวอย่าง (เดโม)':'Listening · tap a phrase (demo, no mic)'):(th?'กำลังฟัง · พูดได้เลย':'Listening · just talk'),hearing:th?'กำลังได้ยิน…':'Hearing you…',thinking:th?'กำลังจัดการ…':'On it…',speaking:th?'กำลังพูด · แตะเพื่อขัดจังหวะ':'Speaking · tap me to interrupt',asleep:th?'พักอยู่ · แตะเพื่อปลุก':'Resting · tap me to wake',muted:th?'ปิดไมค์อยู่':'Mic muted'}[ph];
+   let spoken='',rest='',cc='#4A2E36';
+   if(ph==='hearing'){spoken=v.transcript+' ▍';cc=BLUE;}else if(ph==='speaking'){spoken=v.line.slice(0,v.said);rest=v.line.slice(v.said);}else if(ph==='asleep'){spoken=th?'แตะเมื่ออยากคุยได้เลย':'Tap me when you need me.';cc='#AE939B';}else if(ph==='thinking'){spoken='…';cc='#AE939B';}else{spoken=v.line||(th?'ให้ช่วยอะไรดี':'What can I do for you?');cc=v.line?'#4A2E36':'#AE939B';}
+   const sug=v.chips||[],chips=ph==='listening'?(sug.length?sug:(v.sttOff||!v.you?PHRASES[s.lang]:[])):[];
+   vv={img:'mascot/bow/'+img+'.png',anim,status,dot:{listening:GREEN,hearing:GREEN,thinking:'#E0A526',speaking:BLUE,asleep:'#AE939B',muted:'#AE939B'}[ph],ring:ph==='listening'||ph==='hearing',spoken,rest,captionColor:cc,hasYou:!!v.you&&ph!=='hearing',you:v.you,hasChips:chips.length>0&&!compact,capMax:compact?46:92,chips:chips.map(x=>({t:x,on:e=>{e.stopPropagation();this.simulate(x);}}))};}
+  const seg=on=>({bg:on?'#fff':'transparent',fg:on?'#4A2E36':'#8A6B75',sh:on?'0 1px 4px rgba(150,60,85,.1)':'none'});
+  const tm=s.timer,elapsed=tm?(s.now||Date.now())-tm.start:0,fmtMs=ms=>ms==null?'—':ms<60000?(ms/1000).toFixed(1)+'s':Math.floor(ms/60000)+'m '+String(Math.floor(ms%60000/1000)).padStart(2,'0')+'s';
+  const mx=Math.max(s.results.A||0,s.results.B||0)||1;
+  const held=pf.items;let acc=0;const C=2*Math.PI*52;
+  const donut=held.map((h,i)=>{const len=h.pct/100*C;const d={color:ALLOC_C[i%5],dash:len.toFixed(2)+' '+C.toFixed(2),off:(-acc).toFixed(2)};acc+=len;return d;});
+  const explain=s.explain;
+  return{
+   screenRef:this.screenRef,scrollRef:this.scrollRef,msgsRef:this.msgsRef,
+   onScreenClick:()=>{if(s.explain)this.setState({explain:null});},
+   onScroll:()=>{if(s.explain)this.setState({explain:null});if(this.hlTarget())this.measure();},
+   stop:e=>e.stopPropagation(),
+   isHome:scr==='home',isWallets:scr==='wallets',isInvest:scr==='invest',isAsset:scr==='asset',isPortfolio:scr==='portfolio',isPayments:scr==='payments',isCard:scr==='card',
+   isBuyAmount:scr==='buy'&&s.buyStep==='amount',isBuyReview:scr==='buy'&&s.buyStep==='review',isBuyDone:scr==='buy'&&s.buyStep==='done',
+   totalBal:s.hideBal?'••••••':'$28,399.67',cryptoBal:s.hideBal?'••••':'$11,011.67',spendBal:s.hideBal?'••••':usd(s.usdBal),
+   toggleHide:e=>{e.stopPropagation();this.setState({hideBal:!s.hideBal});},
+   tapBalance:this.explainTap('home.balance'),tapPfValue:this.explainTap('invest.portfolio_value'),tapPfChart:this.explainTap('invest.chart'),tapChart:this.explainTap('asset.chart'),tapChange:this.explainTap('asset.change24h'),tapFee:this.explainTap('buy.fee_line'),tapAlloc:this.explainTap('portfolio.allocation'),tapCardBal:this.explainTap('card.balance'),
+   onBell:()=>this.toast('Notifications are outside this demo'),onReceive:()=>this.toast('Receive is outside this demo'),onSend:()=>this.toast('Send is outside this demo'),onSwap:()=>this.toast('Swap preview is outside this demo'),onSell:()=>this.toast('Sell uses the same flow as Buy; not included in this demo'),onTopUp:()=>this.toast('Top up is outside this demo'),onRemove:()=>this.toast('Remove card is disabled in the demo'),onAddWallet:()=>this.toast('Add to Wallet is outside this demo'),
+   frozen:s.frozen,freezeLabel:s.frozen?'Unfreeze':'Freeze',cardOpacity:1,toggleFreeze:()=>this.setState({frozen:!s.frozen}),
+   txList:HOME_TX.map((t,i)=>({...t,border:i?'1px solid #F8E8EC':'none'})),
+   walletRows:[{mono:'$',name:'Spending Wallet',sub:'USD · linked to your card',bal:usd(s.usdBal)},{mono:'₿',name:'Crypto Wallet',sub:'BTC, ETH, USDT',bal:'$11,011.67'},{mono:'฿',name:'THB Wallet',sub:'Thai baht',bal:thb(s.thbBal)},{mono:'↗',name:'Investments',sub:'Crypto, stocks and gold',bal:usd(pf.value),onClick:()=>this.setState({tab:'invest',view:'portfolio'})}].map((w,i)=>({onClick:()=>{},...w,border:i?'1px solid #F8E8EC':'none'})),
+   pfValue:usd(pf.value),pfChange:(pfAbs>=0?'+':'-')+usd(Math.abs(pfAbs))+' ('+pct(pfPct)+')',pfChColor:pfAbs>=0?GREEN:RED,pfPeriodName:PLABEL[s.pfPeriod],pfChart,
+   openPortfolio:()=>this.setState({tab:'invest',view:'portfolio',buyStep:'amount'}),
+   filters:['All','Crypto','Stocks','Gold'].map(f=>({label:f,bg:s.filter===f?GRAD:'#fff',fg:s.filter===f?'#fff':'#4A2E36',onClick:()=>this.setState({filter:f})})),
+   assetRows:filt.map((id,i)=>{const x=ASSETS[id],up=x.ch['1D']>=0;return{id,name:x.name,ticker:x.ticker,mono:x.mono,bg:x.bg,price:usd(x.price),change:pct(x.ch['1D']),color:up?GREEN:RED,spark:this.spark(id),border:i?'1px solid #F8E8EC':'1px solid transparent',onOpen:e=>{e.stopPropagation();this.openAsset(id);}};}),
+   asset:{name:a.name,ticker:a.ticker,type:a.type,mono:a.mono,bg:a.bg,price:usd(a.price),change24:(c24>=0?'▲ ':'▼ ')+pct(c24)+' · '+(c24>=0?'+':'-')+usd(Math.abs(abs24)),chBg:c24>=0?'#E7F6EC':'#FBEAEA',chColor:c24>=0?'#187A43':'#A82A27',periodName:PLABEL[s.period],pChange:pct(st.pct),pChColor:st.pct>=0?GREEN:RED,lo:usd(st.lo),hi:usd(st.hi),
+    perf:['1W','1M','3M','1Y'].map(p=>({label:p,val:pct(a.ch[p]),color:a.ch[p]>=0?GREEN:RED})),qty:qf(s.hold[a.id]||0,a),value:usd(aVal),alloc:fmt(aAlloc,1)+'%',allocW:aAlloc.toFixed(1),desc:a.desc,
+    info:[{k:'24h high',v:usd(d1.hi)},{k:'24h low',v:usd(d1.lo)},...a.info.map(r=>({k:r[0],v:r[1]})),{k:'Data',v:'Demo, not live'}]},
+   aChart,goBack:()=>this.goBack(),startBuy:()=>this.startBuy(),toReview:()=>this.toReview(),confirm:()=>this.confirm(),
+   buyAmount:s.buyAmount,onAmount:e=>this.setState({buyAmount:e.target.value.replace(/[^\d.]/g,'').slice(0,9)}),
+   quick:[500,1000,5000,10000].map(n=>({label:'฿'+fmt(n,0),bg:amtNum===n?'#FDECF1':'#fff',fg:amtNum===n?BLUE:'#4A2E36',onClick:()=>this.setState({buyAmount:String(n)})})),
+   buy:{border:c.err?'#E6A4A2':amtNum>0?'#F6B9C8':'transparent',qty:qf(c.qty,a),unitPrice:'1 '+(a.unit==='shares'?'share':a.unit)+' ≈ '+thb(a.price*RATE),fee:thb(c.fee),total:thb(c.total),amt:thb(c.amt),hasErr:!!c.err,err:c.err,btnOp:c.ok?1:.45,wallet:wName,avail:thb(c.avail),after:thb(c.avail-c.total)},
+   walletOpts:[{id:'thb',mono:'฿',name:'THB Wallet',sub:thb(s.thbBal)+' available'},{id:'usd',mono:'$',name:'Spending Wallet',sub:usd(s.usdBal)+' · ≈ '+thb(s.usdBal*RATE)}].map(w=>({...w,border:s.walletId===w.id?BLUE:'#F6E1E7',dot:s.walletId===w.id?BLUE:'transparent',onClick:()=>this.setState({walletId:w.id})})),
+   done:s.lastBuy?{qty:qf(s.lastBuy.qty,ASSETS[s.lastBuy.asset]),name:ASSETS[s.lastBuy.asset].name,amt:thb(s.lastBuy.amt),fee:thb(s.lastBuy.fee),total:thb(s.lastBuy.total)}:{qty:'',name:'',amt:'',fee:'',total:''},
+   doneHome:()=>this.setState({view:'asset',buyStep:'amount',buyAmount:''}),
+   donut,heldCount:String(held.length),
+   allocList:held.map((h,i)=>{const x=ASSETS[h.id];return{name:x.name,pct:fmt(h.pct,1)+'%',color:ALLOC_C[i%5],mono:x.mono,bg:x.bg,qty:qf(h.qty,x),value:usd(h.value),change:pct(x.ch['1D'])+' today',chColor:x.ch['1D']>=0?GREEN:RED,border:i?'1px solid #F8E8EC':'none',onOpen:e=>{e.stopPropagation();this.openAsset(h.id);}};}),
+   invTx:s.txs.map((t,i)=>{const x=ASSETS[t.asset];return{mono:x.mono,bg:x.bg,title:'Bought '+x.name,sub:t.date+' · '+qf(t.qty,x),amt:thb(t.thb),border:i?'1px solid #F8E8EC':'none'};}),
+   nav:{home:navItem('home'),wallets:navItem('wallets'),invest:navItem('invest'),payments:navItem('payments'),card:navItem('card')},showNav,
+   goHome:()=>this.goTab('home'),goWallets:()=>this.goTab('wallets'),goInvest:()=>this.goTab('invest'),goPayments:()=>this.goTab('payments'),goCard:()=>this.goTab('card'),
+   hasHl:!!(s.hl&&(g||s.flash)),hl:s.hl||{x:0,y:0,w:0,h:0},
+   showFab:(!sheetVisible&&s.asst!=='voice')||s.closing,fabTap:()=>this.props.fabOpens==='chat'?this.openAsst():this.startVoice(),hasBubble:!!s.fabBubble&&s.asst!=='voice'&&!sheetVisible,bubble:s.fabBubble||'',bubbleBottom:(showNav?104:112)+8,fabBottom:showNav?104:112,fabRing:!!g,fabDot:s.asst==='min'&&!g,openAsst:()=>this.openAsst(),
+   hasGuide:!!g,guide:guide||{dots:[]},tipTop,exitGuide:e=>{e.stopPropagation();this.exitGuide(false);},guideNext:e=>{e.stopPropagation();g.i>=4?this.exitGuide(true):this.setGuide(g.asset,g.i+1);},guideBack:e=>{e.stopPropagation();if(g.i>0)this.setGuide(g.asset,g.i-1);},
+   hasExplain:!!explain,exX:explain?clamp(explain.x-66,10,393-150):0,exY:explain?clamp(explain.y-56,60,780):0,
+   askExplain:e=>{e.stopPropagation();const id=explain.id;const lbl={'home.balance':'my total balance','invest.portfolio_value':'my portfolio value','invest.chart':'the portfolio chart','asset.chart':'this '+a.name+' chart','asset.change24h':'the 24h change','buy.fee_line':'the transaction fee','portfolio.allocation':'my allocation','card.balance':'my card balance'}[id]||'this';this.setState({explain:null});this.send('What does '+lbl+' mean?',id);},
+   hasToast:!!s.toast,toast:s.toast||'',
+   sheetVisible,isChat:s.asst==='open',isVoice:s.asst==='voice',sheetH:s.asst==='voice'?'92%':'68%',
+   sheetAnim:s.closing?'icDown .22s ease forwards':'icUp .32s cubic-bezier(.2,.8,.2,1)',backdropAnim:s.closing?'icFadeOut .22s ease forwards':'icFade .25s ease',
+   minimize:e=>{e&&e.stopPropagation();this.hideAsst('min');},closeAsst:e=>{e.stopPropagation();this.hideAsst('closed');},
+   statusColor:this.backend?GREEN:'#C99A2E',statusText:this.backend?'Online':'Demo mode',backendText:this.backend?'connected':'demo responses (no backend set)',
+   messages:s.messages.map(m=>{const o={id:m.id,isUser:m.role==='user',isIcarus:m.role==='icarus',text:m.text,showPrompts:!!m.prompts,showLabel:!m.prompts,demo:!!m.demo,hasSources:!!(m.sources&&m.sources.length),sources:(m.sources||[]).join(' · '),hasSugg:!!(m.suggestions&&m.suggestions.length),sugg:(m.suggestions||[]).map(t=>({t,on:()=>this.send(t)})),playing:s.playing===m.id,notPlaying:s.playing!==m.id,onPlay:()=>this.playMsg(m),dur:'0:'+String(Math.min(59,Math.max(3,Math.round(m.text.length/15)))).padStart(2,'0'),hasCard:!!m.card,card:{}};
+    if(m.card){const x=ASSETS[m.card.asset],cc=this.calc(m.card.asset,m.card.amount,'thb');o.card={name:x.name+' ('+x.ticker+')',mono:x.mono,bg:x.bg,amt:thb(cc.amt),qty:'≈ '+qf(cc.qty,x),fee:thb(cc.fee),total:thb(cc.total),isOpen:m.card.status==='open',isReviewed:m.card.status==='reviewed',isCancelled:m.card.status==='cancelled',onReview:()=>this.reviewCard(m),onCancel:()=>this.cancelCard(m)};}
+    return o;}),
+   prompts:['Explain this chart','Show me how to buy','Compare assets','Explain my portfolio'].map(t=>({t,on:()=>this.send(t)})),
+   typing:s.typing,ctxLabel:this.getContext().label,input:s.input,onInput:e=>this.setState({input:e.target.value}),onKey:e=>{if(e.key==='Enter')this.send(s.input);},sendInput:()=>this.send(s.input),
+   startVoice:()=>this.startVoice(),endVoice:()=>this.endVoice(),toText:()=>this.toText(),tapMascot:e=>{e.stopPropagation();this.tapMascot();},toggleMute:()=>this.toggleMute(),muteBg:v&&v.muted?'#FBE3EA':'#fff',muteOp:v&&v.muted?1:0,
+   setEn:()=>this.setLang('en'),setTh:()=>this.setLang('th'),langEn:seg(!th),langTh:seg(th),vv,
+   showConsole:this.props.showConsole!==false,
+   scenarios:[{k:'A',title:'Without Icarus',sub:'Resets to Home, starts timer. Stops at confirmation.',btn:'Start',on:()=>this.scenario('A')},{k:'B',title:'With Icarus',sub:'Opens voice and starts timer. Say “Put 1,000 baht in gold”.',btn:'Start',on:()=>this.scenario('B')},{k:'B',title:'Say “1,000 baht in gold”',sub:'Speaks the Scenario B request for you.',btn:'Say',on:()=>this.scenario('B2')},{k:'C',title:'Explain anything',sub:'Opens Gold. Tap the chart, then Ask Icarus.',btn:'Open',on:()=>this.scenario('C')},{k:'D',title:'Just talk',sub:'Try “show me bitcoin”, “switch to one year”, “freeze my card”.',btn:'Talk',on:()=>this.scenario('D')},{k:'D',title:'Step-by-step guide',sub:'Optional tutorial mode with highlights.',btn:'Run',on:()=>this.scenario('G')}],
+   timerMode:tm?(tm.mode==='A'?'Running · Scenario A':'Running · Scenario B'):'Idle',timerText:fmtMs(elapsed||0),
+   resA:{t:fmtMs(s.results.A),w:s.results.A?(s.results.A/mx*100).toFixed(0):0},resB:{t:fmtMs(s.results.B),w:s.results.B?(s.results.B/mx*100).toFixed(0):0},
+   ratioText:s.results.A&&s.results.B?(s.results.B<s.results.A?'Icarus flow was '+(s.results.A/s.results.B).toFixed(1)+'× faster':'Manual flow was faster this run'):'',
+   resetTimer:()=>this.setState({results:{A:null,B:null},timer:null})
+  };
+ }
+}
+</script>
+</body>
+</html>

@@ -6,10 +6,15 @@
 //   - If the preview is missing a field we need, we do NOT read anything back and we do NOT
 //     offer a voice confirm. The user is sent to the card on screen instead.
 //
-// Example:  "1,000 baht into gold. Fee 15 baht. Total 1,015 baht. Say confirm or cancel."
+// Example (English):  "one thousand baht into gold. Fee fifteen baht. Total one thousand fifteen baht.
+//                      Say confirm or cancel."
+//
+// English amounts are spoken as WORDS on purpose. Tested on the live ElevenLabs voice, "1,015" was
+// spoken as "1,215" (and "1015" as "10.15"), while "one thousand fifteen" was right every time.
+// The card on screen keeps digits. Thai amounts stay as digits (the Thai model read them correctly).
 
 import { STRINGS, fill } from '../config/strings';
-import { formatExactNumber } from './speech-format';
+import { spokenExactNumber } from './speech-format';
 import type { AssistantReply, Lang, TradePreview } from './types';
 
 /** card_type values we treat as a money preview. ASSUMPTION: agree these with Luka, First and Oasis. */
@@ -74,15 +79,17 @@ export function extractPreview(reply: AssistantReply): TradePreview | null {
 /** The exact sentence for this preview, in this language. Includes the "say confirm or cancel" prompt. */
 export function buildReadback(preview: TradePreview, lang: Lang): string {
   const s = STRINGS[lang];
-  const currency = s.currencyWords[preview.currency.toUpperCase()] ?? preview.currency;
+  const plural = s.currencyWords[preview.currency.toUpperCase()] ?? preview.currency;
+  // "one dollar", not "one dollars". Baht, yen and Thai words do not change.
+  const currencyFor = (n: number) => (lang === 'en' && n === 1 && /(dollar|euro|pound)s$/.test(plural) ? plural.slice(0, -1) : plural);
   const asset = s.assetNames[preview.asset.toLowerCase()] ?? preview.asset;
-  const amount = formatExactNumber(preview.amount);
+  const amount = spokenExactNumber(preview.amount, lang);
   const sideTemplate = s.readback[preview.side];
 
   const parts = [
-    fill(sideTemplate, { amount, currency, asset }),
-    fill(s.readback.fee, { fee: formatExactNumber(preview.fee), currency }),
-    fill(s.readback.total, { total: formatExactNumber(preview.total), currency }),
+    fill(sideTemplate, { amount, currency: currencyFor(preview.amount), asset }),
+    fill(s.readback.fee, { fee: spokenExactNumber(preview.fee, lang), currency: currencyFor(preview.fee) }),
+    fill(s.readback.total, { total: spokenExactNumber(preview.total, lang), currency: currencyFor(preview.total) }),
     s.readback.prompt.endsWith('.') ? s.readback.prompt : `${s.readback.prompt}.`,
   ];
   return parts.join(' ');

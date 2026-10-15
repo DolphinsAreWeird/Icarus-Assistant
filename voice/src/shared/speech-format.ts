@@ -177,7 +177,12 @@ const ABOUT_WORDS = /(about|around|roughly|approximately|ประมาณ)\s*$
 function speakPercents(text: string, opts: SpeechOptions): string {
   const w = STRINGS[opts.lang].words;
   const pct = w.percent;
+  const say = (digits: string) => (opts.lang === 'en' ? numberToWordsEn(digits) : digits);
   // Ranges first: 5-10% was already turned into "5 to 10%" by speakSymbols.
+  text = text.replace(
+    new RegExp(`(?<![\\w.])(\\d+(?:\\.\\d+)?) ${w.rangeTo} (\\d+(?:\\.\\d+)?)\\s?%`, 'g'),
+    (_m, a: string, b: string) => `${say(a)} ${w.rangeTo} ${say(b)} ${pct}`,
+  );
   return text.replace(
     // A space is only allowed between the sign and the number ("- 2.3%"), never before the match.
     /(?<![\w.])(?:([+\-−])\s?)?(\d+(?:\.\d+)?)\s?%/g,
@@ -186,7 +191,7 @@ function speakPercents(text: string, opts: SpeechOptions): string {
       const value = Number(num);
       const { text: spoken, rounded } = opts.exact ? { text: num, rounded: false } : roundPercent(value);
       const about = rounded && !ABOUT_WORDS.test(before) ? `${w.about} ` : '';
-      const body = `${about}${spoken} ${pct}`;
+      const body = `${about}${say(spoken)} ${pct}`;
       if (sign === '-' || sign === '−') {
         return DOWN_WORDS.test(before) ? body : `${w.down} ${body}`;
       }
@@ -248,10 +253,11 @@ function speakMoney(text: string, opts: SpeechOptions): string {
   return out;
 }
 
-/** Say an amount. Rounds to 2 significant digits for speech unless exact. */
+/** Say an amount. Rounds to 2 significant digits for speech unless exact. English is spoken as words. */
 function speakAmount(value: number, opts: SpeechOptions): { text: string; rounded: boolean } {
   const w = STRINGS[opts.lang].words;
-  if (opts.exact) return { text: formatExactNumber(value), rounded: false };
+  const say = (digits: string) => (opts.lang === 'en' ? numberToWordsEn(digits) : digits);
+  if (opts.exact) return { text: spokenExactNumber(value, opts.lang), rounded: false };
 
   const abs = Math.abs(value);
   let rounded: number;
@@ -260,9 +266,9 @@ function speakAmount(value: number, opts: SpeechOptions): { text: string; rounde
   else rounded = roundSignificant(value, 2);
 
   const changed = rounded !== value;
-  if (Math.abs(rounded) >= 1e9) return { text: `${trim(rounded / 1e9)} ${w.billion}`, rounded: changed };
-  if (Math.abs(rounded) >= 1e6) return { text: `${trim(rounded / 1e6)} ${w.million}`, rounded: changed };
-  return { text: formatPlain(rounded), rounded: changed };
+  if (Math.abs(rounded) >= 1e9) return { text: `${say(trim(rounded / 1e9))} ${w.billion}`, rounded: changed };
+  if (Math.abs(rounded) >= 1e6) return { text: `${say(trim(rounded / 1e6))} ${w.million}`, rounded: changed };
+  return { text: say(formatPlain(rounded)), rounded: changed };
 }
 
 function roundSignificant(value: number, digits: number): number {
@@ -278,6 +284,61 @@ function trim(n: number): string {
 
 function formatPlain(n: number): string {
   return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+// ---------------------------------------------------------------------------
+// English numbers as words.
+// Measured on the live ElevenLabs voice (Flash v2.5): "1,015" was spoken as "1,215", "1015" as "10.15".
+// The same number written as words ("one thousand fifteen") came back right every time.
+// So English money and percent amounts are SPOKEN AS WORDS. The card on screen still shows digits.
+// ---------------------------------------------------------------------------
+
+const ONES = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+const SCALES = ['', ' thousand', ' million', ' billion', ' trillion'];
+
+function belowThousand(n: number): string {
+  const parts: string[] = [];
+  const hundreds = Math.floor(n / 100);
+  const rest = n % 100;
+  if (hundreds) parts.push(`${ONES[hundreds]} hundred`);
+  if (rest) {
+    if (rest < 20) parts.push(ONES[rest] ?? '');
+    else parts.push(`${TENS[Math.floor(rest / 10)]}${rest % 10 ? `-${ONES[rest % 10]}` : ''}`);
+  }
+  return parts.join(' ');
+}
+
+/**
+ * 1015 -> "one thousand fifteen". "1,234.50" -> "one thousand two hundred thirty-four point five zero".
+ * Every digit after the point is said on its own, so nothing is rounded or lost.
+ * Anything that is not a plain number (or has more than 15 digits) is returned unchanged.
+ */
+export function numberToWordsEn(input: number | string): string {
+  const text = String(input).replace(/,/g, '').trim();
+  const m = /^(\d+)(?:\.(\d+))?$/.exec(text);
+  if (!m || (m[1]?.length ?? 0) > 15) return String(input);
+  const int = Number(m[1]);
+  let words: string;
+  if (int === 0) words = 'zero';
+  else {
+    const groups: string[] = [];
+    let rest = int;
+    for (let scale = 0; rest > 0; scale++) {
+      const chunk = rest % 1000;
+      if (chunk) groups.unshift(`${belowThousand(chunk)}${SCALES[scale] ?? ''}`);
+      rest = Math.floor(rest / 1000);
+    }
+    words = groups.join(' ');
+  }
+  const frac = m[2];
+  return frac ? `${words} point ${frac.split('').map((d) => ONES[Number(d)]).join(' ')}` : words;
+}
+
+/** Exact number for speech. English: words. Thai: digits (the Thai model reads them correctly, tested live). */
+export function spokenExactNumber(value: number, lang: Lang): string {
+  const digits = formatExactNumber(value);
+  return lang === 'en' ? numberToWordsEn(digits) : digits;
 }
 
 /**

@@ -319,7 +319,7 @@ describe('barge-in', () => {
 
   it('drops a final that is only an echo of what Icarus said', async () => {
     const s = await speaking();
-    s.stt().final("Gold is down 2.3 percent since yesterday", 0.9);
+    s.stt().final("Gold is down two point three percent since yesterday", 0.9);
     await flush();
     expect(s.log.transcriptIgnored[0]).toMatchObject({ reason: 'echo' });
     expect(s.api.asks).toHaveLength(1);
@@ -336,7 +336,7 @@ describe('money confirmation, end to end', () => {
 
   it('reads the preview back exactly and enters confirming/readback', async () => {
     const s = await readbackPlaying();
-    expect(s.api.ttsRequests[0]?.text).toBe('1,000 baht into gold. Fee 15 baht. Total 1,015 baht. Say confirm or cancel.');
+    expect(s.api.ttsRequests[0]?.text).toBe('one thousand baht into gold. Fee fifteen baht. Total one thousand fifteen baht. Say confirm or cancel.');
     expect(s.voice.state).toBe('confirming');
     expect(s.log.stateChange.at(-1)).toMatchObject({ to: 'confirming', confirmPhase: 'readback' });
     expect(s.log.speakingStart[0]).toMatchObject({ kind: 'readback' });
@@ -354,7 +354,7 @@ describe('money confirmation, end to end', () => {
     expect(s.voice.state).toBe('confirming');
     expect(s.log.stateChange.at(-1)).toMatchObject({ confirmPhase: 'readback' });
     expect(s.api.asks).toHaveLength(1); // not sent to the assistant
-    const readback = '1,000 baht into gold. Fee 15 baht. Total 1,015 baht. Say confirm or cancel.';
+    const readback = 'one thousand baht into gold. Fee fifteen baht. Total one thousand fifteen baht. Say confirm or cancel.';
     expect(s.api.ttsRequests.map((r) => r.text)).toEqual([readback, readback]); // read again from the start
     s.timers.advance(10_000);
     expect(s.log.confirmIntent).toHaveLength(0);
@@ -440,7 +440,7 @@ describe('money confirmation, end to end', () => {
     await flush();
     s.stt().final('repeat that', 0.9);
     await flush();
-    expect(s.api.ttsRequests.at(-1)?.text).toBe('1,000 baht into gold. Fee 15 baht. Total 1,015 baht. Say confirm or cancel.');
+    expect(s.api.ttsRequests.at(-1)?.text).toBe('one thousand baht into gold. Fee fifteen baht. Total one thousand fifteen baht. Say confirm or cancel.');
     expect(s.log.stateChange.at(-1)).toMatchObject({ confirmPhase: 'readback' });
     // The second read-back finishes on its own, then confirm works.
     s.output.last.finishNaturally();
@@ -763,17 +763,18 @@ describe('state machine guard', () => {
 });
 
 describe('speak() keeps numbers exact', () => {
-  it('does not round a line the UI passes in', async () => {
+  it('does not round a line the UI passes in (and says the numbers as words)', async () => {
     const s = await ready();
     s.voice.speak('1,000 baht into gold. Fee 15 baht. Total 1,015 baht. Say confirm or cancel.');
     await flush();
-    expect(s.api.ttsRequests[0]?.text).toBe('1,000 baht into gold. Fee 15 baht. Total 1,015 baht. Say confirm or cancel.');
+    // Digits in, words out, and exact: no "about", nothing rounded.
+    expect(s.api.ttsRequests[0]?.text).toBe('one thousand baht into gold. Fee fifteen baht. Total one thousand fifteen baht. Say confirm or cancel.');
   });
   it('still cleans markdown and symbols', async () => {
     const s = await ready();
     s.voice.speak('**Done**: gold is -2.3% today');
     await flush();
-    expect(s.api.ttsRequests[0]?.text).toBe('Done: gold is down 2.3 percent today.');
+    expect(s.api.ttsRequests[0]?.text).toBe('Done: gold is down two point three percent today.');
   });
 });
 

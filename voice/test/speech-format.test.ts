@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shortenForSpeech, stripMarkdown, toSpeakable } from '../src/shared/speech-format';
+import { numberToWordsEn, shortenForSpeech, spokenExactNumber, stripMarkdown, toSpeakable } from '../src/shared/speech-format';
 
 const now = new Date('2026-10-15T10:00:00Z');
 const en = (text: string, extra = {}) => toSpeakable(text, { lang: 'en', now, ...extra });
@@ -19,7 +19,7 @@ describe('markdown and symbols', () => {
   it('turns arrows, ampersands, tildes and dashes into speech', () => {
     expect(en('Gold → Bitcoin')).toBe('Gold to Bitcoin.');
     expect(en('Fees & taxes')).toBe('Fees and taxes.');
-    expect(en('It costs ~50 baht')).toBe('It costs about 50 baht.');
+    expect(en('It costs ~50 baht')).toBe('It costs about fifty baht.');
     expect(en('Gold, which is steady \u2014 mostly \u2014 rose.')).toBe('Gold, which is steady, mostly, rose.');
   });
   it('never outputs an em dash', () => {
@@ -29,32 +29,32 @@ describe('markdown and symbols', () => {
 
 describe('percent', () => {
   it('says down for negative and up for positive', () => {
-    expect(en('Gold is -2.3% today')).toBe('Gold is down 2.3 percent today.');
-    expect(en('Gold is +1.5% today')).toBe('Gold is up 1.5 percent today.');
-    expect(en('Share is 2.3% of your money')).toBe('Share is 2.3 percent of your money.');
+    expect(en('Gold is -2.3% today')).toBe('Gold is down two point three percent today.');
+    expect(en('Gold is +1.5% today')).toBe('Gold is up one point five percent today.');
+    expect(en('Share is 2.3% of your money')).toBe('Share is two point three percent of your money.');
   });
   it('keeps the space before the number after punctuation or Thai letters', () => {
-    expect(en('Gold, 2.3% today')).toBe('Gold, 2.3 percent today.');
-    expect(en('(2.3%) today')).toBe('(2.3 percent) today.');
+    expect(en('Gold, 2.3% today')).toBe('Gold, two point three percent today.');
+    expect(en('(2.3%) today')).toBe('(two point three percent) today.');
     expect(th('ทองลดลง 2.3%')).toBe('ทองลดลง 2.3 เปอร์เซ็นต์.');
   });
   it('handles a space between the sign and the number', () => {
-    expect(en('Gold is - 2.3% today')).toBe('Gold is down 2.3 percent today.');
+    expect(en('Gold is - 2.3% today')).toBe('Gold is down two point three percent today.');
   });
   it('handles the unicode minus', () => {
-    expect(en('Gold is −2.3% today')).toBe('Gold is down 2.3 percent today.');
+    expect(en('Gold is −2.3% today')).toBe('Gold is down two point three percent today.');
   });
   it('does not say "down down"', () => {
-    expect(en('Gold fell -2.3% today')).toBe('Gold fell 2.3 percent today.');
-    expect(en('Gold is down -2.3% since yesterday.')).toBe('Gold is down 2.3 percent since yesterday.');
-    expect(en('Bitcoin rose +4% this week')).toBe('Bitcoin rose 4 percent this week.');
+    expect(en('Gold fell -2.3% today')).toBe('Gold fell two point three percent today.');
+    expect(en('Gold is down -2.3% since yesterday.')).toBe('Gold is down two point three percent since yesterday.');
+    expect(en('Bitcoin rose +4% this week')).toBe('Bitcoin rose four percent this week.');
   });
   it('rounds for speech', () => {
-    expect(en('Gold is down 2.34%')).toBe('Gold is down 2.3 percent.');
-    expect(en('Bitcoin is up 12.7%')).toBe('Bitcoin is up about 13 percent.');
+    expect(en('Gold is down 2.34%')).toBe('Gold is down two point three percent.');
+    expect(en('Bitcoin is up 12.7%')).toBe('Bitcoin is up about thirteen percent.');
   });
   it('reads ranges', () => {
-    expect(en('Usually 5-10% a year')).toBe('Usually 5 to 10 percent a year.');
+    expect(en('Usually 5-10% a year')).toBe('Usually five to ten percent a year.');
   });
   it('works in Thai', () => {
     expect(th('ทอง -2.3%')).toBe('ทอง ลดลง 2.3 เปอร์เซ็นต์.');
@@ -65,35 +65,71 @@ describe('percent', () => {
 
 describe('money', () => {
   it('turns the baht sign into words and rounds', () => {
-    expect(en('It costs ฿1,015.')).toBe('It costs about 1,000 baht.');
-    expect(en('You have ฿87,432 in gold')).toBe('You have about 87,000 baht in gold.');
-    expect(en('Fee is ฿15')).toBe('Fee is 15 baht.');
-    expect(en('Fee is ฿15.50')).toBe('Fee is about 16 baht.');
+    expect(en('It costs ฿1,015.')).toBe('It costs about one thousand baht.');
+    expect(en('You have ฿87,432 in gold')).toBe('You have about eighty-seven thousand baht in gold.');
+    expect(en('Fee is ฿15')).toBe('Fee is fifteen baht.');
+    expect(en('Fee is ฿15.50')).toBe('Fee is about sixteen baht.');
   });
   it('handles codes and words', () => {
-    expect(en('Pay THB 1,015 now')).toBe('Pay about 1,000 baht now.');
-    expect(en('Pay 1,015 THB now')).toBe('Pay about 1,000 baht now.');
-    expect(en('Pay 1,015 baht now')).toBe('Pay about 1,000 baht now.');
-    expect(en('Bitcoin is $67,432')).toBe('Bitcoin is about 67,000 dollars.');
+    expect(en('Pay THB 1,015 now')).toBe('Pay about one thousand baht now.');
+    expect(en('Pay 1,015 THB now')).toBe('Pay about one thousand baht now.');
+    expect(en('Pay 1,015 baht now')).toBe('Pay about one thousand baht now.');
+    expect(en('Bitcoin is $67,432')).toBe('Bitcoin is about sixty-seven thousand dollars.');
   });
   it('says millions', () => {
-    expect(en('Worth $1.2M')).toBe('Worth 1.2 million dollars.');
-    expect(en('Worth $1.25M')).toBe('Worth about 1.3 million dollars.');
+    expect(en('Worth $1.2M')).toBe('Worth one point two million dollars.');
+    expect(en('Worth $1.25M')).toBe('Worth about one point three million dollars.');
   });
   it('keeps small amounts', () => {
-    expect(en('One unit is ฿0.45')).toBe('One unit is 0.45 baht.');
+    expect(en('One unit is ฿0.45')).toBe('One unit is zero point four five baht.');
   });
   it('does not add "about" twice', () => {
-    expect(en('That is about ฿1,015')).toBe('That is about 1,000 baht.');
+    expect(en('That is about ฿1,015')).toBe('That is about one thousand baht.');
   });
   it('keeps every digit in exact mode', () => {
-    expect(en('Total ฿1,015', { exact: true })).toBe('Total 1,015 baht.');
-    expect(en('Total ฿1,015.50', { exact: true })).toBe('Total 1,015.50 baht.');
-    expect(en('Gold is down 2.34%', { exact: true })).toBe('Gold is down 2.34 percent.');
+    expect(en('Total ฿1,015', { exact: true })).toBe('Total one thousand fifteen baht.');
+    expect(en('Total ฿1,015.50', { exact: true })).toBe('Total one thousand fifteen point five zero baht.');
+    expect(en('Gold is down 2.34%', { exact: true })).toBe('Gold is down two point three four percent.');
   });
   it('works in Thai', () => {
     expect(th('รวม ฿1,015')).toBe('รวม ประมาณ 1,000 บาท.');
     expect(th('ค่าธรรมเนียม 15 บาท')).toBe('ค่าธรรมเนียม 15 บาท.');
+  });
+});
+
+describe('numbers are spoken as words in English (the live voice misread "1,015" as "1,215")', () => {
+  it('says whole numbers', () => {
+    expect(numberToWordsEn(0)).toBe('zero');
+    expect(numberToWordsEn(15)).toBe('fifteen');
+    expect(numberToWordsEn(21)).toBe('twenty-one');
+    expect(numberToWordsEn(100)).toBe('one hundred');
+    expect(numberToWordsEn(1015)).toBe('one thousand fifteen');
+    expect(numberToWordsEn('1,015')).toBe('one thousand fifteen');
+    expect(numberToWordsEn(1000)).toBe('one thousand');
+    expect(numberToWordsEn(87432)).toBe('eighty-seven thousand four hundred thirty-two');
+    expect(numberToWordsEn(1_250_000)).toBe('one million two hundred fifty thousand');
+    expect(numberToWordsEn(1_000_001)).toBe('one million one');
+    expect(numberToWordsEn(2_000_000_000)).toBe('two billion');
+  });
+  it('says every decimal digit on its own, so nothing is lost', () => {
+    expect(numberToWordsEn('1,015.50')).toBe('one thousand fifteen point five zero');
+    expect(numberToWordsEn('0.45')).toBe('zero point four five');
+    expect(numberToWordsEn('1,234.56')).toBe('one thousand two hundred thirty-four point five six');
+  });
+  it('hands back anything that is not a plain number', () => {
+    expect(numberToWordsEn('abc')).toBe('abc');
+    expect(numberToWordsEn('1e9')).toBe('1e9');
+    expect(numberToWordsEn('1234567890123456')).toBe('1234567890123456'); // over 15 digits
+  });
+  it('speaks exact amounts as words in English and digits in Thai', () => {
+    expect(spokenExactNumber(1015, 'en')).toBe('one thousand fifteen');
+    expect(spokenExactNumber(1015.5, 'en')).toBe('one thousand fifteen point five zero');
+    expect(spokenExactNumber(1015, 'th')).toBe('1,015');
+    expect(spokenExactNumber(1015.5, 'th')).toBe('1,015.50');
+  });
+  it('leaves small plain numbers alone (units, dates)', () => {
+    expect(en('Over 7d')).toBe('Over 7 days.');
+    expect(en('Updated 2026-10-15.')).toBe('Updated October 15.');
   });
 });
 
@@ -118,7 +154,7 @@ describe('dates, times and units', () => {
     expect(en('Closes at 12:00')).toBe('Closes at 12 PM.');
   });
   it('says short units', () => {
-    expect(en('Up 2% in 24h')).toBe('Up 2 percent in 24 hours.');
+    expect(en('Up 2% in 24h')).toBe('Up two percent in 24 hours.');
     expect(en('The 24h change is flat')).toBe('The 24 hour change is flat.');
     expect(en('Over 7d')).toBe('Over 7 days.');
   });

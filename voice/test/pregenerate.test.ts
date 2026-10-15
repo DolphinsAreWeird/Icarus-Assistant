@@ -54,7 +54,7 @@ describe('pregenerate', () => {
     const server = makeConfig({ DEMO_AUDIO_DIR: outDir });
     const calls: string[] = [];
     const serverTts = new TtsService(server, createFakeElevenLabsPort({ chunkDelayMs: 0, onRequest: (a) => calls.push(a.text) }), new TtsCache([server.cacheDir, outDir], server.cacheDir), new UsageTracker(() => undefined));
-    const stream = await serverTts.open({ text: '1,000 baht into gold. Fee 15 baht. Total 1,015 baht. Say confirm or cancel.', lang: 'en', sessionId: 's' });
+    const stream = await serverTts.open({ text: 'one thousand baht into gold. Fee fifteen baht. Total one thousand fifteen baht. Say confirm or cancel.', lang: 'en', sessionId: 's' });
     expect(stream.cache).toBe('hit');
     expect(calls).toHaveLength(0);
   });

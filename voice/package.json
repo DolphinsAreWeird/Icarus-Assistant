@@ -13,9 +13,10 @@
     "check": "tsx scripts/elevenlabs-check.ts",
     "pregenerate": "tsx scripts/pregenerate.ts",
     "bench": "tsx scripts/bench.ts",
-    "predev": "npm run build:client",
-    "prestart": "npm run build:client",
-    "dev:fake": "FAKE_ELEVENLABS=1 npm run dev"
+    "predev": "npm run build:client && npm run build:app",
+    "prestart": "npm run build:client && npm run build:app",
+    "dev:fake": "FAKE_ELEVENLABS=1 npm run dev",
+    "build:app": "node scripts/build-app.mjs"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.72.0",

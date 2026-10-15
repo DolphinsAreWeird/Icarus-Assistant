@@ -51,7 +51,7 @@ Style for anything we write: plain English, short sentences, no em dashes. Icaru
 |---|---|---|
 | Data pipeline, user journey, the assistant (the "brain") | Luka and First | _coming_ |
 | **Voice in and out, and how Icarus talks (this repo's `voice/`)** | KP | [`voice/`](voice/) |
-| App mockup, frontend, friction dashboard | Oasis | _coming_ |
+| App mockup, frontend, friction dashboard | Oasis | [`frontend/`](frontend/) (the prototype, running and paired with voice) |
 
 The parts connect through one reply format. The assistant returns `text`, `speak`, `ui_actions` and `sources`. Voice input becomes text for the same assistant, and the assistant's `text` goes to text-to-speech when `speak` is true. One pipeline for voice and text, so they behave the same.
 
@@ -64,7 +64,7 @@ A volunteer who has never used a crypto app is asked to buy 1,000 baht of gold, 
 The voice pipeline is in [`voice/`](voice/). It has its own README with setup, the module the frontend drops in, and what is mocked. Start here:
 
 ```bash
-cd voice
-npm install
-npm run dev:fake     # works with no API key: http://localhost:8787
+cd frontend && npm install && npm run build   # the app (Oasis's prototype)
+cd ../voice && npm install
+npm run dev:fake     # works with no API key. Open http://localhost:8787/app/
 ```
