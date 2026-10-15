@@ -22,6 +22,8 @@ npm run check             # tests your key, the models, Thai support and the voi
 npm run dev               # test page at http://localhost:8787
 ```
 
+**Keep that terminal open.** The test page only works while the server is running. If the browser says the site cannot be reached, the server is not running (or you used `https`). Start it again and open `http://localhost:8787`.
+
 No key or credits yet? `npm run dev:fake` gives fake tones instead of speech and a fake Scribe that "hears" scripted phrases. Tick "Synthetic mic" on the test page and hold the "speak" button. You can rehearse the whole flow, including the money confirmation, for free.
 
 | Command | What it does |
