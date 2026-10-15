@@ -1,5 +1,7 @@
 # Demo review: Luka and First
 
+Start with the [financial review decision sheet](FINANCIAL_REVIEW.md) and its linked bilingual answer packet. The checklist below is a supporting reference.
+
 Reviewers assigned by the user: Luka and First. Assignment does not mean the review is complete or establish professional qualifications. Review status: pending.
 
 Use the saved live examples in `model/results/assistant_live*.json` and the scenario definitions in `cases.json`. Prefer the newest result for each case. Older runs include failures that prompted fixes. Inspect the text, numerical summaries, sources, and limitations together.

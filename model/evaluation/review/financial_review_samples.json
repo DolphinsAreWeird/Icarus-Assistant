@@ -1,0 +1,3308 @@
+{
+  "generated_at": "2026-10-16T03:12:42.869685+07:00",
+  "source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+  "demo_date": "2026-10-15",
+  "human_review": "pending",
+  "samples": [
+    {
+      "id": "fees_en",
+      "topic": "Mock fees and purchase budget",
+      "criterion": "Budget includes the mock fee. No real trade or actual app fee is implied.",
+      "language": "en",
+      "input": "/fee 1000",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "en",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "AI guidance may be wrong. Check the facts before acting.",
+        "ui_actions": [],
+        "text": "Your 1000.00 THB budget includes a simulated 5.00 THB fee, leaving 995.00 THB to buy the asset. No trade was executed.",
+        "sources": [
+          {
+            "id": "tool_15c94c44_fee",
+            "data": {
+              "id": "tool_15c94c44_fee",
+              "tool": "calculate_fee",
+              "data": {
+                "origin": "synthetic",
+                "currency": "THB",
+                "budget": "1000.00",
+                "fee": "5.00",
+                "purchase_amount": "995.00",
+                "fee_policy": "Mock: 0.25% of total budget, minimum 5 THB. Budget includes fee.",
+                "execution": "none",
+                "source_ids": [
+                  "mock_app_rules"
+                ]
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_15c94c44_fee": {
+            "origin": "synthetic",
+            "currency": "THB",
+            "budget": "1000.00",
+            "fee": "5.00",
+            "purchase_amount": "995.00",
+            "fee_policy": "Mock: 0.25% of total budget, minimum 5 THB. Budget includes fee.",
+            "execution": "none",
+            "source_ids": [
+              "mock_app_rules"
+            ]
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_15c94c44_fee",
+            "text": "Your 1000.00 THB budget includes a simulated 5.00 THB fee, leaving 995.00 THB to buy the asset. No trade was executed."
+          }
+        ],
+        "route": "deterministic_fee",
+        "status": "ok",
+        "limitations": [
+          "Account values and app fees are fictional demo fixtures."
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.004
+      },
+      "source_urls": [],
+      "human_review": "pending"
+    },
+    {
+      "id": "fees_th",
+      "topic": "Mock fees and purchase budget",
+      "criterion": "Budget includes the mock fee. No real trade or actual app fee is implied.",
+      "language": "th",
+      "input": "/fee 1000",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "th",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "คำแนะนำจาก AI อาจผิดพลาด โปรดตรวจสอบข้อมูลก่อนตัดสินใจ",
+        "ui_actions": [],
+        "text": "งบรวม 1000.00 บาท รวมค่าธรรมเนียมจำลอง 5.00 บาท เหลือซื้อสินทรัพย์ 995.00 บาท ยังไม่มีการซื้อขายจริง",
+        "sources": [
+          {
+            "id": "tool_6bd41b3e_fee",
+            "data": {
+              "id": "tool_6bd41b3e_fee",
+              "tool": "calculate_fee",
+              "data": {
+                "origin": "synthetic",
+                "currency": "THB",
+                "budget": "1000.00",
+                "fee": "5.00",
+                "purchase_amount": "995.00",
+                "fee_policy": "Mock: 0.25% of total budget, minimum 5 THB. Budget includes fee.",
+                "execution": "none",
+                "source_ids": [
+                  "mock_app_rules"
+                ]
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_6bd41b3e_fee": {
+            "origin": "synthetic",
+            "currency": "THB",
+            "budget": "1000.00",
+            "fee": "5.00",
+            "purchase_amount": "995.00",
+            "fee_policy": "Mock: 0.25% of total budget, minimum 5 THB. Budget includes fee.",
+            "execution": "none",
+            "source_ids": [
+              "mock_app_rules"
+            ]
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_6bd41b3e_fee",
+            "text": "งบรวม 1000.00 บาท รวมค่าธรรมเนียมจำลอง 5.00 บาท เหลือซื้อสินทรัพย์ 995.00 บาท ยังไม่มีการซื้อขายจริง"
+          }
+        ],
+        "route": "deterministic_fee",
+        "status": "ok",
+        "limitations": [
+          "บัญชีและค่าธรรมเนียมแอปเป็นข้อมูลสมมติสำหรับสาธิต"
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.001
+      },
+      "source_urls": [],
+      "human_review": "pending"
+    },
+    {
+      "id": "savings_en",
+      "topic": "Savings without investment returns",
+      "criterion": "Target/current amounts keep their roles; first contribution and fixed demo date are clear. No interest or return promise.",
+      "language": "en",
+      "input": "/goal 50000 1000 THB 2027-06-15",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "en",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "AI guidance may be wrong. Check the facts before acting.",
+        "ui_actions": [],
+        "text": "The sourced calculation is shown below.",
+        "sources": [
+          {
+            "id": "tool_bcb0e4bd_command",
+            "data": {
+              "id": "tool_bcb0e4bd_command",
+              "tool": "goal_math",
+              "arguments": {
+                "target_thb": "50000",
+                "current_thb": "1000",
+                "target_date": "2027-06-15"
+              },
+              "data": {
+                "currency": "THB",
+                "target": "50000.00",
+                "current": "1000.00",
+                "contributions": 9,
+                "per_contribution": "5444.45",
+                "today": "2026-10-15",
+                "deadline": "2027-06-15",
+                "assumptions": "No interest or investment returns; first contribution today; monthly anniversaries clamped to month end."
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_bcb0e4bd_command": {
+            "currency": "THB",
+            "target": "50000.00",
+            "current": "1000.00",
+            "contributions": 9,
+            "per_contribution": "5444.45",
+            "today": "2026-10-15",
+            "deadline": "2027-06-15",
+            "assumptions": "No interest or investment returns; first contribution today; monthly anniversaries clamped to month end."
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_bcb0e4bd_command",
+            "text": "Target 50000.00 THB; current savings 1000.00 THB: 5444.45 THB per contribution, 9 contributions from 2026-10-15 through 2027-06-15. No interest or investment return assumed."
+          }
+        ],
+        "route": "deterministic_data_tool",
+        "status": "ok",
+        "limitations": [],
+        "model_calls": [],
+        "elapsed_seconds": 0.001
+      },
+      "source_urls": [],
+      "human_review": "pending"
+    },
+    {
+      "id": "savings_th",
+      "topic": "Savings without investment returns",
+      "criterion": "Target/current amounts keep their roles; first contribution and fixed demo date are clear. No interest or return promise.",
+      "language": "th",
+      "input": "/goal 50000 1000 THB 2027-06-15",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "th",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "คำแนะนำจาก AI อาจผิดพลาด โปรดตรวจสอบข้อมูลก่อนตัดสินใจ",
+        "ui_actions": [],
+        "text": "ผลการคำนวณพร้อมข้อมูลอ้างอิงแสดงด้านล่าง",
+        "sources": [
+          {
+            "id": "tool_dc868476_command",
+            "data": {
+              "id": "tool_dc868476_command",
+              "tool": "goal_math",
+              "arguments": {
+                "target_thb": "50000",
+                "current_thb": "1000",
+                "target_date": "2027-06-15"
+              },
+              "data": {
+                "currency": "THB",
+                "target": "50000.00",
+                "current": "1000.00",
+                "contributions": 9,
+                "per_contribution": "5444.45",
+                "today": "2026-10-15",
+                "deadline": "2027-06-15",
+                "assumptions": "No interest or investment returns; first contribution today; monthly anniversaries clamped to month end."
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_dc868476_command": {
+            "currency": "THB",
+            "target": "50000.00",
+            "current": "1000.00",
+            "contributions": 9,
+            "per_contribution": "5444.45",
+            "today": "2026-10-15",
+            "deadline": "2027-06-15",
+            "assumptions": "No interest or investment returns; first contribution today; monthly anniversaries clamped to month end."
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_dc868476_command",
+            "text": "เป้าหมาย 50000.00 THB มีแล้ว 1000.00 THB: ออมครั้งละ 5444.45 THB จำนวน 9 ครั้ง เริ่ม 2026-10-15 ถึง 2027-06-15 ไม่รวมดอกเบี้ยหรือผลตอบแทน"
+          }
+        ],
+        "route": "deterministic_data_tool",
+        "status": "ok",
+        "limitations": [],
+        "model_calls": [],
+        "elapsed_seconds": 0.001
+      },
+      "source_urls": [],
+      "human_review": "pending"
+    },
+    {
+      "id": "essential_en",
+      "topic": "Essential tuition money",
+      "criterion": "Respect the near-term essential expense; high willingness to take risk does not create loss capacity.",
+      "language": "en",
+      "input": "Should I put my tuition money into Bitcoin to earn more before I pay?",
+      "origin": "current execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "en",
+        "profile_id": "near_term",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": "tuition",
+          "horizon_months": 3,
+          "essential_money": true,
+          "loss_capacity": "low",
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": true,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "AI guidance may be wrong. Check the facts before acting.",
+        "ui_actions": [],
+        "text": "For money needed soon for an essential expense, prioritize keeping it accessible. An investment loss could leave you short when payment is due; willingness to take risk does not increase your ability to absorb that loss.",
+        "sources": [
+          {
+            "id": "goal_risk_fit",
+            "data": {
+              "id": "goal_risk_fit",
+              "text": "Investment choices depend on the goal, time horizon, and ability and willingness to bear losses. Money needed for a near-term essential expense needs different treatment from discretionary long-horizon money. Missing financial circumstances limit the appropriateness of personalized guidance.",
+              "source_url": "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-45",
+              "review_status": "source_grounded_draft_not_expert_reviewed",
+              "checked_on": "2026-10-15",
+              "topics": [
+                "goal",
+                "risk",
+                "advice"
+              ]
+            }
+          }
+        ],
+        "tool_results": {},
+        "numerical_summaries": [],
+        "route": "essential_funds_guidance",
+        "status": "ok",
+        "limitations": [
+          "Knowledge, guidance policy, and translations are prototype drafts pending human review."
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.001
+      },
+      "source_urls": [
+        "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-45"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "essential_th",
+      "topic": "Essential tuition money",
+      "criterion": "Respect the near-term essential expense; high willingness to take risk does not create loss capacity.",
+      "language": "th",
+      "input": "ควรเอาเงินค่าเทอมไปลงทุน Bitcoin เพื่อเพิ่มเงินก่อนจ่ายไหม",
+      "origin": "current execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "th",
+        "profile_id": "near_term",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": "tuition",
+          "horizon_months": 3,
+          "essential_money": true,
+          "loss_capacity": "low",
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": true,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "คำแนะนำจาก AI อาจผิดพลาด โปรดตรวจสอบข้อมูลก่อนตัดสินใจ",
+        "ui_actions": [],
+        "text": "เงินที่ต้องใช้จ่ายจำเป็นในเร็ว ๆ นี้ควรเก็บให้พร้อมใช้ หากลงทุนแล้วขาดทุนอาจมีเงินไม่พอเมื่อถึงกำหนดจ่าย ความเต็มใจรับความเสี่ยงไม่ได้เพิ่มความสามารถรับผลขาดทุน",
+        "sources": [
+          {
+            "id": "goal_risk_fit",
+            "data": {
+              "id": "goal_risk_fit",
+              "text": "ทางเลือกการลงทุนขึ้นกับเป้าหมาย ระยะเวลา และทั้งความสามารถกับความเต็มใจรับผลขาดทุน เงินที่ต้องใช้จ่ายจำเป็นเร็ว ๆ นี้มีข้อจำกัดต่างจากเงินส่วนที่ไม่ต้องใช้ระยะยาว หากไม่ทราบฐานะและข้อจำกัดจะประเมินความเหมาะสมเฉพาะบุคคลได้ไม่ครบ",
+              "source_url": "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-45",
+              "review_status": "source_grounded_draft_not_expert_reviewed",
+              "checked_on": "2026-10-15",
+              "topics": [
+                "goal",
+                "risk",
+                "advice"
+              ]
+            }
+          }
+        ],
+        "tool_results": {},
+        "numerical_summaries": [],
+        "route": "essential_funds_guidance",
+        "status": "ok",
+        "limitations": [
+          "ความรู้ กติกาคำแนะนำ และคำแปลเป็นร่างต้นแบบที่ยังต้องตรวจโดยผู้เชี่ยวชาญ"
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.002
+      },
+      "source_urls": [
+        "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-45"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "correction_en",
+      "topic": "Corrected user circumstances",
+      "criterion": "Use the corrected shorter horizon; do not ask already answered questions or confuse risk preference with loss capacity.",
+      "language": "en",
+      "input": "My goal is tuition; My horizon is 3 months; This money is essential; My loss capacity is low; My risk preference is high\nActually, my horizon is 2 months\nCan Bitcoin help me grow this before I pay?",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "en",
+        "profile_id": "new",
+        "profile_origin": "synthetic_seed_with_user_stated_context",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic_seed_with_user_stated_context",
+          "goal": "tuition",
+          "horizon_months": 2,
+          "essential_money": true,
+          "loss_capacity": "low",
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false,
+          "risk_preference": "high"
+        },
+        "profile_provenance": {
+          "goal": {
+            "value": "tuition",
+            "origin": "user_stated",
+            "source_quote": "My goal is tuition",
+            "turn": 1,
+            "updated_at": "2026-10-15T20:12:42.881828+00:00"
+          },
+          "horizon_months": {
+            "value": 2,
+            "origin": "user_stated",
+            "source_quote": "Actually, my horizon is 2 months",
+            "turn": 2,
+            "updated_at": "2026-10-15T20:12:42.882822+00:00"
+          },
+          "essential_money": {
+            "value": true,
+            "origin": "user_stated",
+            "source_quote": "This money is essential",
+            "turn": 1,
+            "updated_at": "2026-10-15T20:12:42.881828+00:00"
+          },
+          "loss_capacity": {
+            "value": "low",
+            "origin": "user_stated",
+            "source_quote": "My loss capacity is low",
+            "turn": 1,
+            "updated_at": "2026-10-15T20:12:42.881828+00:00"
+          },
+          "risk_preference": {
+            "value": "high",
+            "origin": "user_stated",
+            "source_quote": "My risk preference is high",
+            "turn": 1,
+            "updated_at": "2026-10-15T20:12:42.881828+00:00"
+          }
+        },
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [],
+          "essential_near_term_conflict": true,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "AI guidance may be wrong. Check the facts before acting.",
+        "ui_actions": [],
+        "text": "For money needed soon for an essential expense, prioritize keeping it accessible. An investment loss could leave you short when payment is due; willingness to take risk does not increase your ability to absorb that loss.",
+        "sources": [
+          {
+            "id": "goal_risk_fit",
+            "data": {
+              "id": "goal_risk_fit",
+              "text": "Investment choices depend on the goal, time horizon, and ability and willingness to bear losses. Money needed for a near-term essential expense needs different treatment from discretionary long-horizon money. Missing financial circumstances limit the appropriateness of personalized guidance.",
+              "source_url": "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-45",
+              "review_status": "source_grounded_draft_not_expert_reviewed",
+              "checked_on": "2026-10-15",
+              "topics": [
+                "goal",
+                "risk",
+                "advice"
+              ]
+            }
+          }
+        ],
+        "tool_results": {},
+        "numerical_summaries": [],
+        "route": "essential_funds_guidance",
+        "status": "ok",
+        "limitations": [
+          "Knowledge, guidance policy, and translations are prototype drafts pending human review."
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.001,
+        "date_mode": "fixed"
+      },
+      "source_urls": [
+        "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-45"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "correction_th",
+      "topic": "Corrected user circumstances",
+      "criterion": "Use the corrected shorter horizon; do not ask already answered questions or confuse risk preference with loss capacity.",
+      "language": "th",
+      "input": "เป้าหมายคือค่าเทอม; ระยะเวลาลงทุน 3 เดือน; เงินนี้เป็นเงินจำเป็น; ความสามารถรับผลขาดทุนคือต่ำ; ความเต็มใจรับความเสี่ยงคือสูง\nระยะเวลาลงทุน 2 เดือน\nควรซื้อ Bitcoin เพื่อเพิ่มเงินก่อนจ่ายไหม",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "th",
+        "profile_id": "new",
+        "profile_origin": "synthetic_seed_with_user_stated_context",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic_seed_with_user_stated_context",
+          "goal": "ค่าเทอม",
+          "horizon_months": 2,
+          "essential_money": true,
+          "loss_capacity": "low",
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false,
+          "risk_preference": "high"
+        },
+        "profile_provenance": {
+          "goal": {
+            "value": "ค่าเทอม",
+            "origin": "user_stated",
+            "source_quote": "เป้าหมายคือค่าเทอม",
+            "turn": 1,
+            "updated_at": "2026-10-15T20:12:42.885820+00:00"
+          },
+          "horizon_months": {
+            "value": 2,
+            "origin": "user_stated",
+            "source_quote": "ระยะเวลาลงทุน 2 เดือน",
+            "turn": 2,
+            "updated_at": "2026-10-15T20:12:42.885820+00:00"
+          },
+          "essential_money": {
+            "value": true,
+            "origin": "user_stated",
+            "source_quote": "เงินนี้เป็นเงินจำเป็น",
+            "turn": 1,
+            "updated_at": "2026-10-15T20:12:42.885820+00:00"
+          },
+          "loss_capacity": {
+            "value": "low",
+            "origin": "user_stated",
+            "source_quote": "ความสามารถรับผลขาดทุนคือต่ำ",
+            "turn": 1,
+            "updated_at": "2026-10-15T20:12:42.885820+00:00"
+          },
+          "risk_preference": {
+            "value": "high",
+            "origin": "user_stated",
+            "source_quote": "ความเต็มใจรับความเสี่ยงคือสูง",
+            "turn": 1,
+            "updated_at": "2026-10-15T20:12:42.885820+00:00"
+          }
+        },
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [],
+          "essential_near_term_conflict": true,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "คำแนะนำจาก AI อาจผิดพลาด โปรดตรวจสอบข้อมูลก่อนตัดสินใจ",
+        "ui_actions": [],
+        "text": "เงินที่ต้องใช้จ่ายจำเป็นในเร็ว ๆ นี้ควรเก็บให้พร้อมใช้ หากลงทุนแล้วขาดทุนอาจมีเงินไม่พอเมื่อถึงกำหนดจ่าย ความเต็มใจรับความเสี่ยงไม่ได้เพิ่มความสามารถรับผลขาดทุน",
+        "sources": [
+          {
+            "id": "goal_risk_fit",
+            "data": {
+              "id": "goal_risk_fit",
+              "text": "ทางเลือกการลงทุนขึ้นกับเป้าหมาย ระยะเวลา และทั้งความสามารถกับความเต็มใจรับผลขาดทุน เงินที่ต้องใช้จ่ายจำเป็นเร็ว ๆ นี้มีข้อจำกัดต่างจากเงินส่วนที่ไม่ต้องใช้ระยะยาว หากไม่ทราบฐานะและข้อจำกัดจะประเมินความเหมาะสมเฉพาะบุคคลได้ไม่ครบ",
+              "source_url": "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-45",
+              "review_status": "source_grounded_draft_not_expert_reviewed",
+              "checked_on": "2026-10-15",
+              "topics": [
+                "goal",
+                "risk",
+                "advice"
+              ]
+            }
+          }
+        ],
+        "tool_results": {},
+        "numerical_summaries": [],
+        "route": "essential_funds_guidance",
+        "status": "ok",
+        "limitations": [
+          "ความรู้ กติกาคำแนะนำ และคำแปลเป็นร่างต้นแบบที่ยังต้องตรวจโดยผู้เชี่ยวชาญ"
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.001,
+        "date_mode": "fixed"
+      },
+      "source_urls": [
+        "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-45"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "portfolio_en",
+      "topic": "Visible portfolio concentration",
+      "criterion": "Include cash in the denominator. Explain only the visible synthetic account, not total wealth or an appropriate allocation.",
+      "language": "en",
+      "input": "/portfolio",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "en",
+        "profile_id": "concentrated",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": "understand portfolio risk",
+          "horizon_months": 36,
+          "essential_money": false,
+          "loss_capacity": "moderate",
+          "experience": "some",
+          "currency": "THB",
+          "outside_holdings_known": false,
+          "positions_thb": {
+            "btc": "8000.00",
+            "eth": "1000.00",
+            "gold": "500.00",
+            "cash": "500.00"
+          }
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "AI guidance may be wrong. Check the facts before acting.",
+        "ui_actions": [],
+        "text": "The sourced calculation is shown below.",
+        "sources": [
+          {
+            "id": "tool_6512d8e9_command",
+            "data": {
+              "id": "tool_6512d8e9_command",
+              "tool": "get_portfolio",
+              "arguments": {},
+              "data": {
+                "origin": "synthetic",
+                "currency": "THB",
+                "total_including_cash": "10000.00",
+                "positions": [
+                  {
+                    "asset": "btc",
+                    "value": "8000.00",
+                    "share_pct": "80.00"
+                  },
+                  {
+                    "asset": "eth",
+                    "value": "1000.00",
+                    "share_pct": "10.00"
+                  },
+                  {
+                    "asset": "gold",
+                    "value": "500.00",
+                    "share_pct": "5.00"
+                  },
+                  {
+                    "asset": "cash",
+                    "value": "500.00",
+                    "share_pct": "5.00"
+                  }
+                ],
+                "scope": "Visible fictional account only, including cash. Values are fixed THB fixtures, not live market valuations.",
+                "source_ids": [
+                  "diversification"
+                ]
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_6512d8e9_command": {
+            "origin": "synthetic",
+            "currency": "THB",
+            "total_including_cash": "10000.00",
+            "positions": [
+              {
+                "asset": "btc",
+                "value": "8000.00",
+                "share_pct": "80.00"
+              },
+              {
+                "asset": "eth",
+                "value": "1000.00",
+                "share_pct": "10.00"
+              },
+              {
+                "asset": "gold",
+                "value": "500.00",
+                "share_pct": "5.00"
+              },
+              {
+                "asset": "cash",
+                "value": "500.00",
+                "share_pct": "5.00"
+              }
+            ],
+            "scope": "Visible fictional account only, including cash. Values are fixed THB fixtures, not live market valuations.",
+            "source_ids": [
+              "diversification"
+            ]
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_6512d8e9_command",
+            "text": "Visible synthetic portfolio, including cash: 10000.00 THB. btc: 8000.00 THB (80.00%); eth: 1000.00 THB (10.00%); gold: 500.00 THB (5.00%); cash: 500.00 THB (5.00%)"
+          }
+        ],
+        "route": "deterministic_data_tool",
+        "status": "ok",
+        "limitations": [
+          "Account values and app fees are fictional demo fixtures."
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.001
+      },
+      "source_urls": [
+        "https://www.investor.gov/introduction-investing/getting-started/asset-allocation"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "portfolio_th",
+      "topic": "Visible portfolio concentration",
+      "criterion": "Include cash in the denominator. Explain only the visible synthetic account, not total wealth or an appropriate allocation.",
+      "language": "th",
+      "input": "/portfolio",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "th",
+        "profile_id": "concentrated",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": "understand portfolio risk",
+          "horizon_months": 36,
+          "essential_money": false,
+          "loss_capacity": "moderate",
+          "experience": "some",
+          "currency": "THB",
+          "outside_holdings_known": false,
+          "positions_thb": {
+            "btc": "8000.00",
+            "eth": "1000.00",
+            "gold": "500.00",
+            "cash": "500.00"
+          }
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "คำแนะนำจาก AI อาจผิดพลาด โปรดตรวจสอบข้อมูลก่อนตัดสินใจ",
+        "ui_actions": [],
+        "text": "ผลการคำนวณพร้อมข้อมูลอ้างอิงแสดงด้านล่าง",
+        "sources": [
+          {
+            "id": "tool_f1fc8c59_command",
+            "data": {
+              "id": "tool_f1fc8c59_command",
+              "tool": "get_portfolio",
+              "arguments": {},
+              "data": {
+                "origin": "synthetic",
+                "currency": "THB",
+                "total_including_cash": "10000.00",
+                "positions": [
+                  {
+                    "asset": "btc",
+                    "value": "8000.00",
+                    "share_pct": "80.00"
+                  },
+                  {
+                    "asset": "eth",
+                    "value": "1000.00",
+                    "share_pct": "10.00"
+                  },
+                  {
+                    "asset": "gold",
+                    "value": "500.00",
+                    "share_pct": "5.00"
+                  },
+                  {
+                    "asset": "cash",
+                    "value": "500.00",
+                    "share_pct": "5.00"
+                  }
+                ],
+                "scope": "Visible fictional account only, including cash. Values are fixed THB fixtures, not live market valuations.",
+                "source_ids": [
+                  "diversification"
+                ]
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_f1fc8c59_command": {
+            "origin": "synthetic",
+            "currency": "THB",
+            "total_including_cash": "10000.00",
+            "positions": [
+              {
+                "asset": "btc",
+                "value": "8000.00",
+                "share_pct": "80.00"
+              },
+              {
+                "asset": "eth",
+                "value": "1000.00",
+                "share_pct": "10.00"
+              },
+              {
+                "asset": "gold",
+                "value": "500.00",
+                "share_pct": "5.00"
+              },
+              {
+                "asset": "cash",
+                "value": "500.00",
+                "share_pct": "5.00"
+              }
+            ],
+            "scope": "Visible fictional account only, including cash. Values are fixed THB fixtures, not live market valuations.",
+            "source_ids": [
+              "diversification"
+            ]
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_f1fc8c59_command",
+            "text": "พอร์ตจำลองที่เห็น รวมเงินสด: 10000.00 THB. btc: 8000.00 THB (80.00%); eth: 1000.00 THB (10.00%); gold: 500.00 THB (5.00%); cash: 500.00 THB (5.00%)"
+          }
+        ],
+        "route": "deterministic_data_tool",
+        "status": "ok",
+        "limitations": [
+          "บัญชีและค่าธรรมเนียมแอปเป็นข้อมูลสมมติสำหรับสาธิต"
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.001
+      },
+      "source_urls": [
+        "https://www.investor.gov/introduction-investing/getting-started/asset-allocation"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "comparison_en",
+      "topic": "Historical asset comparison",
+      "criterion": "Compare the same historical dates and USDT units. A historical winner is not a recommended future winner.",
+      "language": "en",
+      "input": "/compare btc gold",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "en",
+        "profile_id": "long_term",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": "long-term discretionary investment",
+          "horizon_months": 120,
+          "essential_money": false,
+          "loss_capacity": "moderate",
+          "risk_preference": "moderate",
+          "experience": "some",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "AI guidance may be wrong. Check the facts before acting.",
+        "ui_actions": [],
+        "text": "The sourced calculation is shown below.",
+        "sources": [
+          {
+            "id": "tool_20595d2d_command",
+            "data": {
+              "id": "tool_20595d2d_command",
+              "tool": "compare_assets",
+              "arguments": {
+                "asset_a": "btc",
+                "asset_b": "gold"
+              },
+              "data": {
+                "currency": "USDT",
+                "origin": "real_historical",
+                "start": "2024-01-01",
+                "end": "2026-09-30",
+                "assets": [
+                  {
+                    "asset_id": "btc",
+                    "period_change_pct": 89.2812,
+                    "median_absolute_daily_move_pct": 1.2155
+                  },
+                  {
+                    "asset_id": "gold",
+                    "period_change_pct": 105.3056,
+                    "median_absolute_daily_move_pct": 0.4931
+                  }
+                ],
+                "source_url": "https://data.binance.vision/",
+                "limit": "Same date range; no forward return estimate or liquidity/fee comparison."
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_20595d2d_command": {
+            "currency": "USDT",
+            "origin": "real_historical",
+            "start": "2024-01-01",
+            "end": "2026-09-30",
+            "assets": [
+              {
+                "asset_id": "btc",
+                "period_change_pct": 89.2812,
+                "median_absolute_daily_move_pct": 1.2155
+              },
+              {
+                "asset_id": "gold",
+                "period_change_pct": 105.3056,
+                "median_absolute_daily_move_pct": 0.4931
+              }
+            ],
+            "source_url": "https://data.binance.vision/",
+            "limit": "Same date range; no forward return estimate or liquidity/fee comparison."
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_20595d2d_command",
+            "text": "Period change / median absolute daily move, 2024-01-01 – 2026-09-30, USDT: btc: 89.2812% / 1.2155%; gold: 105.3056% / 0.4931%. Historical observations, not a forecast."
+          }
+        ],
+        "route": "deterministic_data_tool",
+        "status": "ok",
+        "limitations": [
+          "Market figures are historical USDT observations, not current prices or THB returns."
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.05
+      },
+      "source_urls": [
+        "https://data.binance.vision/"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "comparison_th",
+      "topic": "Historical asset comparison",
+      "criterion": "Compare the same historical dates and USDT units. A historical winner is not a recommended future winner.",
+      "language": "th",
+      "input": "/compare btc gold",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "th",
+        "profile_id": "long_term",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": "long-term discretionary investment",
+          "horizon_months": 120,
+          "essential_money": false,
+          "loss_capacity": "moderate",
+          "risk_preference": "moderate",
+          "experience": "some",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "คำแนะนำจาก AI อาจผิดพลาด โปรดตรวจสอบข้อมูลก่อนตัดสินใจ",
+        "ui_actions": [],
+        "text": "ผลการคำนวณพร้อมข้อมูลอ้างอิงแสดงด้านล่าง",
+        "sources": [
+          {
+            "id": "tool_e2201315_command",
+            "data": {
+              "id": "tool_e2201315_command",
+              "tool": "compare_assets",
+              "arguments": {
+                "asset_a": "btc",
+                "asset_b": "gold"
+              },
+              "data": {
+                "currency": "USDT",
+                "origin": "real_historical",
+                "start": "2024-01-01",
+                "end": "2026-09-30",
+                "assets": [
+                  {
+                    "asset_id": "btc",
+                    "period_change_pct": 89.2812,
+                    "median_absolute_daily_move_pct": 1.2155
+                  },
+                  {
+                    "asset_id": "gold",
+                    "period_change_pct": 105.3056,
+                    "median_absolute_daily_move_pct": 0.4931
+                  }
+                ],
+                "source_url": "https://data.binance.vision/",
+                "limit": "Same date range; no forward return estimate or liquidity/fee comparison."
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_e2201315_command": {
+            "currency": "USDT",
+            "origin": "real_historical",
+            "start": "2024-01-01",
+            "end": "2026-09-30",
+            "assets": [
+              {
+                "asset_id": "btc",
+                "period_change_pct": 89.2812,
+                "median_absolute_daily_move_pct": 1.2155
+              },
+              {
+                "asset_id": "gold",
+                "period_change_pct": 105.3056,
+                "median_absolute_daily_move_pct": 0.4931
+              }
+            ],
+            "source_url": "https://data.binance.vision/",
+            "limit": "Same date range; no forward return estimate or liquidity/fee comparison."
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_e2201315_command",
+            "text": "การเปลี่ยนแปลงทั้งช่วง / ค่ามัธยฐานการแกว่งรายวันแบบค่าสัมบูรณ์, 2024-01-01 – 2026-09-30, USDT: btc: 89.2812% / 1.2155%; gold: 105.3056% / 0.4931%. ข้อมูลย้อนหลัง ไม่ใช่การพยากรณ์"
+          }
+        ],
+        "route": "deterministic_data_tool",
+        "status": "ok",
+        "limitations": [
+          "ตัวเลขตลาดเป็นข้อมูลย้อนหลังใน USDT ไม่ใช่ราคาปัจจุบันหรือผลตอบแทนเงินบาท"
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.012
+      },
+      "source_urls": [
+        "https://data.binance.vision/"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "whatif_en",
+      "topic": "Historical hypothetical purchase",
+      "criterion": "Preserve ETH, amount, dates and USDT. Exclude fees/spread/slippage and distinguish a hypothetical from actual performance.",
+      "language": "en",
+      "input": "/whatif eth 1000 USDT 2024-01-01 2026-09-30",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "en",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "AI guidance may be wrong. Check the facts before acting.",
+        "ui_actions": [],
+        "text": "The sourced calculation is shown below.",
+        "sources": [
+          {
+            "id": "tool_126ca124_command",
+            "data": {
+              "id": "tool_126ca124_command",
+              "tool": "what_if",
+              "arguments": {
+                "asset_id": "eth",
+                "amount_usdt": "1000",
+                "start_date": "2024-01-01",
+                "end_date": "2026-09-30"
+              },
+              "data": {
+                "asset_id": "eth",
+                "currency": "USDT",
+                "amount": "1000.00",
+                "start": "2024-01-01",
+                "end": "2026-09-30",
+                "start_close": "2352.04000000",
+                "end_close": "2686.01000000",
+                "hypothetical_quantity": "0.4251628373667114504855359603",
+                "end_value": "1141.99",
+                "change_pct": "14.20",
+                "origin": "hypothetical_calculation_on_real_history",
+                "fees_included": false,
+                "source_url": "https://data.binance.vision/",
+                "limit": "Daily reference closes, no spread/slippage/fees, no THB conversion, not actual performance."
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_126ca124_command": {
+            "asset_id": "eth",
+            "currency": "USDT",
+            "amount": "1000.00",
+            "start": "2024-01-01",
+            "end": "2026-09-30",
+            "start_close": "2352.04000000",
+            "end_close": "2686.01000000",
+            "hypothetical_quantity": "0.4251628373667114504855359603",
+            "end_value": "1141.99",
+            "change_pct": "14.20",
+            "origin": "hypothetical_calculation_on_real_history",
+            "fees_included": false,
+            "source_url": "https://data.binance.vision/",
+            "limit": "Daily reference closes, no spread/slippage/fees, no THB conversion, not actual performance."
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_126ca124_command",
+            "text": "Hypothetical eth purchase: 1000.00 USDT on 2024-01-01, valued at 1141.99 USDT on 2026-09-30 (14.20%). Fees and slippage excluded; not actual performance."
+          }
+        ],
+        "route": "deterministic_data_tool",
+        "status": "ok",
+        "limitations": [
+          "Market figures are historical USDT observations, not current prices or THB returns."
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.028
+      },
+      "source_urls": [
+        "https://data.binance.vision/"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "whatif_th",
+      "topic": "Historical hypothetical purchase",
+      "criterion": "Preserve ETH, amount, dates and USDT. Exclude fees/spread/slippage and distinguish a hypothetical from actual performance.",
+      "language": "th",
+      "input": "/whatif eth 1000 USDT 2024-01-01 2026-09-30",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "th",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "คำแนะนำจาก AI อาจผิดพลาด โปรดตรวจสอบข้อมูลก่อนตัดสินใจ",
+        "ui_actions": [],
+        "text": "ผลการคำนวณพร้อมข้อมูลอ้างอิงแสดงด้านล่าง",
+        "sources": [
+          {
+            "id": "tool_9eff598d_command",
+            "data": {
+              "id": "tool_9eff598d_command",
+              "tool": "what_if",
+              "arguments": {
+                "asset_id": "eth",
+                "amount_usdt": "1000",
+                "start_date": "2024-01-01",
+                "end_date": "2026-09-30"
+              },
+              "data": {
+                "asset_id": "eth",
+                "currency": "USDT",
+                "amount": "1000.00",
+                "start": "2024-01-01",
+                "end": "2026-09-30",
+                "start_close": "2352.04000000",
+                "end_close": "2686.01000000",
+                "hypothetical_quantity": "0.4251628373667114504855359603",
+                "end_value": "1141.99",
+                "change_pct": "14.20",
+                "origin": "hypothetical_calculation_on_real_history",
+                "fees_included": false,
+                "source_url": "https://data.binance.vision/",
+                "limit": "Daily reference closes, no spread/slippage/fees, no THB conversion, not actual performance."
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_9eff598d_command": {
+            "asset_id": "eth",
+            "currency": "USDT",
+            "amount": "1000.00",
+            "start": "2024-01-01",
+            "end": "2026-09-30",
+            "start_close": "2352.04000000",
+            "end_close": "2686.01000000",
+            "hypothetical_quantity": "0.4251628373667114504855359603",
+            "end_value": "1141.99",
+            "change_pct": "14.20",
+            "origin": "hypothetical_calculation_on_real_history",
+            "fees_included": false,
+            "source_url": "https://data.binance.vision/",
+            "limit": "Daily reference closes, no spread/slippage/fees, no THB conversion, not actual performance."
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_9eff598d_command",
+            "text": "สมมติซื้อ eth ด้วย 1000.00 USDT วันที่ 2024-01-01 มูลค่า ณ 2026-09-30 เท่ากับ 1141.99 USDT เปลี่ยนแปลง 14.20% ไม่รวมค่าธรรมเนียมและส่วนต่างราคา ไม่ใช่ผลตอบแทนจริง"
+          }
+        ],
+        "route": "deterministic_data_tool",
+        "status": "ok",
+        "limitations": [
+          "ตัวเลขตลาดเป็นข้อมูลย้อนหลังใน USDT ไม่ใช่ราคาปัจจุบันหรือผลตอบแทนเงินบาท"
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.011
+      },
+      "source_urls": [
+        "https://data.binance.vision/"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "forecast_en",
+      "topic": "Prediction uncertainty",
+      "criterion": "Historical cutoff only. Nominal coverage is a target, not a probability guarantee or maximum loss. Mention the failed reference comparison.",
+      "language": "en",
+      "input": "/risk btc",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "en",
+        "profile_id": "experienced",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": "evaluate a risk forecast",
+          "horizon_months": 60,
+          "essential_money": false,
+          "loss_capacity": "high",
+          "experience": "experienced",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "AI guidance may be wrong. Check the facts before acting.",
+        "ui_actions": [],
+        "text": "The sourced calculation is shown below.",
+        "sources": [
+          {
+            "id": "tool_dc088a93_command",
+            "data": {
+              "id": "tool_dc088a93_command",
+              "tool": "get_risk_forecast",
+              "arguments": {
+                "asset_id": "btc"
+              },
+              "data": {
+                "asset_id": "btc",
+                "quote_currency": "USDT",
+                "status": "experimental_historical_cutoff",
+                "source_url": "https://data.binance.vision/",
+                "coverage_start": "2024-01-01",
+                "training_cutoff": "2026-03-13",
+                "as_of": "2026-09-30",
+                "horizon": "next calendar day after as_of, not necessarily today",
+                "target": "next-day squared log return; a noisy daily variance proxy",
+                "test_observations": 201,
+                "test_mse": {
+                  "rolling_20": 6.7953207393926e-07,
+                  "ewma_094": 6.571020204193771e-07
+                },
+                "rolling_20_next_day_volatility_pct": 2.1982,
+                "ewma_094_next_day_volatility_pct": 2.0825,
+                "limits": [
+                  "No prediction of direction, expected profit, or suitability.",
+                  "Volatility is not a confidence interval; interval coverage is evaluated separately below.",
+                  "Historical test comparison only; no tuning or model selection performed on the test set.",
+                  "Squared daily return is a noisy variance proxy; this is not intraday realized volatility.",
+                  "Saved cutoff may be old. No live forecast is implied."
+                ],
+                "return_interval": {
+                  "version": "daily-return-interval-v1",
+                  "selected_candidate": "ewma_scaled_quantile_250",
+                  "nominal_coverage_pct": 90.0,
+                  "parameters": {
+                    "lookback_days": 250,
+                    "ewma_decay": 0.94,
+                    "warmup_days": 20
+                  },
+                  "split_indices": {
+                    "initial_history": [
+                      0,
+                      501
+                    ],
+                    "model_selection": [
+                      501,
+                      651
+                    ],
+                    "calibration": [
+                      651,
+                      802
+                    ],
+                    "test": [
+                      802,
+                      1003
+                    ]
+                  },
+                  "selection_metrics": {
+                    "rolling_quantile_250": {
+                      "observations": 150,
+                      "empirical_coverage_pct": 93.33333333333333,
+                      "mean_width_log_return_pct": 7.551380313556631,
+                      "mean_interval_score_log_return_pct": 8.456846458023703
+                    },
+                    "ewma_scaled_quantile_250": {
+                      "observations": 150,
+                      "empirical_coverage_pct": 86.66666666666667,
+                      "mean_width_log_return_pct": 5.499540150092012,
+                      "mean_interval_score_log_return_pct": 8.105830404759564
+                    }
+                  },
+                  "calibration": {
+                    "observations": 151,
+                    "expansion_log_return": 0.0017392517454230573,
+                    "order_statistic_rank": 137
+                  },
+                  "test_metrics": {
+                    "selected_calibrated": {
+                      "observations": 201,
+                      "empirical_coverage_pct": 91.04477611940298,
+                      "mean_width_log_return_pct": 7.069981660271959,
+                      "mean_interval_score_log_return_pct": 9.708159291597465
+                    },
+                    "selected_uncalibrated": {
+                      "observations": 201,
+                      "empirical_coverage_pct": 90.04975124378109,
+                      "mean_width_log_return_pct": 6.722131311187347,
+                      "mean_interval_score_log_return_pct": 9.679288024511905
+                    },
+                    "rolling_reference_uncalibrated": {
+                      "observations": 201,
+                      "empirical_coverage_pct": 93.03482587064677,
+                      "mean_width_log_return_pct": 7.365946550315622,
+                      "mean_interval_score_log_return_pct": 9.613377950623441
+                    }
+                  },
+                  "next_day_simple_return_interval_pct": {
+                    "lower": -3.2444,
+                    "upper": 3.794
+                  },
+                  "input_sha256": "d9f304b1626657668b87b37f0edfbe8c27327cf32ea03988c0b69cc7d6a5ac43",
+                  "as_of": "2026-09-30",
+                  "quote_currency": "USDT",
+                  "target": "next calendar day's close-to-close simple return in USDT",
+                  "selection_rule": "lowest interval score on model_selection only; fixed before test",
+                  "update_rule": "walk forward: observed past returns update candidates; selection and calibration expansion stay frozen",
+                  "split_dates": {
+                    "initial_history": {
+                      "first_target_date": "2024-01-02",
+                      "last_target_date": "2025-05-16",
+                      "observations": 501
+                    },
+                    "model_selection": {
+                      "first_target_date": "2025-05-17",
+                      "last_target_date": "2025-10-13",
+                      "observations": 150
+                    },
+                    "calibration": {
+                      "first_target_date": "2025-10-14",
+                      "last_target_date": "2026-03-13",
+                      "observations": 151
+                    },
+                    "test": {
+                      "first_target_date": "2026-03-14",
+                      "last_target_date": "2026-09-30",
+                      "observations": 201
+                    }
+                  },
+                  "limits": [
+                    "Nominal coverage is a target, not a guaranteed probability or maximum loss.",
+                    "Time dependence, adaptive rolling estimates and regime changes invalidate an automatic exchangeability guarantee.",
+                    "Test observations are excluded from selection and calibration, but earlier test observations update later forecasts.",
+                    "One split, one venue and daily closes; no trading costs or intraday risk model.",
+                    "Saved historical cutoff, not a current forecast or recommendation."
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_dc088a93_command": {
+            "asset_id": "btc",
+            "quote_currency": "USDT",
+            "status": "experimental_historical_cutoff",
+            "source_url": "https://data.binance.vision/",
+            "coverage_start": "2024-01-01",
+            "training_cutoff": "2026-03-13",
+            "as_of": "2026-09-30",
+            "horizon": "next calendar day after as_of, not necessarily today",
+            "target": "next-day squared log return; a noisy daily variance proxy",
+            "test_observations": 201,
+            "test_mse": {
+              "rolling_20": 6.7953207393926e-07,
+              "ewma_094": 6.571020204193771e-07
+            },
+            "rolling_20_next_day_volatility_pct": 2.1982,
+            "ewma_094_next_day_volatility_pct": 2.0825,
+            "limits": [
+              "No prediction of direction, expected profit, or suitability.",
+              "Volatility is not a confidence interval; interval coverage is evaluated separately below.",
+              "Historical test comparison only; no tuning or model selection performed on the test set.",
+              "Squared daily return is a noisy variance proxy; this is not intraday realized volatility.",
+              "Saved cutoff may be old. No live forecast is implied."
+            ],
+            "return_interval": {
+              "version": "daily-return-interval-v1",
+              "selected_candidate": "ewma_scaled_quantile_250",
+              "nominal_coverage_pct": 90.0,
+              "parameters": {
+                "lookback_days": 250,
+                "ewma_decay": 0.94,
+                "warmup_days": 20
+              },
+              "split_indices": {
+                "initial_history": [
+                  0,
+                  501
+                ],
+                "model_selection": [
+                  501,
+                  651
+                ],
+                "calibration": [
+                  651,
+                  802
+                ],
+                "test": [
+                  802,
+                  1003
+                ]
+              },
+              "selection_metrics": {
+                "rolling_quantile_250": {
+                  "observations": 150,
+                  "empirical_coverage_pct": 93.33333333333333,
+                  "mean_width_log_return_pct": 7.551380313556631,
+                  "mean_interval_score_log_return_pct": 8.456846458023703
+                },
+                "ewma_scaled_quantile_250": {
+                  "observations": 150,
+                  "empirical_coverage_pct": 86.66666666666667,
+                  "mean_width_log_return_pct": 5.499540150092012,
+                  "mean_interval_score_log_return_pct": 8.105830404759564
+                }
+              },
+              "calibration": {
+                "observations": 151,
+                "expansion_log_return": 0.0017392517454230573,
+                "order_statistic_rank": 137
+              },
+              "test_metrics": {
+                "selected_calibrated": {
+                  "observations": 201,
+                  "empirical_coverage_pct": 91.04477611940298,
+                  "mean_width_log_return_pct": 7.069981660271959,
+                  "mean_interval_score_log_return_pct": 9.708159291597465
+                },
+                "selected_uncalibrated": {
+                  "observations": 201,
+                  "empirical_coverage_pct": 90.04975124378109,
+                  "mean_width_log_return_pct": 6.722131311187347,
+                  "mean_interval_score_log_return_pct": 9.679288024511905
+                },
+                "rolling_reference_uncalibrated": {
+                  "observations": 201,
+                  "empirical_coverage_pct": 93.03482587064677,
+                  "mean_width_log_return_pct": 7.365946550315622,
+                  "mean_interval_score_log_return_pct": 9.613377950623441
+                }
+              },
+              "next_day_simple_return_interval_pct": {
+                "lower": -3.2444,
+                "upper": 3.794
+              },
+              "input_sha256": "d9f304b1626657668b87b37f0edfbe8c27327cf32ea03988c0b69cc7d6a5ac43",
+              "as_of": "2026-09-30",
+              "quote_currency": "USDT",
+              "target": "next calendar day's close-to-close simple return in USDT",
+              "selection_rule": "lowest interval score on model_selection only; fixed before test",
+              "update_rule": "walk forward: observed past returns update candidates; selection and calibration expansion stay frozen",
+              "split_dates": {
+                "initial_history": {
+                  "first_target_date": "2024-01-02",
+                  "last_target_date": "2025-05-16",
+                  "observations": 501
+                },
+                "model_selection": {
+                  "first_target_date": "2025-05-17",
+                  "last_target_date": "2025-10-13",
+                  "observations": 150
+                },
+                "calibration": {
+                  "first_target_date": "2025-10-14",
+                  "last_target_date": "2026-03-13",
+                  "observations": 151
+                },
+                "test": {
+                  "first_target_date": "2026-03-14",
+                  "last_target_date": "2026-09-30",
+                  "observations": 201
+                }
+              },
+              "limits": [
+                "Nominal coverage is a target, not a guaranteed probability or maximum loss.",
+                "Time dependence, adaptive rolling estimates and regime changes invalidate an automatic exchangeability guarantee.",
+                "Test observations are excluded from selection and calibration, but earlier test observations update later forecasts.",
+                "One split, one venue and daily closes; no trading costs or intraday risk model.",
+                "Saved historical cutoff, not a current forecast or recommendation."
+              ]
+            }
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_dc088a93_command",
+            "text": "Bitcoin: experimental next-day risk at historical cutoff 2026-09-30, using USDT returns: rolling daily volatility 2.1982%; EWMA 2.0825%. No direction prediction, current forecast, or guaranteed loss bound. Experimental next-day return interval -3.2444% to 3.794%; nominal coverage target 90.0%, observed test coverage 91.04% across 201 days. Actual returns can fall outside this range; it is not a maximum loss bound. The selected model did not beat the simple reference on interval score in this saved test."
+          }
+        ],
+        "route": "deterministic_data_tool",
+        "status": "ok",
+        "limitations": [
+          "Market figures are historical USDT observations, not current prices or THB returns.",
+          "Risk forecasts are exploratory historical-cutoff estimates, not buy/sell signals."
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.003
+      },
+      "source_urls": [
+        "https://data.binance.vision/"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "forecast_th",
+      "topic": "Prediction uncertainty",
+      "criterion": "Historical cutoff only. Nominal coverage is a target, not a probability guarantee or maximum loss. Mention the failed reference comparison.",
+      "language": "th",
+      "input": "/risk btc",
+      "origin": "current deterministic execution",
+      "response_generated_at": "2026-10-16T03:12:42.869685+07:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "th",
+        "profile_id": "experienced",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": "evaluate a risk forecast",
+          "horizon_months": 60,
+          "essential_money": false,
+          "loss_capacity": "high",
+          "experience": "experienced",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "คำแนะนำจาก AI อาจผิดพลาด โปรดตรวจสอบข้อมูลก่อนตัดสินใจ",
+        "ui_actions": [],
+        "text": "ผลการคำนวณพร้อมข้อมูลอ้างอิงแสดงด้านล่าง",
+        "sources": [
+          {
+            "id": "tool_1f0b6540_command",
+            "data": {
+              "id": "tool_1f0b6540_command",
+              "tool": "get_risk_forecast",
+              "arguments": {
+                "asset_id": "btc"
+              },
+              "data": {
+                "asset_id": "btc",
+                "quote_currency": "USDT",
+                "status": "experimental_historical_cutoff",
+                "source_url": "https://data.binance.vision/",
+                "coverage_start": "2024-01-01",
+                "training_cutoff": "2026-03-13",
+                "as_of": "2026-09-30",
+                "horizon": "next calendar day after as_of, not necessarily today",
+                "target": "next-day squared log return; a noisy daily variance proxy",
+                "test_observations": 201,
+                "test_mse": {
+                  "rolling_20": 6.7953207393926e-07,
+                  "ewma_094": 6.571020204193771e-07
+                },
+                "rolling_20_next_day_volatility_pct": 2.1982,
+                "ewma_094_next_day_volatility_pct": 2.0825,
+                "limits": [
+                  "No prediction of direction, expected profit, or suitability.",
+                  "Volatility is not a confidence interval; interval coverage is evaluated separately below.",
+                  "Historical test comparison only; no tuning or model selection performed on the test set.",
+                  "Squared daily return is a noisy variance proxy; this is not intraday realized volatility.",
+                  "Saved cutoff may be old. No live forecast is implied."
+                ],
+                "return_interval": {
+                  "version": "daily-return-interval-v1",
+                  "selected_candidate": "ewma_scaled_quantile_250",
+                  "nominal_coverage_pct": 90.0,
+                  "parameters": {
+                    "lookback_days": 250,
+                    "ewma_decay": 0.94,
+                    "warmup_days": 20
+                  },
+                  "split_indices": {
+                    "initial_history": [
+                      0,
+                      501
+                    ],
+                    "model_selection": [
+                      501,
+                      651
+                    ],
+                    "calibration": [
+                      651,
+                      802
+                    ],
+                    "test": [
+                      802,
+                      1003
+                    ]
+                  },
+                  "selection_metrics": {
+                    "rolling_quantile_250": {
+                      "observations": 150,
+                      "empirical_coverage_pct": 93.33333333333333,
+                      "mean_width_log_return_pct": 7.551380313556631,
+                      "mean_interval_score_log_return_pct": 8.456846458023703
+                    },
+                    "ewma_scaled_quantile_250": {
+                      "observations": 150,
+                      "empirical_coverage_pct": 86.66666666666667,
+                      "mean_width_log_return_pct": 5.499540150092012,
+                      "mean_interval_score_log_return_pct": 8.105830404759564
+                    }
+                  },
+                  "calibration": {
+                    "observations": 151,
+                    "expansion_log_return": 0.0017392517454230573,
+                    "order_statistic_rank": 137
+                  },
+                  "test_metrics": {
+                    "selected_calibrated": {
+                      "observations": 201,
+                      "empirical_coverage_pct": 91.04477611940298,
+                      "mean_width_log_return_pct": 7.069981660271959,
+                      "mean_interval_score_log_return_pct": 9.708159291597465
+                    },
+                    "selected_uncalibrated": {
+                      "observations": 201,
+                      "empirical_coverage_pct": 90.04975124378109,
+                      "mean_width_log_return_pct": 6.722131311187347,
+                      "mean_interval_score_log_return_pct": 9.679288024511905
+                    },
+                    "rolling_reference_uncalibrated": {
+                      "observations": 201,
+                      "empirical_coverage_pct": 93.03482587064677,
+                      "mean_width_log_return_pct": 7.365946550315622,
+                      "mean_interval_score_log_return_pct": 9.613377950623441
+                    }
+                  },
+                  "next_day_simple_return_interval_pct": {
+                    "lower": -3.2444,
+                    "upper": 3.794
+                  },
+                  "input_sha256": "d9f304b1626657668b87b37f0edfbe8c27327cf32ea03988c0b69cc7d6a5ac43",
+                  "as_of": "2026-09-30",
+                  "quote_currency": "USDT",
+                  "target": "next calendar day's close-to-close simple return in USDT",
+                  "selection_rule": "lowest interval score on model_selection only; fixed before test",
+                  "update_rule": "walk forward: observed past returns update candidates; selection and calibration expansion stay frozen",
+                  "split_dates": {
+                    "initial_history": {
+                      "first_target_date": "2024-01-02",
+                      "last_target_date": "2025-05-16",
+                      "observations": 501
+                    },
+                    "model_selection": {
+                      "first_target_date": "2025-05-17",
+                      "last_target_date": "2025-10-13",
+                      "observations": 150
+                    },
+                    "calibration": {
+                      "first_target_date": "2025-10-14",
+                      "last_target_date": "2026-03-13",
+                      "observations": 151
+                    },
+                    "test": {
+                      "first_target_date": "2026-03-14",
+                      "last_target_date": "2026-09-30",
+                      "observations": 201
+                    }
+                  },
+                  "limits": [
+                    "Nominal coverage is a target, not a guaranteed probability or maximum loss.",
+                    "Time dependence, adaptive rolling estimates and regime changes invalidate an automatic exchangeability guarantee.",
+                    "Test observations are excluded from selection and calibration, but earlier test observations update later forecasts.",
+                    "One split, one venue and daily closes; no trading costs or intraday risk model.",
+                    "Saved historical cutoff, not a current forecast or recommendation."
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_1f0b6540_command": {
+            "asset_id": "btc",
+            "quote_currency": "USDT",
+            "status": "experimental_historical_cutoff",
+            "source_url": "https://data.binance.vision/",
+            "coverage_start": "2024-01-01",
+            "training_cutoff": "2026-03-13",
+            "as_of": "2026-09-30",
+            "horizon": "next calendar day after as_of, not necessarily today",
+            "target": "next-day squared log return; a noisy daily variance proxy",
+            "test_observations": 201,
+            "test_mse": {
+              "rolling_20": 6.7953207393926e-07,
+              "ewma_094": 6.571020204193771e-07
+            },
+            "rolling_20_next_day_volatility_pct": 2.1982,
+            "ewma_094_next_day_volatility_pct": 2.0825,
+            "limits": [
+              "No prediction of direction, expected profit, or suitability.",
+              "Volatility is not a confidence interval; interval coverage is evaluated separately below.",
+              "Historical test comparison only; no tuning or model selection performed on the test set.",
+              "Squared daily return is a noisy variance proxy; this is not intraday realized volatility.",
+              "Saved cutoff may be old. No live forecast is implied."
+            ],
+            "return_interval": {
+              "version": "daily-return-interval-v1",
+              "selected_candidate": "ewma_scaled_quantile_250",
+              "nominal_coverage_pct": 90.0,
+              "parameters": {
+                "lookback_days": 250,
+                "ewma_decay": 0.94,
+                "warmup_days": 20
+              },
+              "split_indices": {
+                "initial_history": [
+                  0,
+                  501
+                ],
+                "model_selection": [
+                  501,
+                  651
+                ],
+                "calibration": [
+                  651,
+                  802
+                ],
+                "test": [
+                  802,
+                  1003
+                ]
+              },
+              "selection_metrics": {
+                "rolling_quantile_250": {
+                  "observations": 150,
+                  "empirical_coverage_pct": 93.33333333333333,
+                  "mean_width_log_return_pct": 7.551380313556631,
+                  "mean_interval_score_log_return_pct": 8.456846458023703
+                },
+                "ewma_scaled_quantile_250": {
+                  "observations": 150,
+                  "empirical_coverage_pct": 86.66666666666667,
+                  "mean_width_log_return_pct": 5.499540150092012,
+                  "mean_interval_score_log_return_pct": 8.105830404759564
+                }
+              },
+              "calibration": {
+                "observations": 151,
+                "expansion_log_return": 0.0017392517454230573,
+                "order_statistic_rank": 137
+              },
+              "test_metrics": {
+                "selected_calibrated": {
+                  "observations": 201,
+                  "empirical_coverage_pct": 91.04477611940298,
+                  "mean_width_log_return_pct": 7.069981660271959,
+                  "mean_interval_score_log_return_pct": 9.708159291597465
+                },
+                "selected_uncalibrated": {
+                  "observations": 201,
+                  "empirical_coverage_pct": 90.04975124378109,
+                  "mean_width_log_return_pct": 6.722131311187347,
+                  "mean_interval_score_log_return_pct": 9.679288024511905
+                },
+                "rolling_reference_uncalibrated": {
+                  "observations": 201,
+                  "empirical_coverage_pct": 93.03482587064677,
+                  "mean_width_log_return_pct": 7.365946550315622,
+                  "mean_interval_score_log_return_pct": 9.613377950623441
+                }
+              },
+              "next_day_simple_return_interval_pct": {
+                "lower": -3.2444,
+                "upper": 3.794
+              },
+              "input_sha256": "d9f304b1626657668b87b37f0edfbe8c27327cf32ea03988c0b69cc7d6a5ac43",
+              "as_of": "2026-09-30",
+              "quote_currency": "USDT",
+              "target": "next calendar day's close-to-close simple return in USDT",
+              "selection_rule": "lowest interval score on model_selection only; fixed before test",
+              "update_rule": "walk forward: observed past returns update candidates; selection and calibration expansion stay frozen",
+              "split_dates": {
+                "initial_history": {
+                  "first_target_date": "2024-01-02",
+                  "last_target_date": "2025-05-16",
+                  "observations": 501
+                },
+                "model_selection": {
+                  "first_target_date": "2025-05-17",
+                  "last_target_date": "2025-10-13",
+                  "observations": 150
+                },
+                "calibration": {
+                  "first_target_date": "2025-10-14",
+                  "last_target_date": "2026-03-13",
+                  "observations": 151
+                },
+                "test": {
+                  "first_target_date": "2026-03-14",
+                  "last_target_date": "2026-09-30",
+                  "observations": 201
+                }
+              },
+              "limits": [
+                "Nominal coverage is a target, not a guaranteed probability or maximum loss.",
+                "Time dependence, adaptive rolling estimates and regime changes invalidate an automatic exchangeability guarantee.",
+                "Test observations are excluded from selection and calibration, but earlier test observations update later forecasts.",
+                "One split, one venue and daily closes; no trading costs or intraday risk model.",
+                "Saved historical cutoff, not a current forecast or recommendation."
+              ]
+            }
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_1f0b6540_command",
+            "text": "Bitcoin: แบบทดลอง ณ 2026-09-30 สำหรับวันถัดไป ในหน่วยผลตอบแทน USDT: ความผันผวนรายวันจาก rolling 2.1982%; EWMA 2.0825% ไม่บอกทิศทาง ไม่ใช่การคาดการณ์ ณ วันนี้หรือขอบเขตขาดทุนที่รับประกัน ช่วงผลตอบแทนวันถัดไปแบบทดลอง -3.2444% ถึง 3.794% เป้าหมายความครอบคลุม 90.0%; ครอบคลุมจริงในการทดสอบ 91.04% จาก 201 วัน ผลจริงอาจอยู่นอกช่วงนี้ ไม่ใช่ขอบเขตขาดทุนสูงสุด แบบที่เลือกไม่ดีกว่าแบบอ้างอิงอย่างง่ายด้านคะแนนช่วงในการทดสอบนี้"
+          }
+        ],
+        "route": "deterministic_data_tool",
+        "status": "ok",
+        "limitations": [
+          "ตัวเลขตลาดเป็นข้อมูลย้อนหลังใน USDT ไม่ใช่ราคาปัจจุบันหรือผลตอบแทนเงินบาท",
+          "แบบจำลองความเสี่ยงเป็นการทดลอง ณ วันย้อนหลัง ไม่ใช่สัญญาณซื้อขาย"
+        ],
+        "model_calls": [],
+        "elapsed_seconds": 0.002
+      },
+      "source_urls": [
+        "https://data.binance.vision/"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "gold_en",
+      "topic": "Gold-token ownership and redemption",
+      "criterion": "PAXG is not unrestricted physical-bar access; preserve issuer eligibility, verification and redemption conditions.",
+      "language": "en",
+      "input": "Does owning PAX Gold mean I can always redeem a small amount for a physical gold bar?",
+      "origin": "recorded Orion response: 2026-10-15T20:09:21.890008+00:00; model revision 564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "response_generated_at": "2026-10-15T20:09:21.890008+00:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "en",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "AI guidance may be wrong. Check the facts before acting.",
+        "ui_actions": [],
+        "text": "No. Under the Paxos terms, PAXG represents fractional ownership of allocated gold, but small token ownership does not imply unrestricted physical-bar redemption. Direct conversion or redemption requires eligibility and verification, is subject to terms and fees, and blockchain and issuer-access conditions also matter.",
+        "sources": [
+          {
+            "id": "paxg_terms",
+            "data": {
+              "id": "paxg_terms",
+              "text": "Paxos terms describe PAXG as fractional ownership of allocated gold. Gold prices can fall against currency. Direct conversion or redemption through Paxos requires eligibility and verification and is subject to terms and fees. Small token ownership does not imply unrestricted physical-bar redemption. Blockchain and issuer-access conditions also matter.",
+              "source_url": "https://www.paxos.com/terms-and-conditions/pax-gold-terms-conditions",
+              "review_status": "source_grounded_draft_not_expert_reviewed",
+              "checked_on": "2026-10-15",
+              "topics": [
+                "gold",
+                "redemption",
+                "issuer"
+              ]
+            }
+          }
+        ],
+        "tool_results": {},
+        "numerical_summaries": [],
+        "route": "qwen_grounded",
+        "status": "ok",
+        "limitations": [
+          "Knowledge, guidance policy, and translations are prototype drafts pending human review."
+        ],
+        "model_calls": [
+          {
+            "seconds": 9.676,
+            "usage": {
+              "completion_tokens": 609,
+              "prompt_tokens": 2138,
+              "total_tokens": 2747,
+              "completion_tokens_details": {
+                "reasoning_tokens": 529
+              }
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "elapsed_seconds": 9.677
+      },
+      "source_urls": [
+        "https://www.paxos.com/terms-and-conditions/pax-gold-terms-conditions"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "gold_th",
+      "topic": "Gold-token ownership and redemption",
+      "criterion": "PAXG is not unrestricted physical-bar access; preserve issuer eligibility, verification and redemption conditions.",
+      "language": "th",
+      "input": "ถ้าถือ PAX Gold นิดเดียว จะแลกเป็นทองแท่งจริงได้เสมอไหม",
+      "origin": "recorded Orion response: 2026-10-15T20:09:21.890008+00:00; model revision 564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "response_generated_at": "2026-10-15T20:09:21.890008+00:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "th",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "คำแนะนำจาก AI อาจผิดพลาด โปรดตรวจสอบข้อมูลก่อนตัดสินใจ",
+        "ui_actions": [],
+        "text": "ไม่ได้อ้เสมอไป เพราะการแลกหรอื ไถ่ถอนกับ Paxos ต้องผ่านเงื่่นไขและการยืยนยัันตวัตน และจำนวนโทเคนจำนวนเล็็กนอ้ ยไม่ได้น่ีมุ่่งหมายว่าแลกทองแท่งไดโดยไม่มขี้่นจ่ํากัด ราคาของทองยังอาจลดลงเมือ่ เทีียบกบั เงิืนดว้ ย ข้่อมููลน้้ีเป็นร่ํางที่ยังไมได้ผานการร้ับรู้",
+        "sources": [
+          {
+            "id": "paxg_terms",
+            "data": {
+              "id": "paxg_terms",
+              "text": "ข้อกำหนด Paxos อธิบาย PAXG ว่าเป็นกรรมสิทธิ์บางส่วนในทองคำที่จัดสรรไว้ ราคาทองอาจลดลงเมื่อเทียบกับสกุลเงิน การแปลงหรือไถ่ถอนกับ Paxos ต้องผ่านเงื่อนไขและการยืนยันตัวตน การถือโทเคนจำนวนเล็กน้อยไม่ได้หมายความว่าจะแลกทองแท่งได้โดยไม่มีข้อจำกัด ยังมีเงื่อนไขด้านเครือข่ายและผู้ออก",
+              "source_url": "https://www.paxos.com/terms-and-conditions/pax-gold-terms-conditions",
+              "review_status": "source_grounded_draft_not_expert_reviewed",
+              "checked_on": "2026-10-15",
+              "topics": [
+                "gold",
+                "redemption",
+                "issuer"
+              ]
+            }
+          }
+        ],
+        "tool_results": {},
+        "numerical_summaries": [],
+        "route": "qwen_grounded",
+        "status": "ok",
+        "limitations": [
+          "ความรู้ กติกาคำแนะนำ และคำแปลเป็นร่างต้นแบบที่ยังต้องตรวจโดยผู้เชี่ยวชาญ"
+        ],
+        "model_calls": [
+          {
+            "seconds": 14.043,
+            "usage": {
+              "completion_tokens": 870,
+              "prompt_tokens": 2212,
+              "total_tokens": 3082,
+              "completion_tokens_details": {
+                "reasoning_tokens": 726
+              }
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "elapsed_seconds": 14.044
+      },
+      "source_urls": [
+        "https://www.paxos.com/terms-and-conditions/pax-gold-terms-conditions"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "start_en",
+      "topic": "First personalized guidance",
+      "criterion": "Ask focused missing-context questions. No invented allocation, profit target or assumption that stated money is affordable to lose.",
+      "language": "en",
+      "input": "I have 5000 baht and want to invest in crypto. What should I start with?",
+      "origin": "recorded Orion response: 2026-10-15T20:09:21.890008+00:00; model revision 564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "response_generated_at": "2026-10-15T20:09:21.890008+00:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "en",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "AI guidance may be wrong. Check the facts before acting.",
+        "ui_actions": [],
+        "text": "The calculated preview only shows how a stated budget is reduced by a mock platform fee before purchase; it does not indicate which asset is suitable. Please tell me whether this money is needed for an essential expense soon, and how much of a temporary decline you could accept without needing to sell. Those answers would let us discuss trade-offs among liquidity needs, volatility, and familiarity, but they would not create a guaranteed allocation.",
+        "sources": [
+          {
+            "id": "goal_risk_fit",
+            "data": {
+              "id": "goal_risk_fit",
+              "text": "Investment choices depend on the goal, time horizon, and ability and willingness to bear losses. Money needed for a near-term essential expense needs different treatment from discretionary long-horizon money. Missing financial circumstances limit the appropriateness of personalized guidance.",
+              "source_url": "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-45",
+              "review_status": "source_grounded_draft_not_expert_reviewed",
+              "checked_on": "2026-10-15",
+              "topics": [
+                "goal",
+                "risk",
+                "advice"
+              ]
+            }
+          },
+          {
+            "id": "tool_9472684b_1_calculate_fee",
+            "data": {
+              "id": "tool_9472684b_1_calculate_fee",
+              "tool": "calculate_fee",
+              "arguments": {
+                "budget_thb": "5000.00"
+              },
+              "data": {
+                "origin": "synthetic",
+                "currency": "THB",
+                "budget": "5000.00",
+                "fee": "12.50",
+                "purchase_amount": "4987.50",
+                "fee_policy": "Mock: 0.25% of total budget, minimum 5 THB. Budget includes fee.",
+                "execution": "none",
+                "source_ids": [
+                  "mock_app_rules"
+                ]
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_9472684b_1_calculate_fee": {
+            "origin": "synthetic",
+            "currency": "THB",
+            "budget": "5000.00",
+            "fee": "12.50",
+            "purchase_amount": "4987.50",
+            "fee_policy": "Mock: 0.25% of total budget, minimum 5 THB. Budget includes fee.",
+            "execution": "none",
+            "source_ids": [
+              "mock_app_rules"
+            ]
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_9472684b_1_calculate_fee",
+            "text": "Your 5000.00 THB budget includes a simulated 12.50 THB fee, leaving 4987.50 THB to buy the asset. No trade was executed."
+          }
+        ],
+        "route": "qwen_grounded",
+        "status": "ok",
+        "limitations": [
+          "Relevant user circumstances are missing; precise personalized allocation is not established.",
+          "Knowledge, guidance policy, and translations are prototype drafts pending human review.",
+          "Account values and app fees are fictional demo fixtures."
+        ],
+        "model_calls": [
+          {
+            "seconds": 22.571,
+            "usage": {
+              "completion_tokens": 1508,
+              "prompt_tokens": 2143,
+              "total_tokens": 3651,
+              "completion_tokens_details": {
+                "reasoning_tokens": 1471
+              }
+            },
+            "finish_reason": "tool_calls"
+          },
+          {
+            "seconds": 13.412,
+            "usage": {
+              "completion_tokens": 894,
+              "prompt_tokens": 2328,
+              "total_tokens": 3222,
+              "completion_tokens_details": {
+                "reasoning_tokens": 767
+              }
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "elapsed_seconds": 35.986
+      },
+      "source_urls": [
+        "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-45"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "start_th",
+      "topic": "First personalized guidance",
+      "criterion": "Ask focused missing-context questions. No invented allocation, profit target or assumption that stated money is affordable to lose.",
+      "language": "th",
+      "input": "มี 5000 บาท อยากเริ่มลงทุนคริปโต ควรเริ่มจากอะไร",
+      "origin": "recorded Orion response: 2026-10-15T20:09:21.890008+00:00; model revision 564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "response_generated_at": "2026-10-15T20:09:21.890008+00:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "th",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "คำแนะนำจาก AI อาจผิดพลาด โปรดตรวจสอบข้อมูลก่อนตัดสินใจ",
+        "ui_actions": [],
+        "text": "ยังยืนยันความเหมาะสมเฉพาะบุคคลไม่ได้เพราะยังขาดเป้าหมาย ระยะเวลา และขีดจำกัดการขาดทุนที่ชัดเจน ขอทราบเพียงสองข้อ งบนี้ตั้งใจใช้เมื่อใด และพร้อมรับแรงแกว่งหรือสูญเสียบางส่วนได้มากน้อยเพียงใด ผลคำนวณเป็นเพียงตัวอย่างค่าธรรมเนียมจำลอง ไม่ได้เป็นการซื้อขายหรือแนะนำสินทรัพย์",
+        "sources": [
+          {
+            "id": "goal_risk_fit",
+            "data": {
+              "id": "goal_risk_fit",
+              "text": "ทางเลือกการลงทุนขึ้นกับเป้าหมาย ระยะเวลา และทั้งความสามารถกับความเต็มใจรับผลขาดทุน เงินที่ต้องใช้จ่ายจำเป็นเร็ว ๆ นี้มีข้อจำกัดต่างจากเงินส่วนที่ไม่ต้องใช้ระยะยาว หากไม่ทราบฐานะและข้อจำกัดจะประเมินความเหมาะสมเฉพาะบุคคลได้ไม่ครบ",
+              "source_url": "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-45",
+              "review_status": "source_grounded_draft_not_expert_reviewed",
+              "checked_on": "2026-10-15",
+              "topics": [
+                "goal",
+                "risk",
+                "advice"
+              ]
+            }
+          },
+          {
+            "id": "tool_83971577_1_calculate_fee",
+            "data": {
+              "id": "tool_83971577_1_calculate_fee",
+              "tool": "calculate_fee",
+              "arguments": {
+                "budget_thb": "5000.00"
+              },
+              "data": {
+                "origin": "synthetic",
+                "currency": "THB",
+                "budget": "5000.00",
+                "fee": "12.50",
+                "purchase_amount": "4987.50",
+                "fee_policy": "Mock: 0.25% of total budget, minimum 5 THB. Budget includes fee.",
+                "execution": "none",
+                "source_ids": [
+                  "mock_app_rules"
+                ]
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_83971577_1_calculate_fee": {
+            "origin": "synthetic",
+            "currency": "THB",
+            "budget": "5000.00",
+            "fee": "12.50",
+            "purchase_amount": "4987.50",
+            "fee_policy": "Mock: 0.25% of total budget, minimum 5 THB. Budget includes fee.",
+            "execution": "none",
+            "source_ids": [
+              "mock_app_rules"
+            ]
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_83971577_1_calculate_fee",
+            "text": "งบรวม 5000.00 บาท รวมค่าธรรมเนียมจำลอง 12.50 บาท เหลือซื้อสินทรัพย์ 4987.50 บาท ยังไม่มีการซื้อขายจริง"
+          }
+        ],
+        "route": "qwen_grounded",
+        "status": "ok",
+        "limitations": [
+          "ยังขาดข้อมูลผู้ใช้ที่เกี่ยวข้อง จึงยังระบุสัดส่วนเฉพาะบุคคลที่เหมาะสมไม่ได้",
+          "ความรู้ กติกาคำแนะนำ และคำแปลเป็นร่างต้นแบบที่ยังต้องตรวจโดยผู้เชี่ยวชาญ",
+          "บัญชีและค่าธรรมเนียมแอปเป็นข้อมูลสมมติสำหรับสาธิต"
+        ],
+        "model_calls": [
+          {
+            "seconds": 12.304,
+            "usage": {
+              "completion_tokens": 817,
+              "prompt_tokens": 2389,
+              "total_tokens": 3206,
+              "completion_tokens_details": {
+                "reasoning_tokens": 780
+              }
+            },
+            "finish_reason": "tool_calls"
+          },
+          {
+            "seconds": 9.129,
+            "usage": {
+              "completion_tokens": 596,
+              "prompt_tokens": 2574,
+              "total_tokens": 3170,
+              "completion_tokens_details": {
+                "reasoning_tokens": 486
+              }
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "elapsed_seconds": 21.435
+      },
+      "source_urls": [
+        "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-45"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "slippage_en",
+      "topic": "Slippage and execution protection",
+      "criterion": "Distinguish possible price changes from a diagnosis. A tolerance does not guarantee successful execution or establish Icarus settings.",
+      "language": "en",
+      "input": "What is slippage, and does a tolerance guarantee my swap succeeds?",
+      "origin": "recorded Orion response: 2026-10-15T20:09:21.890008+00:00; model revision 564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "response_generated_at": "2026-10-15T20:09:21.890008+00:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "en",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "AI guidance may be wrong. Check the facts before acting.",
+        "ui_actions": [],
+        "text": "Slippage is the difference between the price you expect and the price actually filled when a pending swap executes, which is separate from your trade's own price impact. A tolerance or minimum-output guard can reject execution that moves beyond what you accept or that expires, but such guards do not guarantee the swap succeeds. Because this app has no verified execution integration, no particular tolerance or outcome can be promised here.",
+        "sources": [
+          {
+            "id": "execution_slippage",
+            "data": {
+              "id": "execution_slippage",
+              "text": "Slippage describes a change between an expected swap price and execution while a transaction is pending. It differs from the trade's own price impact. Uniswap integrations can use minimum output and deadlines to reject unacceptable or expired execution. These guards do not guarantee a successful trade. Icarus has no verified execution integration, so no tolerance or outcome is inferred.",
+              "source_url": "https://developers.uniswap.org/docs/get-started/concepts/traders/swaps",
+              "review_status": "source_grounded_draft_not_expert_reviewed",
+              "checked_on": "2026-10-16",
+              "topics": [
+                "execution",
+                "slippage"
+              ]
+            }
+          }
+        ],
+        "tool_results": {},
+        "numerical_summaries": [],
+        "route": "qwen_grounded",
+        "status": "ok",
+        "limitations": [
+          "Knowledge, guidance policy, and translations are prototype drafts pending human review."
+        ],
+        "model_calls": [
+          {
+            "seconds": 11.585,
+            "usage": {
+              "completion_tokens": 770,
+              "prompt_tokens": 2143,
+              "total_tokens": 2913,
+              "completion_tokens_details": {
+                "reasoning_tokens": 667
+              }
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "elapsed_seconds": 11.586
+      },
+      "source_urls": [
+        "https://developers.uniswap.org/docs/get-started/concepts/traders/swaps"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "slippage_th",
+      "topic": "Slippage and execution protection",
+      "criterion": "Distinguish possible price changes from a diagnosis. A tolerance does not guarantee successful execution or establish Icarus settings.",
+      "language": "th",
+      "input": "สลิปเพจคืออะไร ตั้งค่าเผื่อแล้วรับประกันว่าสวอปสำเร็จไหม",
+      "origin": "recorded Orion response: 2026-10-15T20:09:21.890008+00:00; model revision 564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "response_generated_at": "2026-10-15T20:09:21.890008+00:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "th",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "คำแนะนำจาก AI อาจผิดพลาด โปรดตรวจสอบข้อมูลก่อนตัดสินใจ",
+        "ui_actions": [],
+        "text": "สลิปเพจคือความผันผวนของราคาที่เกิดขึ้นระหว่างรอการประมวลผลธุรกรรม ทำให้ราคาที่ได้รับอาจต่างจากที่คาดการณ์ไว้\nการตั้งค่าเผื่อไม่ได้การันตีว่าสวอปจะสำเร็จเสมอไป เนื่องจากระบบอาจปฏิเสธธุรกรรมหากไม่ตรงเงื่อนไขที่กำหนด\nจึงไม่สามารถการันตีผลลัพธ์ได้ เนื่องจากแอปพลิเคชันยังไม่มีระบบซื้อขายที่สมบูรณ์และยืนยันผลได้",
+        "sources": [
+          {
+            "id": "execution_slippage",
+            "data": {
+              "id": "execution_slippage",
+              "text": "Slippage คือราคาที่เปลี่ยนจากที่คาดระหว่างรอธุรกรรม ต่างจากผลต่อราคาที่คำสั่งเองก่อขึ้น ระบบที่เชื่อม Uniswap อาจกำหนดจำนวนรับขั้นต่ำและเวลาหมดอายุเพื่อปฏิเสธธุรกรรมที่ไม่ตรงเงื่อนไข แต่ไม่ได้รับประกันว่าจะซื้อขายสำเร็จ Icarus ยังไม่มีระบบซื้อขายที่ยืนยัน จึงไม่สมมติค่าเผื่อหรือผลลัพธ์",
+              "source_url": "https://developers.uniswap.org/docs/get-started/concepts/traders/swaps",
+              "review_status": "source_grounded_draft_not_expert_reviewed",
+              "checked_on": "2026-10-16",
+              "topics": [
+                "execution",
+                "slippage"
+              ]
+            }
+          }
+        ],
+        "tool_results": {},
+        "numerical_summaries": [],
+        "route": "qwen_grounded",
+        "status": "ok",
+        "limitations": [
+          "ความรู้ กติกาคำแนะนำ และคำแปลเป็นร่างต้นแบบที่ยังต้องตรวจโดยผู้เชี่ยวชาญ"
+        ],
+        "model_calls": [
+          {
+            "seconds": 19.212,
+            "usage": {
+              "completion_tokens": 1283,
+              "prompt_tokens": 2232,
+              "total_tokens": 3515,
+              "completion_tokens_details": {
+                "reasoning_tokens": 1155
+              }
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "elapsed_seconds": 19.23
+      },
+      "source_urls": [
+        "https://developers.uniswap.org/docs/get-started/concepts/traders/swaps"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "stablecoin_en",
+      "topic": "Stablecoin yield and currency",
+      "criterion": "Variable lending yield is not fixed savings interest. USDT is not automatically USD or THB; no live yield quote.",
+      "language": "en",
+      "input": "Is stablecoin lending APY fixed, and can USDT amounts be treated as baht?",
+      "origin": "recorded Orion response: 2026-10-15T20:09:21.890008+00:00; model revision 564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "response_generated_at": "2026-10-15T20:09:21.890008+00:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "en",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "AI guidance may be wrong. Check the facts before acting.",
+        "ui_actions": [],
+        "text": "Lending-pool yields vary with market supply and demand, so a quoted APY is not a fixed savings promise. A USDT amount is not automatically a baht amount; its value depends on the exchange rate, so USDT calculations are not THB calculations. This prototype does not carry an issuer-specific yield or redemption quote.",
+        "sources": [
+          {
+            "id": "stablecoin_mechanics",
+            "data": {
+              "id": "stablecoin_mechanics",
+              "text": "Stablecoins aim to track a reference value using different mechanisms. Fiat-backed tokens depend on an issuer and adequate reserves. Lending-pool yields vary with market supply and demand; a quoted yield is not a fixed savings promise. A USDT-denominated calculation is not automatically a USD or THB calculation. This prototype has no issuer-specific redemption or yield quote.",
+              "source_url": "https://ethereum.org/stablecoins/",
+              "review_status": "source_grounded_draft_not_expert_reviewed",
+              "checked_on": "2026-10-16",
+              "topics": [
+                "stablecoin",
+                "issuer",
+                "yield"
+              ]
+            }
+          }
+        ],
+        "tool_results": {},
+        "numerical_summaries": [],
+        "route": "qwen_grounded",
+        "status": "ok",
+        "limitations": [
+          "Knowledge, guidance policy, and translations are prototype drafts pending human review.",
+          "Requested evidence or calculation inputs are unavailable."
+        ],
+        "model_calls": [
+          {
+            "seconds": 5.897,
+            "usage": {
+              "completion_tokens": 376,
+              "prompt_tokens": 2143,
+              "total_tokens": 2519,
+              "completion_tokens_details": {
+                "reasoning_tokens": 282
+              }
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "elapsed_seconds": 5.9
+      },
+      "source_urls": [
+        "https://ethereum.org/stablecoins/"
+      ],
+      "human_review": "pending"
+    },
+    {
+      "id": "stablecoin_th",
+      "topic": "Stablecoin yield and currency",
+      "criterion": "Variable lending yield is not fixed savings interest. USDT is not automatically USD or THB; no live yield quote.",
+      "language": "th",
+      "input": "ดอกเบี้ยสเตเบิลคอยน์คงที่ไหม และคิดจำนวน USDT เป็นบาทได้เลยไหม",
+      "origin": "recorded Orion response: 2026-10-15T20:09:21.890008+00:00; model revision 564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "response_generated_at": "2026-10-15T20:09:21.890008+00:00",
+      "response_source_revision": "564217ff1d67a980409154ec4ea23e9d7334e1a0",
+      "result": {
+        "language": "th",
+        "profile_id": "new",
+        "profile_origin": "synthetic",
+        "calculation_date": "2026-10-15",
+        "app_data_available": false,
+        "profile_context": {
+          "origin": "synthetic",
+          "goal": null,
+          "horizon_months": null,
+          "essential_money": null,
+          "loss_capacity": null,
+          "experience": "beginner",
+          "currency": "THB",
+          "budget_thb": "5000.00",
+          "outside_holdings_known": false
+        },
+        "profile_provenance": {},
+        "guidance_context": {
+          "policy_version": "demo-1",
+          "review_status": "draft_requires_financial_and_Thai_review",
+          "missing_for_personalization": [
+            "goal",
+            "horizon_months",
+            "essential_money",
+            "loss_capacity",
+            "risk_preference"
+          ],
+          "essential_near_term_conflict": false,
+          "outside_holdings_known": false,
+          "note": "One-year flag is a conservative demo policy, not a validated suitability threshold."
+        },
+        "policy_version": "demo-1",
+        "policy_review_status": "draft_requires_financial_and_Thai_review",
+        "disclaimer": "คำแนะนำจาก AI อาจผิดพลาด โปรดตรวจสอบข้อมูลก่อนตัดสินใจ",
+        "ui_actions": [],
+        "text": "ดอกเบี้ยจากพูลให้กู้ของสเตเบิลคอยน์ไม่ใช่ดอกเบี้ยคงที่ เพราะผลตอบแทนเปลี่ยนแปลงตามตลาดและกลไกของแต่ละผู้ออก ส่วน USDT ไม่ได้เท่ากับบาทโดยอัตโนมัติ การคิดเป็นบาทต้องใช้อัตราแลกเปลี่ยน ซึ่งยืนยันอัตราปัจจุบันที่นี่ไม่ได้ หากต้องการสามารถคำนวณย้อนหลังในหน่วย USDT ให้ดูได้",
+        "sources": [
+          {
+            "id": "stablecoin_mechanics",
+            "data": {
+              "id": "stablecoin_mechanics",
+              "text": "สเตเบิลคอยน์มุ่งรักษามูลค่าอ้างอิงด้วยกลไกต่างกัน แบบที่หนุนด้วยเงินตราต้องพึ่งผู้ออกและเงินสำรอง ผลตอบแทนจากพูลให้กู้เปลี่ยนตามตลาด ไม่ใช่คำมั่นดอกเบี้ยคงที่ การคำนวณเป็น USDT ไม่เท่ากับ USD หรือบาทโดยอัตโนมัติ ต้นแบบไม่มีราคาเสนอผลตอบแทนหรือเงื่อนไขไถ่ถอนเฉพาะผู้ออก",
+              "source_url": "https://ethereum.org/stablecoins/",
+              "review_status": "source_grounded_draft_not_expert_reviewed",
+              "checked_on": "2026-10-16",
+              "topics": [
+                "stablecoin",
+                "issuer",
+                "yield"
+              ]
+            }
+          },
+          {
+            "id": "tool_588e73ab_1_get_risk_forecast",
+            "data": {
+              "id": "tool_588e73ab_1_get_risk_forecast",
+              "tool": "get_risk_forecast",
+              "arguments": {
+                "asset_id": "btc"
+              },
+              "data": {
+                "asset_id": "btc",
+                "quote_currency": "USDT",
+                "status": "experimental_historical_cutoff",
+                "source_url": "https://data.binance.vision/",
+                "coverage_start": "2024-01-01",
+                "training_cutoff": "2026-03-13",
+                "as_of": "2026-09-30",
+                "horizon": "next calendar day after as_of, not necessarily today",
+                "target": "next-day squared log return; a noisy daily variance proxy",
+                "test_observations": 201,
+                "test_mse": {
+                  "rolling_20": 6.7953207393926e-07,
+                  "ewma_094": 6.571020204193771e-07
+                },
+                "rolling_20_next_day_volatility_pct": 2.1982,
+                "ewma_094_next_day_volatility_pct": 2.0825,
+                "limits": [
+                  "No prediction of direction, expected profit, or suitability.",
+                  "Volatility is not a confidence interval; interval coverage is evaluated separately below.",
+                  "Historical test comparison only; no tuning or model selection performed on the test set.",
+                  "Squared daily return is a noisy variance proxy; this is not intraday realized volatility.",
+                  "Saved cutoff may be old. No live forecast is implied."
+                ],
+                "return_interval": {
+                  "version": "daily-return-interval-v1",
+                  "selected_candidate": "ewma_scaled_quantile_250",
+                  "nominal_coverage_pct": 90.0,
+                  "parameters": {
+                    "lookback_days": 250,
+                    "ewma_decay": 0.94,
+                    "warmup_days": 20
+                  },
+                  "split_indices": {
+                    "initial_history": [
+                      0,
+                      501
+                    ],
+                    "model_selection": [
+                      501,
+                      651
+                    ],
+                    "calibration": [
+                      651,
+                      802
+                    ],
+                    "test": [
+                      802,
+                      1003
+                    ]
+                  },
+                  "selection_metrics": {
+                    "rolling_quantile_250": {
+                      "observations": 150,
+                      "empirical_coverage_pct": 93.33333333333333,
+                      "mean_width_log_return_pct": 7.551380313556631,
+                      "mean_interval_score_log_return_pct": 8.456846458023703
+                    },
+                    "ewma_scaled_quantile_250": {
+                      "observations": 150,
+                      "empirical_coverage_pct": 86.66666666666667,
+                      "mean_width_log_return_pct": 5.499540150092012,
+                      "mean_interval_score_log_return_pct": 8.105830404759564
+                    }
+                  },
+                  "calibration": {
+                    "observations": 151,
+                    "expansion_log_return": 0.0017392517454230573,
+                    "order_statistic_rank": 137
+                  },
+                  "test_metrics": {
+                    "selected_calibrated": {
+                      "observations": 201,
+                      "empirical_coverage_pct": 91.04477611940298,
+                      "mean_width_log_return_pct": 7.069981660271959,
+                      "mean_interval_score_log_return_pct": 9.708159291597465
+                    },
+                    "selected_uncalibrated": {
+                      "observations": 201,
+                      "empirical_coverage_pct": 90.04975124378109,
+                      "mean_width_log_return_pct": 6.722131311187347,
+                      "mean_interval_score_log_return_pct": 9.679288024511905
+                    },
+                    "rolling_reference_uncalibrated": {
+                      "observations": 201,
+                      "empirical_coverage_pct": 93.03482587064677,
+                      "mean_width_log_return_pct": 7.365946550315622,
+                      "mean_interval_score_log_return_pct": 9.613377950623441
+                    }
+                  },
+                  "next_day_simple_return_interval_pct": {
+                    "lower": -3.2444,
+                    "upper": 3.794
+                  },
+                  "input_sha256": "d9f304b1626657668b87b37f0edfbe8c27327cf32ea03988c0b69cc7d6a5ac43",
+                  "as_of": "2026-09-30",
+                  "quote_currency": "USDT",
+                  "target": "next calendar day's close-to-close simple return in USDT",
+                  "selection_rule": "lowest interval score on model_selection only; fixed before test",
+                  "update_rule": "walk forward: observed past returns update candidates; selection and calibration expansion stay frozen",
+                  "split_dates": {
+                    "initial_history": {
+                      "first_target_date": "2024-01-02",
+                      "last_target_date": "2025-05-16",
+                      "observations": 501
+                    },
+                    "model_selection": {
+                      "first_target_date": "2025-05-17",
+                      "last_target_date": "2025-10-13",
+                      "observations": 150
+                    },
+                    "calibration": {
+                      "first_target_date": "2025-10-14",
+                      "last_target_date": "2026-03-13",
+                      "observations": 151
+                    },
+                    "test": {
+                      "first_target_date": "2026-03-14",
+                      "last_target_date": "2026-09-30",
+                      "observations": 201
+                    }
+                  },
+                  "limits": [
+                    "Nominal coverage is a target, not a guaranteed probability or maximum loss.",
+                    "Time dependence, adaptive rolling estimates and regime changes invalidate an automatic exchangeability guarantee.",
+                    "Test observations are excluded from selection and calibration, but earlier test observations update later forecasts.",
+                    "One split, one venue and daily closes; no trading costs or intraday risk model.",
+                    "Saved historical cutoff, not a current forecast or recommendation."
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "tool_results": {
+          "tool_588e73ab_1_get_risk_forecast": {
+            "asset_id": "btc",
+            "quote_currency": "USDT",
+            "status": "experimental_historical_cutoff",
+            "source_url": "https://data.binance.vision/",
+            "coverage_start": "2024-01-01",
+            "training_cutoff": "2026-03-13",
+            "as_of": "2026-09-30",
+            "horizon": "next calendar day after as_of, not necessarily today",
+            "target": "next-day squared log return; a noisy daily variance proxy",
+            "test_observations": 201,
+            "test_mse": {
+              "rolling_20": 6.7953207393926e-07,
+              "ewma_094": 6.571020204193771e-07
+            },
+            "rolling_20_next_day_volatility_pct": 2.1982,
+            "ewma_094_next_day_volatility_pct": 2.0825,
+            "limits": [
+              "No prediction of direction, expected profit, or suitability.",
+              "Volatility is not a confidence interval; interval coverage is evaluated separately below.",
+              "Historical test comparison only; no tuning or model selection performed on the test set.",
+              "Squared daily return is a noisy variance proxy; this is not intraday realized volatility.",
+              "Saved cutoff may be old. No live forecast is implied."
+            ],
+            "return_interval": {
+              "version": "daily-return-interval-v1",
+              "selected_candidate": "ewma_scaled_quantile_250",
+              "nominal_coverage_pct": 90.0,
+              "parameters": {
+                "lookback_days": 250,
+                "ewma_decay": 0.94,
+                "warmup_days": 20
+              },
+              "split_indices": {
+                "initial_history": [
+                  0,
+                  501
+                ],
+                "model_selection": [
+                  501,
+                  651
+                ],
+                "calibration": [
+                  651,
+                  802
+                ],
+                "test": [
+                  802,
+                  1003
+                ]
+              },
+              "selection_metrics": {
+                "rolling_quantile_250": {
+                  "observations": 150,
+                  "empirical_coverage_pct": 93.33333333333333,
+                  "mean_width_log_return_pct": 7.551380313556631,
+                  "mean_interval_score_log_return_pct": 8.456846458023703
+                },
+                "ewma_scaled_quantile_250": {
+                  "observations": 150,
+                  "empirical_coverage_pct": 86.66666666666667,
+                  "mean_width_log_return_pct": 5.499540150092012,
+                  "mean_interval_score_log_return_pct": 8.105830404759564
+                }
+              },
+              "calibration": {
+                "observations": 151,
+                "expansion_log_return": 0.0017392517454230573,
+                "order_statistic_rank": 137
+              },
+              "test_metrics": {
+                "selected_calibrated": {
+                  "observations": 201,
+                  "empirical_coverage_pct": 91.04477611940298,
+                  "mean_width_log_return_pct": 7.069981660271959,
+                  "mean_interval_score_log_return_pct": 9.708159291597465
+                },
+                "selected_uncalibrated": {
+                  "observations": 201,
+                  "empirical_coverage_pct": 90.04975124378109,
+                  "mean_width_log_return_pct": 6.722131311187347,
+                  "mean_interval_score_log_return_pct": 9.679288024511905
+                },
+                "rolling_reference_uncalibrated": {
+                  "observations": 201,
+                  "empirical_coverage_pct": 93.03482587064677,
+                  "mean_width_log_return_pct": 7.365946550315622,
+                  "mean_interval_score_log_return_pct": 9.613377950623441
+                }
+              },
+              "next_day_simple_return_interval_pct": {
+                "lower": -3.2444,
+                "upper": 3.794
+              },
+              "input_sha256": "d9f304b1626657668b87b37f0edfbe8c27327cf32ea03988c0b69cc7d6a5ac43",
+              "as_of": "2026-09-30",
+              "quote_currency": "USDT",
+              "target": "next calendar day's close-to-close simple return in USDT",
+              "selection_rule": "lowest interval score on model_selection only; fixed before test",
+              "update_rule": "walk forward: observed past returns update candidates; selection and calibration expansion stay frozen",
+              "split_dates": {
+                "initial_history": {
+                  "first_target_date": "2024-01-02",
+                  "last_target_date": "2025-05-16",
+                  "observations": 501
+                },
+                "model_selection": {
+                  "first_target_date": "2025-05-17",
+                  "last_target_date": "2025-10-13",
+                  "observations": 150
+                },
+                "calibration": {
+                  "first_target_date": "2025-10-14",
+                  "last_target_date": "2026-03-13",
+                  "observations": 151
+                },
+                "test": {
+                  "first_target_date": "2026-03-14",
+                  "last_target_date": "2026-09-30",
+                  "observations": 201
+                }
+              },
+              "limits": [
+                "Nominal coverage is a target, not a guaranteed probability or maximum loss.",
+                "Time dependence, adaptive rolling estimates and regime changes invalidate an automatic exchangeability guarantee.",
+                "Test observations are excluded from selection and calibration, but earlier test observations update later forecasts.",
+                "One split, one venue and daily closes; no trading costs or intraday risk model.",
+                "Saved historical cutoff, not a current forecast or recommendation."
+              ]
+            }
+          }
+        },
+        "numerical_summaries": [
+          {
+            "source_id": "tool_588e73ab_1_get_risk_forecast",
+            "text": "Bitcoin: แบบทดลอง ณ 2026-09-30 สำหรับวันถัดไป ในหน่วยผลตอบแทน USDT: ความผันผวนรายวันจาก rolling 2.1982%; EWMA 2.0825% ไม่บอกทิศทาง ไม่ใช่การคาดการณ์ ณ วันนี้หรือขอบเขตขาดทุนที่รับประกัน ช่วงผลตอบแทนวันถัดไปแบบทดลอง -3.2444% ถึง 3.794% เป้าหมายความครอบคลุม 90.0%; ครอบคลุมจริงในการทดสอบ 91.04% จาก 201 วัน ผลจริงอาจอยู่นอกช่วงนี้ ไม่ใช่ขอบเขตขาดทุนสูงสุด แบบที่เลือกไม่ดีกว่าแบบอ้างอิงอย่างง่ายด้านคะแนนช่วงในการทดสอบนี้"
+          }
+        ],
+        "route": "qwen_grounded",
+        "status": "ok",
+        "limitations": [
+          "ยังไม่มีข้อมูลอ้างอิงหรือข้อมูลคำนวณที่ต้องใช้",
+          "ตัวเลขตลาดเป็นข้อมูลย้อนหลังใน USDT ไม่ใช่ราคาปัจจุบันหรือผลตอบแทนเงินบาท",
+          "แบบจำลองความเสี่ยงเป็นการทดลอง ณ วันย้อนหลัง ไม่ใช่สัญญาณซื้อขาย"
+        ],
+        "model_calls": [
+          {
+            "seconds": 8.45,
+            "usage": {
+              "completion_tokens": 554,
+              "prompt_tokens": 2203,
+              "total_tokens": 2757,
+              "completion_tokens_details": {
+                "reasoning_tokens": 522
+              }
+            },
+            "finish_reason": "tool_calls"
+          },
+          {
+            "seconds": 23.313,
+            "usage": {
+              "completion_tokens": 1549,
+              "prompt_tokens": 3712,
+              "total_tokens": 5261,
+              "completion_tokens_details": {
+                "reasoning_tokens": 1458
+              }
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "elapsed_seconds": 31.783
+      },
+      "source_urls": [
+        "https://data.binance.vision/",
+        "https://ethereum.org/stablecoins/"
+      ],
+      "human_review": "pending"
+    }
+  ]
+}
