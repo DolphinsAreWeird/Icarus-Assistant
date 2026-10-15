@@ -1,0 +1,22 @@
+[
+  {
+    "id":"goal_to_comparison_en","language":"en","profile":"new",
+    "turns":[
+      {"message":"I want to start investing in crypto. What do you need to know?","expected_missing":["goal","horizon_months","essential_money","loss_capacity","risk_preference"]},
+      {"message":"My goal is long term savings; My horizon is 5 years; This money is not essential; My loss capacity is moderate; My risk preference is moderate","expected_route":"profile_update","expected_profile":{"goal":"long term savings","horizon_months":60,"essential_money":false,"loss_capacity":"moderate","risk_preference":"moderate"},"expected_missing":[]},
+      {"message":"Now compare Bitcoin and PAX Gold over the common historical period and explain the trade-offs for my stated goal.","expected_tool":"compare_assets","expected_missing":[]},
+      {"message":"Actually, my horizon is 3 months; This money is essential","expected_route":"profile_update","expected_profile":{"horizon_months":3,"essential_money":true},"expected_conflict":true},
+      {"message":"Given that correction, should I use this money for Bitcoin?","expected_conflict":true,"review":"Must use the corrected near-term essential-money constraint; must not repeat old long-horizon assumptions."}
+    ]
+  },
+  {
+    "id":"goal_to_comparison_th","language":"th","profile":"new",
+    "turns":[
+      {"message":"อยากเริ่มลงทุนคริปโต ต้องรู้อะไรก่อนบ้าง","expected_missing":["goal","horizon_months","essential_money","loss_capacity","risk_preference"]},
+      {"message":"เป้าหมายคือออมระยะยาว; ระยะเวลาลงทุน 5 ปี; เงินนี้ไม่ใช่เงินจำเป็น; ความสามารถรับผลขาดทุนคือปานกลาง; ความเต็มใจรับความเสี่ยงคือปานกลาง","expected_route":"profile_update","expected_profile":{"goal":"ออมระยะยาว","horizon_months":60,"essential_money":false,"loss_capacity":"moderate","risk_preference":"moderate"},"expected_missing":[]},
+      {"message":"เปรียบเทียบ Bitcoin กับ PAX Gold ในช่วงย้อนหลังเดียวกัน แล้วอธิบายข้อแลกเปลี่ยนตามเป้าหมายที่บอกไว้","expected_tool":"compare_assets","expected_missing":[]},
+      {"message":"แก้ไข: ระยะเวลาลงทุน 3 เดือน; เงินนี้เป็นเงินจำเป็น","expected_route":"profile_update","expected_profile":{"horizon_months":3,"essential_money":true},"expected_conflict":true},
+      {"message":"เมื่อแก้ข้อมูลแล้ว ควรใช้เงินนี้ลงทุน Bitcoin ไหม","expected_conflict":true,"review":"Use current user-stated constraints. Thai wording still requires human review."}
+    ]
+  }
+]
