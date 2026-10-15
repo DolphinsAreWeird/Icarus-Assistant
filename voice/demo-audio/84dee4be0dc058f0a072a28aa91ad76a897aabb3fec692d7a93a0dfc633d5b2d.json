@@ -1,0 +1,10 @@
+{
+  "voiceId": "XiPS9cXxAVbaIWtGDHDh",
+  "model": "eleven_flash_v2_5",
+  "speed": 1,
+  "text": "Confirmed. Your gold purchase is on its way.",
+  "outputFormat": "pcm_24000",
+  "sampleRate": 24000,
+  "bytes": 127060,
+  "createdAt": "2026-10-15T13:18:52.274Z"
+}

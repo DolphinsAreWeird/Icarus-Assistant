@@ -31,8 +31,10 @@ No key or credits yet? `npm run dev:fake` gives fake tones instead of speech and
 | `npm run dev` | Server and test page (rebuilds the browser code first) |
 | `npm run dev:fake` | Same, with fake ElevenLabs. No key needed |
 | `npm run check` | Checks the key, models, Thai support, voice IDs, token minting against the live API. Add `-- --speak` to hear a test line |
-| `npm run pregenerate` | Makes the demo audio files in `demo-audio/`. `-- --dry` shows the credit cost first |
+| `npm run pregenerate` | Makes the demo audio files in `demo-audio/`. `-- --dry` shows the credit cost first. `-- --verify` checks every clip with the live Scribe, amounts included |
 | `npm run bench` | Measures the pipeline speed with no mic. Reports real numbers |
+| `npm run voices` | Lists voices and measures their pitch from the free samples (no credits). `-- --library --lang th` searches the Voice Library |
+| `npm run audition` | Makes the finalist voices say our lines, then measures pitch, speed, and whether Scribe understood them and the amounts |
 | `npm run build:client` | Builds `dist/icarus-voice.js` for the frontend |
 | `npm test` | Unit and integration tests |
 
@@ -158,7 +160,7 @@ export function useIcarusVoice(serverUrl: string) {
 
 Notes:
 
-- **Voices.** Both languages currently use **Sarah** (a premade voice, `EXAVITQu4vr4xnSDxMaL`) as a stand-in. ElevenLabs does not list Thai as a verified language for any of the 21 premade voices on the account, but the Thai model speaks it, and Scribe transcribed our Thai speech back exactly. **A Thai speaker still has to listen**, and may want a different Thai voice. Pick voices on the ElevenLabs **Voices** page, copy each voice ID into `VOICE_ID_EN` and `VOICE_ID_TH`, then run `npm run check -- --speak`.
+- **Voices.** English is **Brittney** (`XiPS9cXxAVbaIWtGDHDh`) and Thai is **Malee** (`mYcpTKg1oj1H5CtzUZNO`), both from the ElevenLabs Voice Library, picked on 15 Oct for the cute theme after an audition (see [Choosing the voices](#choosing-the-voices)). Before that, Sarah (a premade voice) was a stand-in. **A Thai speaker still has to listen to Malee.**
 - **Key permissions.** A restricted key works for the app if it has **Text to Speech** and **Speech to Text**. `npm run check` also wants **Models: read** and **Voices: read**, and explains if they are missing.
 - If ElevenLabs text-to-speech fails, the module falls back to the browser's own voice (macOS has an English voice and a Thai one called Kanya). It sounds different, but everything keeps working.
 
@@ -213,7 +215,36 @@ Limits to know:
 
 `npm run voices` lists every voice on the account and measures its **real pitch** from the free sample ElevenLabs publishes (no credits used). Add `--library --lang th` to search the public Voice Library, and filters like `--gender female --age young --descriptive cute`. It prints the pitch in Hz, a band (low, mid-low, mid, HIGH, VERY HIGH), whether a free plan may use the voice, and a link to listen. Pitch is a guide, not a verdict: a person has to listen.
 
-A voice from the library must be **added to the account** before it can be used (it takes one of the account's voice slots). Then put its ID in `VOICE_ID_EN` or `VOICE_ID_TH` and run `npm run check -- --speak`. English and Thai can be two different voices.
+Library voices **do not need to be added** to the account: on a paid plan, text-to-speech takes a library voice ID directly (we checked). Adding one to "My Voices" is optional and needs a key with the **Voices: write** permission (ours does not have it). Put the ID in `VOICE_ID_EN` or `VOICE_ID_TH` and run `npm run check -- --speak`. English and Thai can be two different voices. A free-plan key cannot use most library voices.
+
+### The audition (15 Oct): how we picked Brittney and Malee
+
+`npm run audition` makes every finalist (in `src/config/voice-candidates.ts`) say **our** lines: the greeting, the red-number explanation, the money read-back and the U-Bot handoff. It saves WAV files to `auditions/` (not committed) so people can listen, and measures each voice: the real pitch of what it said, the time to the first audio, how well the live Scribe understood it, and whether every **amount** came back right (1,000 / 15 / 1,015, whether Scribe writes digits or words). About 2,500 characters for all seven.
+
+| Voice | Language | Pitch (sample / saying our lines) | First audio (first / later) | Scribe understood (worst / average) | Amounts | Library tags |
+|---|---|---|---|---|---|---|
+| **Brittney** (picked) | EN | 308 / 276 Hz | 224 / 159 ms | 96% / 99% | all right | young, cute, social media, explainers |
+| Callie | EN | 254 / 222 to 258 Hz | 337 / 173 ms | 96% / 99% | all right | young, cute, conversational |
+| Emma | EN | 296 / 276 Hz | 148 / 168 ms | 96% / 99% | all right | young, cute, **animation characters** |
+| Jessica (premade) | EN | 219 / 216 Hz | 152 / 188 ms | 95% / 99% | all right | playful, warm |
+| **Malee** (picked) | TH | 281 / 271 Hz | 232 / 184 ms | 91% / 98% | all right | bright, cheerful, social media |
+| Aom | TH | 250 / 242 Hz | 129 / 183 ms | 91% / 98% | all right | smooth, calm, advertising |
+| Nueng | TH | 314 / 276 Hz | 130 / 171 ms | 91% / 97% | all right | **fast and loud**, social media |
+
+Every voice was understood and said every amount right, so the choice came down to pitch and style:
+
+- **Brittney**: the theme asks for a high voice, and she stays high (about 276 Hz) while explaining, which is Icarus's job. Callie wanders between 222 and 258 Hz, close to an ordinary voice. Emma is made for cartoons, which is wrong for reading money back.
+- **Malee**: the same pitch as Brittney (271 against 276 Hz), so Icarus sounds like one character in both languages. Nueng is described as fast and loud (Icarus should be calm). Aom is calm but lower.
+- The worst scores (91 to 96%) are all the U-Bot line: Scribe writes "U-Bot" as "YouBot" and "You topia Pay" as "Utopia Pay". It is the same for every voice.
+
+**Alternates, one line in `.env` each:** if Brittney sounds too peppy for money, use Callie (`7YaUDeaStRuoYg3FKsmU`). If Malee is too quick on the Thai read-back, use Aom (`nealpwJT5tCyJFKDzEq8`). Then run `npm run pregenerate -- --clean --verify` and commit `demo-audio/`.
+
+Things to know:
+
+- **Listen before the demo.** Numbers cannot tell you whether a voice sounds nice, and a Thai speaker has to check Malee. Thai lines leave out ค่ะ and ครับ: add ค่ะ to match Malee if the Thai reviewer wants it.
+- **First use is slow.** In one run, a library voice that had not spoken yet took 2 to 3 s to its first audio, then about 150 ms. The server now says one short word in each voice at start and every 20 minutes (`TTS_WARMUP_MINUTES`, a few characters each time).
+- **A library voice can disappear** if its owner removes it. Then text-to-speech fails with a clear "bad voice" error, the app falls back to the browser's voice, and the committed demo audio still plays.
+- `npm run pregenerate -- --verify` plays every demo clip into the live Scribe and fails if an amount is wrong. The committed demo audio (Brittney) passed: every line understood, every amount right.
 
 ## Connect the real assistant
 
@@ -330,8 +361,11 @@ voice/
     elevenlabs-check.ts   npm run check
     pregenerate.ts        npm run pregenerate
     bench.ts              npm run bench
+    voice-scout.ts        npm run voices (pitch from the free samples)
+    voice-audition.ts     npm run audition (finalists say our lines, then get measured)
   src/
-    config/               everything editable: strings, commands, keyterms, thresholds, demo lines
+    config/               everything editable: strings, commands, keyterms, thresholds, demo lines,
+                          the U-topia glossary, handoff rules, voice finalists
     shared/               code used by both the server and the browser
       types.ts            the contracts and event types
       speech-format.ts    text to speakable text (markdown, money, percent, dates, short version)
@@ -363,6 +397,9 @@ voice/
       usage.ts            credit counting
       friction.ts         the friction log stub
       assistant/          mock, HTTP adapter, and the one switch
+      utopia/             "Ask U-topia" (mock glossary or HTTP) and handoffs to U-Bot, with the safety screen
+      warmup.ts           says one word in each voice at start, so the first real reply is fast
+      transcribe.ts       plays a clip into the live Scribe and checks words and amounts (scripts only)
       pregenerate.ts      logic behind npm run pregenerate
       bench.ts            logic behind npm run bench
       fake-elevenlabs.ts  fake TTS, for dev and tests

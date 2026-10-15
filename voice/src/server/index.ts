@@ -11,6 +11,7 @@ import { TtsCache } from './tts-cache';
 import { TtsService } from './tts';
 import { UsageTracker } from './usage';
 import { createUtopia } from './utopia';
+import { startVoiceWarmup } from './warmup';
 
 const cfg = loadConfig();
 
@@ -47,6 +48,8 @@ const server = app.listen(cfg.port, () => {
   line('STT', `scribe_v2_realtime, ${cfg.stt.commitStrategy}, silence ${cfg.stt.vadSilenceSecs}s`);
   if (cfg.stt.droppedKeyterms.length) console.log(`  Dropped keyterms (too long or too many): ${cfg.stt.droppedKeyterms.join(', ')}`);
   console.log('');
+  // The first time a library voice speaks it is slow. Do that now, not during the first real reply.
+  if (port && !cfg.fakeElevenLabs) startVoiceWarmup(port, cfg, usage);
 });
 
 // In fake mode, also serve a pretend Scribe socket so the mic path can be rehearsed with no credits.

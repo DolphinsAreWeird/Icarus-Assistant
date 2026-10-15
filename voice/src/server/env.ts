@@ -29,6 +29,8 @@ export interface ServerConfig {
   ttsOutputFormat: string;
   ttsSampleRate: number;
   ttsMaxChars: number;
+  /** Say one short word in each voice at start and every this many minutes (first use of a voice is slow). 0 = off. */
+  ttsWarmupMinutes: number;
 
   stt: {
     commitStrategy: 'manual' | 'vad';
@@ -108,6 +110,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     ttsOutputFormat: outputFormat,
     ttsSampleRate: Number(pcm[1]),
     ttsMaxChars: num(env.TTS_MAX_CHARS, 1000),
+    ttsWarmupMinutes: num(env.TTS_WARMUP_MINUTES, 20),
 
     stt: {
       commitStrategy: strategy,
