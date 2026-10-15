@@ -67,8 +67,11 @@ export interface IcarusVoiceOptions {
 }
 
 export interface AudioDeps {
-  /** Create or resume the audio system. Must be called from a user gesture the first time. */
-  unlock(): Promise<void>;
+  /**
+   * Create or resume the audio system. Must be called from a user gesture the first time.
+   * Returns the state ('running' means sound can play). undefined means "unknown" (tests).
+   */
+  unlock(): Promise<AudioContextState | undefined>;
   output(): AudioOutput;
   mic: MicPort;
 }
@@ -90,7 +93,9 @@ function createBrowserDeps(serverUrl: string, sessionId: string, startLeadMs: nu
     audio: {
       async unlock() {
         const c = getContext();
-        if (c.state === 'suspended') await c.resume();
+        // If the browser blocks audio, resume() can stay pending forever. Do not wait for it.
+        if (c.state === 'suspended') await Promise.race([c.resume(), new Promise((r) => setTimeout(r, 1500))]);
+        return c.state;
       },
       output: () => (output ??= new WebAudioOutput(getContext(), startLeadMs)),
       mic: mic ?? new WebMic(getContext),
@@ -246,7 +251,24 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
 
   /** Call from a click or tap. Browsers only allow audio after a gesture. Safe to call many times. */
   async unlock(): Promise<void> {
-    await this.deps.audio.unlock();
+    await this.ensureAudio();
+  }
+
+  private audioWarned = false;
+
+  /** Unlock audio. If the browser still blocks sound, say so once, instead of failing silently. */
+  private async ensureAudio(): Promise<void> {
+    const state = await this.deps.audio.unlock();
+    if (state !== undefined && state !== 'running' && !this.audioWarned) {
+      this.audioWarned = true;
+      this.emit('error', {
+        code: 'audio_blocked',
+        message:
+          'The browser is blocking sound, so you will hear nothing. Click once on the page and try again. ' +
+          'In Brave, open the lion (Shields) icon and the site settings, and allow Sound for this site.',
+        fatal: false,
+      });
+    }
   }
 
   /** Turn the microphone on. In hands-free mode it stays on until stop(). */
@@ -255,7 +277,7 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     this.running = true;
     this.lastActivityAt = this.deps.timers.now();
     try {
-      await this.deps.audio.unlock();
+      await this.ensureAudio();
       await this.deps.audio.mic.start((frame) => this.onMicFrame(frame));
     } catch (err) {
       this.running = false;
@@ -784,7 +806,7 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     this.lastActivityAt = this.deps.timers.now();
 
     try {
-      await this.deps.audio.unlock();
+      await this.ensureAudio();
       const res = await this.deps.api.tts({ text: speech.text, language: speech.language, speed: this.cfg.tts.speedSteps[this.speedStep] ?? 1 }, pb.abort.signal);
       if (pb.ended) {
         void res.body.cancel().catch(() => undefined);

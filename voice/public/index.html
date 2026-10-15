@@ -32,6 +32,11 @@
     label { display: inline-flex; gap: 6px; align-items: center; }
     .banner { border-radius: 10px; padding: 10px 14px; border: 1px solid var(--line); background: var(--card); }
     .banner.warn { border-color: var(--warn); }
+    .banner.fake { border: 2px solid var(--bad); }
+    .banner.err { border: 2px solid var(--bad); color: var(--bad); font-weight: 600; cursor: pointer; }
+    .convo { max-height: 280px; }
+    .convo .me { color: var(--muted); }
+    .convo .bot { font-weight: 600; }
     .state { display: flex; align-items: center; gap: 12px; }
     .badge { font-weight: 700; font-size: 18px; padding: 6px 14px; border-radius: 999px; background: var(--line); }
     .badge[data-state=listening] { background: #1f8a4c; color: #fff; }
@@ -64,6 +69,7 @@
   </div>
 
   <div id="banner" class="banner">Checking the server...</div>
+  <div id="errorBar" class="banner err" hidden title="Click to dismiss"></div>
 
   <div class="grid">
     <section class="card">
@@ -71,6 +77,7 @@
       <div class="row">
         <button id="toggle" class="primary">Start mic</button>
         <button id="ptt" hidden>Hold to talk (or hold Space)</button>
+        <button id="beep" title="Plays a short beep without using any of the voice code">Test my speakers</button>
       </div>
       <div class="row">
         <label>Mode
@@ -103,9 +110,9 @@
         <span id="countdown" class="big" hidden>3</span>
         <button id="cancelTap" class="danger" hidden>Cancel (tap)</button>
       </div>
-      <h2 style="margin-top:14px">Live transcript</h2>
+      <h2 style="margin-top:14px">Conversation</h2>
       <div id="partial" class="partial"></div>
-      <div id="finals" class="log"></div>
+      <div id="finals" class="log convo"></div>
     </section>
 
     <section class="card">

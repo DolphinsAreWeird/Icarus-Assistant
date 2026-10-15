@@ -774,3 +774,26 @@ describe('speak() keeps numbers exact', () => {
     expect(s.api.ttsRequests[0]?.text).toBe('Done: gold is down 2.3 percent today.');
   });
 });
+
+describe('blocked audio', () => {
+  it('says so once when the browser keeps audio suspended, instead of failing silently', async () => {
+    const s = setup({ deps: { audio: { unlock: async () => 'suspended' as const, output: () => new FakeOutput(), mic: new FakeMic() } } });
+    await s.voice.start();
+    s.voice.sendText('take me to gold');
+    await flush();
+    s.voice.sendText('take me to gold');
+    await flush();
+    const blocked = s.log.error.filter((e) => e.code === 'audio_blocked');
+    expect(blocked).toHaveLength(1); // once, not on every line
+    expect(blocked[0]).toMatchObject({ fatal: false });
+    expect(blocked[0]?.message).toMatch(/blocking sound/i);
+  });
+
+  it('stays quiet when audio is running', async () => {
+    const s = setup({ deps: { audio: { unlock: async () => 'running' as const, output: () => new FakeOutput(), mic: new FakeMic() } } });
+    await s.voice.start();
+    s.voice.sendText('take me to gold');
+    await flush();
+    expect(s.log.error.filter((e) => e.code === 'audio_blocked')).toHaveLength(0);
+  });
+});

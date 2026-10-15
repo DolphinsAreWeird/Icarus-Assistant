@@ -15,7 +15,7 @@ const el = {
   requireTap: $<HTMLInputElement>('requireTap'), simConfirm: $<HTMLInputElement>('simConfirm'),
   synthMic: $<HTMLInputElement>('synthMic'), synthTalk: $<HTMLButtonElement>('synthTalk'),
   state: $('state'), phase: $('phase'), countdown: $('countdown'), cancelTap: $<HTMLButtonElement>('cancelTap'),
-  partial: $('partial'), finals: $('finals'), events: $('events'),
+  partial: $('partial'), finals: $('finals'), events: $('events'), errorBar: $('errorBar'), beep: $<HTMLButtonElement>('beep'),
   tfa: $('m-tfa'), stt: $('m-stt'), asst: $('m-asst'), tts: $('m-tts'), avg: $('m-avg'), barge: $('m-barge'),
   uStt: $('u-stt'), uTts: $('u-tts'),
   typed: $<HTMLInputElement>('typed'), sim: $<HTMLInputElement>('sim'), simConf: $<HTMLInputElement>('simConf'),
@@ -26,6 +26,14 @@ let voice: IcarusVoice;
 let synth: SyntheticMic | null = null;
 let running = false;
 const recentFirstAudio: number[] = [];
+let fakeMode = false;
+
+/** Show a problem where you cannot miss it, not only in the event log at the bottom. */
+function showError(text: string): void {
+  el.errorBar.textContent = text;
+  el.errorBar.hidden = false;
+}
+el.errorBar.onclick = () => { el.errorBar.hidden = true; };
 
 // ---------- event log ----------
 function log(text: string, kind: '' | 'bad' | 'good' = ''): void {
@@ -35,6 +43,17 @@ function log(text: string, kind: '' | 'bad' | 'good' = ''): void {
   if (kind) line.className = kind;
   el.events.prepend(line);
   while (el.events.childElementCount > 100) el.events.lastElementChild?.remove();
+}
+
+function addRow(who: 'me' | 'bot', label: string, text: string, tag: string): void {
+  const row = document.createElement('div');
+  row.className = who;
+  row.append(document.createTextNode(`${label}: ${text} `));
+  const t = document.createElement('span');
+  t.className = 'tag';
+  t.textContent = tag;
+  row.append(t);
+  el.finals.prepend(row);
 }
 
 // ---------- the voice module ----------
@@ -68,19 +87,16 @@ function wire(v: IcarusVoice): void {
   v.on('partialTranscript', ({ text }) => { el.partial.textContent = text; });
   v.on('finalTranscript', (t) => {
     el.partial.textContent = '';
-    const row = document.createElement('div');
     const conf = t.confidence === null ? 'confidence unknown' : `confidence ${t.confidence.toFixed(2)}`;
-    row.innerHTML = '';
-    row.append(document.createTextNode(t.text + ' '));
-    const tag = document.createElement('span');
-    tag.className = 'tag';
-    tag.textContent = `${t.language} | ${conf} | ${t.source}`;
-    row.append(tag);
-    el.finals.prepend(row);
+    const fake = fakeMode && t.source === 'voice' ? ' | FAKE script, not your words' : '';
+    addRow('me', 'You', t.text, `${t.language} | ${conf} | ${t.source}${fake}`);
   });
   v.on('transcriptIgnored', ({ text, reason, confidence }) =>
     log(`ignored "${text}" (${reason}${confidence === null ? '' : `, ${confidence.toFixed(2)}`})`));
-  v.on('speakingStart', ({ text, kind }) => log(`speaking (${kind}): ${text}`));
+  v.on('speakingStart', ({ text, kind }) => {
+    log(`speaking (${kind}): ${text}`);
+    el.errorBar.hidden = true; // sound started, so any earlier problem is over
+  });
   v.on('speakingEnd', ({ reason }) => log(`speaking ended: ${reason}`));
   v.on('command', ({ name }) => log(`local command: ${name}${name === 'back' ? ' (the UI would navigate back here)' : ''}`, 'good'));
   v.on('bargeIn', ({ source, ms }) => {
@@ -96,11 +112,13 @@ function wire(v: IcarusVoice): void {
   });
   v.on('error', ({ code, message, fatal }) => {
     log(`error ${code}${fatal ? ' (fatal)' : ''}: ${message}`, 'bad');
+    showError(`${code}: ${message}`);
     if (fatal || code === 'idle_timeout') { running = false; syncControls(); }
   });
   v.on('assistantReply', (r) => {
     const actions = r.reply.ui_actions.map((a) => a.type).join(', ') || 'none';
     log(`assistant (${r.assistantMs} ms): "${r.reply.text}"  ui_actions: ${actions}`);
+    addRow('bot', 'Icarus', r.reply.text, r.speech ? `will say (${r.speech.kind}): "${r.speech.text}"` : 'silent: the assistant said not to speak');
     const preview = extractPreview(r.reply);
     if (preview) showPreview(preview);
   });
@@ -209,6 +227,7 @@ el.toggle.onclick = async () => {
   if (running) { voice.stop(); running = false; syncControls(); return; }
   running = true;
   syncControls();
+  el.errorBar.hidden = true;
   await voice.start(); // from a click, so the browser allows the mic and audio
 };
 el.mode.onchange = () => { voice.setMode(el.mode.value as Mode); syncControls(); };
@@ -221,6 +240,22 @@ el.synthTalk.onpointerup = () => synth?.setTalking(false);
 el.synthTalk.onpointerleave = () => synth?.setTalking(false);
 el.cancelTap.onclick = () => voice.cancelConfirm();
 el.snapshot.oninput = pushSnapshot;
+
+// A beep that uses none of our voice code. If you cannot hear it, the problem is your browser or speakers.
+el.beep.onclick = async () => {
+  const ctx = new AudioContext();
+  await Promise.race([ctx.resume(), new Promise((r) => setTimeout(r, 1500))]);
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  gain.gain.value = 0.2;
+  osc.frequency.value = 440;
+  osc.connect(gain).connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.4);
+  log(`speaker test: AudioContext is "${ctx.state}". You should hear a short beep. If not, check the volume, the output device and the site's Sound permission.`, ctx.state === 'running' ? 'good' : 'bad');
+  if (ctx.state !== 'running') showError(`The browser keeps audio "${ctx.state}", so nothing can play. Allow Sound for this site (in Brave: the lion icon, then site settings).`);
+  setTimeout(() => void ctx.close(), 800);
+};
 
 // Push to talk: button or Space bar
 el.ptt.onpointerdown = () => voice.pushToTalkStart();
@@ -265,7 +300,8 @@ async function showHealth(): Promise<void> {
   try {
     const h = await (await fetch('/api/health')).json();
     const notes: string[] = [];
-    if (h.fakeElevenLabs) notes.push('FAKE ElevenLabs: you hear tones, not speech. If you start the mic, whatever you say is "heard" as the next scripted phrase: red number, take me to gold, put 1,000 baht in gold, confirm, what should I buy.');
+    fakeMode = Boolean(h.fakeElevenLabs);
+    if (h.fakeElevenLabs) notes.push('FAKE MODE (no ElevenLabs key): Icarus answers with BEEPS, not words, and the microphone does NOT recognise what you say. It replays a fixed script whatever you say: red number, take me to gold, put 1,000 baht in gold, confirm, what should I buy. For real speech, add your key to .env and run npm run dev.');
     else {
       if (!h.apiKeySet) notes.push('ELEVENLABS_API_KEY is missing in .env. Text replies work, voice does not.');
       if (!h.voices.en) notes.push('VOICE_ID_EN is missing.');
@@ -274,6 +310,7 @@ async function showHealth(): Promise<void> {
     notes.push(`Assistant: ${h.assistant === 'mock' ? 'MOCK (canned replies)' : 'real'}. TTS models: EN ${h.ttsModels.en.join(', ')} | TH ${h.ttsModels.th.join(', ')}.`);
     el.banner.textContent = notes.join(' ');
     el.banner.classList.toggle('warn', notes.length > 1);
+    el.banner.classList.toggle('fake', fakeMode);
   } catch {
     el.banner.textContent = 'Cannot reach the voice server. Start it with: npm run dev';
     el.banner.classList.add('warn');
