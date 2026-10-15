@@ -1,0 +1,410 @@
+<title>Icarus Partner Pricing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: the levers on the left, a live price receipt on the right; one column on phones. */
+:root {
+  --bg: #FBF4F6; --surface: #FFFFFF; --ink: #3E2530; --muted: #866671; --line: #EED9E0;
+  --accent: #C04A6C; --accent-soft: #F8E1E8;
+  --good: #2E7D4F; --good-soft: #E2F3E8; --warn: #9A6412; --warn-soft: #FBEFD9; --bad: #B4302A; --bad-soft: #FBE3E1;
+  --seg-team: #C04A6C; --seg-model: #6F55BE; --seg-voice: #2A8392; --seg-servers: #B096A1; --seg-profit: #D9952F;
+  --font-display: "Fredoka", "Mali", system-ui, sans-serif;
+  --font-body: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1C1317; --surface: #281B21; --ink: #F5E7EC; --muted: #BFA2AD; --line: #3D2A32;
+  --accent: #E7799B; --accent-soft: #46222F;
+  --good: #67C690; --good-soft: #193526; --warn: #E6B456; --warn-soft: #3A2C12; --bad: #F2776C; --bad-soft: #43201D;
+  --seg-team: #E7799B; --seg-model: #9C86E8; --seg-voice: #4FB6C4; --seg-servers: #8E7680; --seg-profit: #EDB14F;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #1C1317; --surface: #281B21; --ink: #F5E7EC; --muted: #BFA2AD; --line: #3D2A32;
+  --accent: #E7799B; --accent-soft: #46222F;
+  --good: #67C690; --good-soft: #193526; --warn: #E6B456; --warn-soft: #3A2C12; --bad: #F2776C; --bad-soft: #43201D;
+  --seg-team: #E7799B; --seg-model: #9C86E8; --seg-voice: #4FB6C4; --seg-servers: #8E7680; --seg-profit: #EDB14F;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-body); }
+.page { max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 40px; display: grid; gap: 22px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(26px, 4vw, 34px); letter-spacing: -0.01em; }
+h2 { font-size: 18px; }
+h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-family: var(--font-body); font-weight: 700; }
+p { margin: 0; }
+.lede { color: var(--muted); max-width: 64ch; }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 22px; align-items: start; }
+@media (max-width: 820px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 16px; min-width: 0; }
+.group { display: grid; gap: 12px; }
+.group + .group { border-top: 1px dashed var(--line); padding-top: 14px; }
+.field { display: grid; gap: 4px; }
+.field-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.field label { font-weight: 600; }
+.field output { font-family: var(--font-data); font-variant-numeric: tabular-nums; color: var(--accent); white-space: nowrap; }
+.hint { font-size: 12.5px; color: var(--muted); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+input[type="number"] { width: 100%; font: 500 15px var(--font-data); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 600 12.5px var(--font-body); border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.seg button { font: 600 13.5px var(--font-body); padding: 9px 8px; border: 0; background: var(--bg); color: var(--ink); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details summary { cursor: pointer; font-weight: 700; }
+details[open] summary { margin-bottom: 12px; }
+.verdict { display: flex; gap: 10px; align-items: center; border-radius: 14px; padding: 10px 14px; font-weight: 700; }
+.verdict .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: currentColor; }
+.verdict.good { background: var(--good-soft); color: var(--good); }
+.verdict.warn { background: var(--warn-soft); color: var(--warn); }
+.verdict.bad { background: var(--bad-soft); color: var(--bad); }
+.price { display: grid; gap: 2px; }
+.price .big { font: 600 clamp(34px, 6vw, 46px)/1.05 var(--font-display); letter-spacing: -0.01em; }
+.price .unit { font: 600 16px var(--font-body); color: var(--muted); }
+.bar { display: flex; height: 16px; border-radius: 8px; overflow: hidden; background: var(--line); }
+.bar span { height: 100%; transition: flex-basis .25s ease; }
+@media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }
+.legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 14px; font-size: 13.5px; }
+.legend div { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.legend b { margin-left: auto; font-family: var(--font-data); font-weight: 500; font-variant-numeric: tabular-nums; }
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.kpi { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; }
+.kpi .v { font: 500 20px var(--font-data); font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: 12.5px; color: var(--muted); }
+.vs { display: grid; gap: 8px; }
+.vs-row { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 13.5px; }
+.vs-track { height: 12px; background: var(--line); border-radius: 6px; overflow: hidden; }
+.vs-track span { display: block; height: 100%; border-radius: 6px; }
+.note { font-size: 13px; color: var(--muted); }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+td.r, th.r { text-align: right; font-family: var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.ours td { color: var(--accent); font-weight: 700; }
+footer { font-size: 12.5px; color: var(--muted); display: grid; gap: 4px; }
+</style>
+
+<div class="page">
+  <header style="display:grid;gap:8px">
+    <h3>Icarus · business plan</h3>
+    <h1>What should a partner pay for Icarus?</h1>
+    <p class="lede">Move the levers for one finance app. The page shows what Icarus costs us to run for that app, the price at your margin, and whether it pays for itself for the partner. Numbers in Thai baht, per month. Same math as <span class="num">docs/cost_model.py</span>.</p>
+  </header>
+
+  <div class="layout">
+    <section class="panel" aria-label="Levers">
+      <div class="group">
+        <h3>The partner app</h3>
+        <div class="field">
+          <div class="field-head"><label for="mau">Monthly active users</label><output id="mau-out" for="mau"></output></div>
+          <input id="mau" type="range" min="0" max="1000" step="1">
+          <div class="chips" id="presets" role="group" aria-label="Example sizes"></div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>How people use Icarus</h3>
+        <div class="field">
+          <div class="field-head"><label for="share">Users who ask Icarus something</label><output id="share-out" for="share"></output></div>
+          <input id="share" type="range" min="5" max="60" step="1">
+        </div>
+        <div class="field">
+          <div class="field-head"><label for="turns">Questions per Icarus user a month</label><output id="turns-out" for="turns"></output></div>
+          <input id="turns" type="range" min="2" max="40" step="1">
+        </div>
+        <div class="field">
+          <div class="field-head"><label for="voice">Asked by voice</label><output id="voice-out" for="voice"></output></div>
+          <input id="voice" type="range" min="0" max="100" step="5">
+          <p class="hint">Spoken questions cost speech-to-text and text-to-speech (ElevenLabs list prices).</p>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Where the model runs</h3>
+        <div class="seg" role="group" aria-label="Model hosting">
+          <button type="button" id="how-api">Pay per token</button>
+          <button type="button" id="how-gpu">Dedicated GPUs</button>
+        </div>
+        <p class="hint" id="how-hint"></p>
+      </div>
+
+      <div class="group">
+        <h3>Our costs and margin</h3>
+        <div class="field">
+          <label for="ops">Team, THB a month</label>
+          <input id="ops" type="number" min="0" step="5000" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label for="platform">Servers and tools, THB a month</label>
+          <input id="platform" type="number" min="0" step="1000" inputmode="numeric">
+        </div>
+        <div class="field">
+          <div class="field-head"><label for="margin">Profit margin on the price</label><output id="margin-out" for="margin"></output></div>
+          <input id="margin" type="range" min="0" max="50" step="1">
+        </div>
+      </div>
+
+      <div class="group">
+        <details>
+          <summary>What Icarus is worth to the partner</summary>
+          <div class="group" style="border:0;padding:0">
+            <div class="field">
+              <div class="field-head"><label for="ticket">Conversations that would have been a support contact</label><output id="ticket-out" for="ticket"></output></div>
+              <input id="ticket" type="range" min="0" max="30" step="1">
+            </div>
+            <div class="field">
+              <div class="field-head"><label for="contact">Cost of one support contact</label><output id="contact-out" for="contact"></output></div>
+              <input id="contact" type="range" min="10" max="150" step="1">
+              <p class="hint">Default: a Thai call-centre operator's median pay (21,500 THB a month), about 800 contacts a month, times 1.6 for supervision and tools.</p>
+            </div>
+            <div class="field">
+              <div class="field-head"><label for="uplift">More new users reaching a first deposit</label><output id="uplift-out" for="uplift"></output></div>
+              <input id="uplift" type="range" min="0" max="3" step="0.1">
+            </div>
+            <div class="field">
+              <div class="field-head"><label for="activated">First-year profit from one activated user</label><output id="activated-out" for="activated"></output></div>
+              <input id="activated" type="range" min="100" max="3000" step="50">
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Result" aria-live="polite">
+      <div class="verdict" id="verdict"><span class="dot"></span><span id="verdict-text"></span></div>
+
+      <div class="price">
+        <h3>Price for this partner</h3>
+        <div><span class="big num" id="price"></span> <span class="unit">THB a month</span></div>
+        <p class="note" id="price-usd"></p>
+      </div>
+
+      <div class="group" style="gap:10px">
+        <div class="bar" id="bar" aria-hidden="true"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><span class="v" id="k-mau"></span><span class="l">per active user a month</span></div>
+        <div class="kpi"><span class="v" id="k-conv"></span><span class="l">per conversation (4 questions)</span></div>
+        <div class="kpi"><span class="v" id="k-turns"></span><span class="l">questions a month</span></div>
+        <div class="kpi"><span class="v" id="k-gpus"></span><span class="l" id="k-gpus-l">GPUs of our own</span></div>
+      </div>
+
+      <div class="group" style="gap:10px">
+        <h3>Worth to the partner vs price</h3>
+        <div class="vs">
+          <div class="vs-row"><span>Worth to them</span><div class="vs-track"><span id="vs-value" style="background:var(--good)"></span></div><span class="num" id="vs-value-n"></span></div>
+          <div class="vs-row"><span>Full-cost price</span><div class="vs-track"><span id="vs-price" style="background:var(--accent)"></span></div><span class="num" id="vs-price-n"></span></div>
+          <div class="vs-row"><span>Our list price</span><div class="vs-track"><span id="vs-list" style="background:var(--seg-model)"></span></div><span class="num" id="vs-list-n"></span></div>
+        </div>
+        <p class="note" id="breakeven"></p>
+        <p class="note" id="listnote"></p>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" aria-label="Compared with">
+    <h2>Compared with what partners already pay for</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Product</th><th>How it charges</th><th class="r">Price</th><th class="r">In THB</th></tr></thead>
+        <tbody id="bench"></tbody>
+      </table>
+    </div>
+    <p class="note">List prices checked on 15 Oct 2026 (Intercom, Zendesk, Salesforce and Userpilot pricing pages). Exchange rate: the European Central Bank's 33.575 THB per US dollar on 14 Oct 2026.</p>
+  </section>
+
+  <footer>
+    <p>Assumptions marked as ours (share of users, questions, voice share, the value side) are estimates to measure in the U-topia pilot with the friction map. U-topia's size is not verified: 130,000 monthly users is a backer's claim from 2025.</p>
+    <p id="model-note"></p>
+  </footer>
+</div>
+
+<script type="application/json" id="assumptions">__ASSUMPTIONS__</script>
+<script>
+(() => {
+  const A = JSON.parse(document.getElementById('assumptions').textContent);
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n, d = 0) => Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const usd = (n) => `US$${Number(n).toFixed(2)}`;
+
+  // Monthly active users on a log scale, 5,000 to 1,000,000, rounded to the nearest 1,000.
+  const MIN = 5000, MAX = 1000000;
+  const toMau = (t) => Math.max(MIN, Math.round(MIN * Math.pow(MAX / MIN, t / 1000) / 1000) * 1000);
+  const toSlider = (m) => Math.round(1000 * Math.log(m / MIN) / Math.log(MAX / MIN));
+
+  const state = {
+    mau: 130000, share: A.icarusUsersShare, turnsPer: A.turnsPerIcarusUser, voiceShare: A.voiceShare, how: 'api',
+    ops: A.opsThb, platform: A.platformThb, margin: A.margin, ticketShare: A.ticketShare,
+    costPerContact: A.costPerContactThb, uplift: A.activationUplift, valuePerActivated: A.valuePerActivatedThb,
+  };
+
+  // The same model as docs/cost_model.py.
+  function compute(s) {
+    const turns = s.mau * s.share * s.turnsPer;
+    const voiceTurns = turns * s.voiceShare;
+    const conversations = turns / A.turnsPerConversation;
+    let llm, gpus = 0;
+    if (s.how === 'gpu') {
+      const peak = turns / (30 * 24 * 3600) * A.peakToAverage;
+      gpus = Math.max(A.minGpusForUptime, Math.ceil(peak / (A.gpu.turns_per_second * A.gpuTargetUtilisation)));
+      llm = gpus * A.gpu.usd_per_hour * A.hoursPerMonth * A.thbPerUsd;
+    } else {
+      const inp = turns * A.inputTokensPerTurn / 1e6, out = turns * A.outputTokensPerTurn / 1e6;
+      llm = (inp * (1 - A.cachedInputShare) * A.api.usd_per_m_input + inp * A.cachedInputShare * A.api.usd_per_m_cached_input + out * A.api.usd_per_m_output) * A.thbPerUsd;
+    }
+    const voice = (voiceTurns * A.sttSecondsPerVoiceTurn / 3600 * A.sttUsdPerHour + voiceTurns * A.ttsCharsPerVoiceTurn / 1000 * A.ttsUsdPer1kChars) * A.thbPerUsd;
+    const cost = s.ops + s.platform + llm + voice;
+    const price = cost / (1 - s.margin);
+    const support = conversations * s.ticketShare * s.costPerContact;
+    const activation = s.mau * A.signupsShare * s.uplift * s.valuePerActivated;
+    return { turns, voiceTurns, conversations, llm, voice, gpus, cost, price, profit: price - cost, value: support + activation, support, activation };
+  }
+  // Our recommended list price: per active user in bands, a minimum, and fair-use overage (list_price_thb in Python).
+  function listPrice(s, r) {
+    let price = 0, counted = 0;
+    for (const [cap, rate] of A.priceBands) {
+      const users = cap === null ? s.mau - counted : Math.max(0, Math.min(s.mau, cap) - counted);
+      price += users * rate;
+      counted += users;
+    }
+    const extra = Math.max(0, r.turns - A.includedTurnsPerMau * s.mau);
+    return Math.max(A.minMonthlyFee, price) + extra * A.overageThbPerTurn;
+  }
+  window.icarusPricing = { compute, listPrice, assumptions: A }; // for checking against cost_model.py
+
+  function breakEven(s) {
+    for (let m = 1000; m < 5000000; m += 1000) {
+      const r = compute({ ...s, mau: m });
+      if (r.value >= r.price) return m;
+    }
+    return null;
+  }
+
+  // ---- controls
+  const presets = [['10k', 10000], ['50k', 50000], ['130k (U-topia, claimed)', 130000], ['300k', 300000]];
+  $('presets').innerHTML = presets.map(([label, m]) => `<button type="button" class="chip" data-mau="${m}">${label}</button>`).join('');
+  $('presets').addEventListener('click', (e) => {
+    const m = Number(e.target.closest('[data-mau]')?.dataset.mau);
+    if (m) { state.mau = m; $('mau').value = toSlider(m); render(); }
+  });
+  const bind = (id, key, toState, show) => {
+    const el = $(id);
+    el.addEventListener('input', () => { state[key] = toState(el.value); render(); });
+    return { el, show };
+  };
+  const sliders = [
+    bind('mau', 'mau', (v) => toMau(Number(v))),
+    bind('share', 'share', (v) => Number(v) / 100),
+    bind('turns', 'turnsPer', (v) => Number(v)),
+    bind('voice', 'voiceShare', (v) => Number(v) / 100),
+    bind('margin', 'margin', (v) => Number(v) / 100),
+    bind('ticket', 'ticketShare', (v) => Number(v) / 100),
+    bind('contact', 'costPerContact', (v) => Number(v)),
+    bind('uplift', 'uplift', (v) => Number(v) / 100),
+    bind('activated', 'valuePerActivated', (v) => Number(v)),
+  ];
+  $('ops').addEventListener('input', () => { state.ops = Math.max(0, Number($('ops').value) || 0); render(); });
+  $('platform').addEventListener('input', () => { state.platform = Math.max(0, Number($('platform').value) || 0); render(); });
+  $('how-api').onclick = () => { state.how = 'api'; render(); };
+  $('how-gpu').onclick = () => { state.how = 'gpu'; render(); };
+
+  // initial control positions
+  $('mau').value = toSlider(state.mau);
+  $('share').value = Math.round(state.share * 100);
+  $('turns').value = state.turnsPer;
+  $('voice').value = Math.round(state.voiceShare * 100);
+  $('margin').value = Math.round(state.margin * 100);
+  $('ticket').value = Math.round(state.ticketShare * 100);
+  $('contact').value = state.costPerContact;
+  $('uplift').value = (state.uplift * 100).toFixed(1);
+  $('activated').value = state.valuePerActivated;
+  $('ops').value = state.ops;
+  $('platform').value = state.platform;
+
+  const BENCH = [
+    ['Intercom Fin', 'per resolved conversation', 0.99, 'conv'],
+    ['Zendesk AI agents', 'per automated resolution (contract)', 1.5, 'conv'],
+    ['Salesforce Agentforce', 'per conversation', 2.0, 'conv'],
+    ['Userpilot Starter', 'per active user a month, at its 2,000-user cap', 299 / 2000, 'mau'],
+  ];
+
+  function render() {
+    const s = state;
+    const r = compute(s);
+    $('mau-out').textContent = fmt(s.mau);
+    $('share-out').textContent = `${Math.round(s.share * 100)}%`;
+    $('turns-out').textContent = fmt(s.turnsPer);
+    $('voice-out').textContent = `${Math.round(s.voiceShare * 100)}%`;
+    $('margin-out').textContent = `${Math.round(s.margin * 100)}%`;
+    $('ticket-out').textContent = `1 in ${s.ticketShare > 0 ? fmt(1 / s.ticketShare, s.ticketShare >= 0.1 ? 0 : 1) : '∞'}`;
+    $('contact-out').textContent = `${fmt(s.costPerContact)} THB`;
+    $('uplift-out').textContent = `+${(s.uplift * 100).toFixed(1)} in 100`;
+    $('activated-out').textContent = `${fmt(s.valuePerActivated)} THB`;
+    for (const b of $('presets').querySelectorAll('[data-mau]')) b.setAttribute('aria-pressed', String(Number(b.dataset.mau) === s.mau));
+    $('how-api').setAttribute('aria-pressed', String(s.how === 'api'));
+    $('how-gpu').setAttribute('aria-pressed', String(s.how === 'gpu'));
+    $('how-hint').textContent = s.how === 'api'
+      ? `${A.api.name}: ${usd(A.api.usd_per_m_input)} per million tokens in (${usd(A.api.usd_per_m_cached_input)} cached), ${usd(A.api.usd_per_m_output)} out. No machines of our own.`
+      : `${A.gpu.name} at ${usd(A.gpu.usd_per_hour)} an hour. At least ${A.minGpusForUptime}, so one can fail without Icarus going down.`;
+
+    const ratio = r.value / r.price;
+    const v = $('verdict');
+    v.className = 'verdict ' + (ratio >= 1.1 ? 'good' : ratio >= 0.9 ? 'warn' : 'bad');
+    $('verdict-text').textContent = ratio >= 1.1 ? `Pays for itself: worth ${ratio.toFixed(1)}x the price to the partner`
+      : ratio >= 0.9 ? `About even: worth ${ratio.toFixed(1)}x the price`
+      : `Does not pay for itself: worth ${ratio.toFixed(1)}x the price`;
+
+    $('price').textContent = fmt(r.price);
+    $('price-usd').textContent = `About US$${fmt(r.price / A.thbPerUsd)} a month. Our cost ${fmt(r.cost)} THB, profit ${fmt(r.profit)} THB.`;
+
+    const parts = [
+      ['Team', s.ops, 'var(--seg-team)'], ['Model', r.llm, 'var(--seg-model)'], ['Voice', r.voice, 'var(--seg-voice)'],
+      ['Servers', s.platform, 'var(--seg-servers)'], ['Profit', r.profit, 'var(--seg-profit)'],
+    ];
+    $('bar').innerHTML = parts.map(([, n, c]) => `<span style="flex:0 0 ${Math.max(0, n / r.price * 100)}%;background:${c}"></span>`).join('');
+    $('legend').innerHTML = parts.map(([label, n, c]) => `<div><i style="background:${c}"></i>${label}<b>${fmt(n)}</b></div>`).join('');
+
+    $('k-mau').textContent = `${fmt(r.price / s.mau, 2)} THB`;
+    $('k-conv').textContent = `${fmt(r.price / r.conversations, 2)} THB`;
+    $('k-turns').textContent = fmt(r.turns);
+    $('k-gpus').textContent = s.how === 'gpu' ? fmt(r.gpus) : '0';
+    $('k-gpus-l').textContent = s.how === 'gpu' ? `${A.gpu.name} GPUs` : 'GPUs of our own (pay per token)';
+
+    const list = listPrice(s, r);
+    const top = Math.max(r.value, r.price, list);
+    $('vs-value').style.width = `${r.value / top * 100}%`;
+    $('vs-price').style.width = `${r.price / top * 100}%`;
+    $('vs-list').style.width = `${list / top * 100}%`;
+    $('vs-value-n').textContent = fmt(r.value);
+    $('vs-price-n').textContent = fmt(r.price);
+    $('vs-list-n').textContent = fmt(list);
+    const [[bandCap, bandRate], [, aboveRate]] = A.priceBands;
+    $('listnote').textContent = `Our list price: ${fmt(bandRate, 1)} THB per active user (${fmt(aboveRate, 1)} above ${fmt(bandCap)}), at least ${fmt(A.minMonthlyFee)} THB, `
+      + `${A.includedTurnsPerMau} questions per user included, then ${fmt(A.overageThbPerTurn, 2)} THB each. The partner gets back ${(r.value / list).toFixed(1)}x; `
+      + `the price leaves ${fmt(list - r.llm - r.voice)} THB a month for the team and profit.`;
+    const be = breakEven(s);
+    $('breakeven').textContent = be ? `With these settings, Icarus pays for itself for an app with at least ${fmt(be)} monthly active users.`
+      : 'With these settings, Icarus does not pay for itself at any size up to 5 million users.';
+
+    const perConvUsd = r.price / r.conversations / A.thbPerUsd;
+    const perMauUsd = r.price / s.mau / A.thbPerUsd;
+    $('bench').innerHTML = [
+      ...BENCH.map(([name, how, usd, unit]) => `<tr><td>${name}</td><td>${how}</td><td class="r">US$${usd.toFixed(2)}</td><td class="r">${fmt(usd * A.thbPerUsd, 2)}</td></tr>`),
+      `<tr class="ours"><td>Icarus, these settings</td><td>per conversation</td><td class="r">US$${perConvUsd.toFixed(2)}</td><td class="r">${fmt(perConvUsd * A.thbPerUsd, 2)}</td></tr>`,
+      `<tr class="ours"><td>Icarus, these settings</td><td>per active user a month</td><td class="r">US$${perMauUsd.toFixed(2)}</td><td class="r">${fmt(perMauUsd * A.thbPerUsd, 2)}</td></tr>`,
+    ].join('');
+  }
+
+  $('model-note').textContent = `Model: ${A.api.name} or ${A.gpu.name}. Voice: ElevenLabs Scribe v2 Realtime ${usd(A.sttUsdPerHour)} an hour, text-to-speech ${usd(A.ttsUsdPer1kChars)} per 1,000 characters. Each question: about ${fmt(A.inputTokensPerTurn)} tokens in, ${fmt(A.outputTokensPerTurn)} out; a spoken one streams ${A.sttSecondsPerVoiceTurn} s and gets ${A.ttsCharsPerVoiceTurn} characters back.`;
+  render();
+})();
+</script>
