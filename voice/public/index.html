@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Icarus voice test page</title>
+  <style>
+    :root {
+      --bg: #f6f7f9; --card: #fff; --text: #1b1f24; --muted: #667085; --line: #dfe3e8;
+      --accent: #2f5bea; --good: #17803d; --bad: #c0332b; --warn: #b26a00;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #14171c; --card: #1c2027; --text: #e8ebf0; --muted: #98a1b0; --line: #2d333d; --accent: #7d9bff; --good: #4cc27a; --bad: #ff7a70; --warn: #f0b25a; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
+    h1 { font-size: 20px; margin: 4px 0 0; }
+    h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+    .sub { color: var(--muted); margin: 0; }
+    .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
+    button, select, input[type=text], textarea { font: inherit; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px; }
+    button { cursor: pointer; }
+    button:hover:not(:disabled) { border-color: var(--accent); }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button.danger { color: var(--bad); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    input[type=text] { flex: 1; min-width: 180px; }
+    textarea { width: 100%; min-height: 70px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+    label { display: inline-flex; gap: 6px; align-items: center; }
+    .banner { border-radius: 10px; padding: 10px 14px; border: 1px solid var(--line); background: var(--card); }
+    .banner.warn { border-color: var(--warn); }
+    .state { display: flex; align-items: center; gap: 12px; }
+    .badge { font-weight: 700; font-size: 18px; padding: 6px 14px; border-radius: 999px; background: var(--line); }
+    .badge[data-state=listening] { background: #1f8a4c; color: #fff; }
+    .badge[data-state=thinking] { background: #b26a00; color: #fff; }
+    .badge[data-state=speaking] { background: var(--accent); color: #fff; }
+    .badge[data-state=confirming] { background: #8a3ff0; color: #fff; }
+    .big { font-size: 40px; font-weight: 800; min-width: 1.3em; text-align: center; }
+    .partial { color: var(--muted); font-style: italic; min-height: 1.5em; }
+    .log { max-height: 170px; overflow: auto; font-size: 14px; }
+    .log div { padding: 3px 0; border-bottom: 1px solid var(--line); }
+    .tag { font-size: 11px; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    td, th { text-align: left; padding: 4px 8px 4px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    th { color: var(--muted); font-weight: 600; }
+    .good { color: var(--good); font-weight: 700; } .bad { color: var(--bad); font-weight: 700; }
+    .preview { border: 2px dashed var(--line); border-radius: 12px; padding: 12px; }
+    .preview.pending { border-color: #8a3ff0; }
+    .preview.armed { border-color: var(--good); }
+    .preview dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; margin: 6px 0; }
+    .preview dt { color: var(--muted); } .preview dd { margin: 0; font-weight: 600; }
+    #events { max-height: 230px; overflow: auto; font: 12px/1.5 ui-monospace, Menlo, monospace; white-space: pre-wrap; }
+    .hint { color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <div>
+    <h1>Icarus voice test page</h1>
+    <p class="sub">Speech in, speech out, turn-taking. The assistant here is a mock unless the server says otherwise.</p>
+  </div>
+
+  <div id="banner" class="banner">Checking the server...</div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Controls</h2>
+      <div class="row">
+        <button id="toggle" class="primary">Start mic</button>
+        <button id="ptt" hidden>Hold to talk (or hold Space)</button>
+      </div>
+      <div class="row">
+        <label>Mode
+          <select id="mode"><option value="hands-free">Hands-free</option><option value="push-to-talk">Push to talk</option></select>
+        </label>
+        <label>Language
+          <select id="lang"><option value="en">English</option><option value="th">Thai</option><option value="auto">Auto-detect</option></select>
+        </label>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="requireTap" checked> Frontend requires a TAP after voice confirm (hard rule 4)</label>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="simConfirm"> Let simulated speech start a confirm countdown (testing only)</label>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="synthMic"> Synthetic mic (no real microphone, for the fake mode)</label>
+        <button id="synthTalk" hidden>Hold to "speak"</button>
+      </div>
+      <p class="hint">Use headphones if Icarus cuts itself off. In a loud room use push to talk.</p>
+    </section>
+
+    <section class="card">
+      <h2>State</h2>
+      <div class="state">
+        <span id="state" class="badge" data-state="idle">idle</span>
+        <span id="phase" class="tag"></span>
+      </div>
+      <div class="row">
+        <span id="countdown" class="big" hidden>3</span>
+        <button id="cancelTap" class="danger" hidden>Cancel (tap)</button>
+      </div>
+      <h2 style="margin-top:14px">Live transcript</h2>
+      <div id="partial" class="partial"></div>
+      <div id="finals" class="log"></div>
+    </section>
+
+    <section class="card">
+      <h2>Latency (ms)</h2>
+      <table>
+        <tbody>
+          <tr><th>Last user speech to first audio</th><td id="m-tfa">-</td></tr>
+          <tr><th>Speech end to final transcript</th><td id="m-stt">-</td></tr>
+          <tr><th>Assistant</th><td id="m-asst">-</td></tr>
+          <tr><th>TTS first byte (cache)</th><td id="m-tts">-</td></tr>
+          <tr><th>Average to first audio (last 10)</th><td id="m-avg">-</td></tr>
+          <tr><th>Last barge-in (speech start to silence)</th><td id="m-barge">-</td></tr>
+        </tbody>
+      </table>
+      <p class="hint">Targets: first audio within about 1500 ms, barge-in under 500 ms. The browser's own audio delay (about 40 ms) is added after the first audio is scheduled.</p>
+      <h2 style="margin-top:14px">Usage this session</h2>
+      <table><tbody>
+        <tr><th>Speech-to-text</th><td id="u-stt">0 s</td></tr>
+        <tr><th>Text-to-speech</th><td id="u-tts">0 characters (0 from cache)</td></tr>
+      </tbody></table>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Trigger a mock reply</h2>
+      <div class="row">
+        <button data-say="what's this red number?">Explain</button>
+        <button data-say="take me to gold">Navigate</button>
+        <button data-say="put 1,000 baht in gold">Trade preview</button>
+        <button data-say="what should I buy?">Refuse advice</button>
+      </div>
+      <div class="row">
+        <button data-say-th="ตัวเลขสีแดงคืออะไร">TH explain</button>
+        <button data-say-th="พาไปที่ทอง">TH navigate</button>
+        <button data-say-th="ซื้อทอง 1,000 บาท">TH trade</button>
+        <button data-say-th="ควรซื้ออะไรดี">TH refuse</button>
+      </div>
+      <h2 style="margin-top:12px">Type to Icarus</h2>
+      <div class="row"><input id="typed" type="text" placeholder="Type a question and press Enter"><button id="sendTyped">Send</button></div>
+      <h2 style="margin-top:12px">Simulate what Scribe heard</h2>
+      <div class="row">
+        <input id="sim" type="text" placeholder="e.g. confirm">
+        <label>confidence <input id="simConf" type="number" min="0" max="1" step="0.05" value="0.95" style="width:70px"></label>
+        <button id="simGo">Say it</button>
+      </div>
+      <div class="row">
+        <button data-sim="confirm">confirm</button>
+        <button data-sim="cancel">cancel</button>
+        <button data-sim="repeat that">repeat that</button>
+        <button data-sim="stop">stop</button>
+        <button data-sim="louder">louder</button>
+        <button data-sim="slower">slower</button>
+        <button data-sim="go back">go back</button>
+        <button data-sim="uh">noise "uh"</button>
+      </div>
+      <h2 style="margin-top:12px">Demo lines (cached audio)</h2>
+      <div id="demoLines" class="row"></div>
+    </section>
+
+    <section class="card">
+      <h2>Pretend frontend: preview card</h2>
+      <div id="preview" class="preview"><span class="hint">No preview yet. Press "Trade preview".</span></div>
+      <p class="hint" id="previewNote">The voice layer never executes anything. It only reports a confirm intent. This card plays the frontend and decides what to do with it.</p>
+      <h2 style="margin-top:12px">Screen snapshot (passed to the assistant as is)</h2>
+      <textarea id="snapshot">{ "screen": "asset.gold", "visible": ["asset.chart", "asset.change24h"] }</textarea>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Events</h2>
+    <div id="events"></div>
+  </section>
+</main>
+<script type="module" src="/test-page.js"></script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { AskResponse } from '../src/shared/types';
+import { SECRET_KEY, listen, makeStack } from './helpers';
+
+let stack: ReturnType<typeof makeStack>;
+let server: Awaited<ReturnType<typeof listen>>;
+
+beforeEach(async () => {
+  stack = makeStack();
+  server = await listen(stack.app);
+});
+afterEach(() => server.close());
+
+const post = (path: string, body: unknown, headers: Record<string, string> = {}) =>
+  fetch(`${server.base}${path}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', ...headers },
+    body: JSON.stringify(body),
+  });
+const ask = async (text: string, language = 'en') => (await (await post('/api/ask', { text, language, userId: 'u1' })).json()) as AskResponse;
+
+describe('/api/ask with the mock assistant', () => {
+  it('explains', async () => {
+    const r = await ask("what's this red number?");
+    expect(r.reply.text).toContain('2.3%');
+    expect(r.speech).toEqual({ text: "That red number is today's change. Gold is down 2.3 percent since yesterday.", language: 'en', kind: 'reply' });
+    expect(r.reply.ui_actions[0]).toMatchObject({ type: 'highlight', element_id: 'asset.change24h' });
+  });
+
+  it('navigates', async () => {
+    const r = await ask('take me to gold');
+    expect(r.speech?.text).toBe('Sure, taking you to gold.');
+    expect(r.reply.ui_actions).toEqual([{ type: 'navigate', screen: 'asset.gold' }]);
+  });
+
+  it('prepares a trade and reads it back from the CARD numbers, not the reply sentence', async () => {
+    const r = await ask('put 1,000 baht in gold');
+    expect(r.speech).toEqual({
+      text: '1,000 baht into gold. Fee 15 baht. Total 1,015 baht. Say confirm or cancel.',
+      language: 'en',
+      kind: 'readback',
+    });
+    expect(r.reply.text).not.toBe(r.speech?.text); // proves the spoken text is not the LLM text
+    expect(r.preview).toMatchObject({ amount: 1000, fee: 15, total: 1015, currency: 'THB', side: 'buy' });
+  });
+
+  it('reads back whatever amount the user said, exactly', async () => {
+    const r = await ask('buy 2,500 baht of bitcoin');
+    expect(r.speech?.text).toBe('2,500 baht into Bitcoin. Fee 37.50 baht. Total 2,537.50 baht. Say confirm or cancel.');
+  });
+
+  it('refuses to pick investments', async () => {
+    const r = await ask('what should I buy?');
+    expect(r.speech?.text).toMatch(/^I can't pick investments for you/);
+    expect(r.preview).toBeNull();
+  });
+
+  it('answers in Thai with the Thai voice language', async () => {
+    const r = await ask('ซื้อทอง 1,000 บาท', 'th');
+    expect(r.speech?.language).toBe('th');
+    expect(r.speech?.kind).toBe('readback');
+    expect(r.speech?.text).toContain('1,015');
+  });
+
+  it('detects the language when set to auto', async () => {
+    const r = await ask('ตัวเลขสีแดงคืออะไร', 'auto');
+    expect(r.speech?.language).toBe('th');
+  });
+
+  it('passes the snapshot through untouched', async () => {
+    const seen: unknown[] = [];
+    const s = makeStack();
+    const app = (await import('../src/server/app')).createApp({
+      cfg: s.cfg, tts: s.tts, port: s.port, usage: s.usage, friction: () => undefined, log: () => undefined,
+      assistant: { ask: async (req) => { seen.push(req); return { text: 'ok', speak: false, ui_actions: [], sources: [] }; } },
+    });
+    const srv = await listen(app);
+    const snapshot = { screen: 'asset.gold', visible: ['asset.chart'], nested: { a: [1, 2, 3] } };
+    const res = await fetch(`${srv.base}/api/ask`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: 'hi there', language: 'en', snapshot, userId: 'u9' }) });
+    expect(((await res.json()) as AskResponse).speech).toBeNull(); // speak:false means silence
+    await srv.close();
+    expect(seen[0]).toEqual({ text: 'hi there', language: 'en', snapshot, userId: 'u9' });
+  });
+
+  it('offers no read-back when the preview card is incomplete', async () => {
+    const s = makeStack();
+    const app = (await import('../src/server/app')).createApp({
+      cfg: s.cfg, tts: s.tts, port: s.port, usage: s.usage, friction: () => undefined, log: () => undefined,
+      assistant: { ask: async () => ({ text: 'Preview ready.', speak: true, sources: [], ui_actions: [{ type: 'show_card', card_type: 'preview', data: { preview_id: 'p', side: 'buy', asset: 'gold', amount: 1000, currency: 'THB' } }] }) },
+    });
+    const srv = await listen(app);
+    const r = (await (await fetch(`${srv.base}/api/ask`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: 'buy gold', language: 'en' }) })).json()) as AskResponse;
+    await srv.close();
+    expect(r.preview).toBeNull();
+    expect(r.speech).toMatchObject({ kind: 'reply', text: "I can't read that out loud. Please check the card on your screen." });
+  });
+
+  it('validates input and survives a failing assistant', async () => {
+    expect((await post('/api/ask', { text: '' })).status).toBe(400);
+    expect((await post('/api/ask', { text: 'x'.repeat(2001) })).status).toBe(400);
+    const s = makeStack();
+    const app = (await import('../src/server/app')).createApp({
+      cfg: s.cfg, tts: s.tts, port: s.port, usage: s.usage, friction: () => undefined, log: () => undefined,
+      assistant: { ask: async () => { throw new Error('boom ' + SECRET_KEY); } },
+    });
+    const srv = await listen(app);
+    const res = await fetch(`${srv.base}/api/ask`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: 'hello there' }) });
+    const text = await res.text();
+    await srv.close();
+    expect(res.status).toBe(502);
+    expect(text).not.toContain('boom');
+    expect(text).not.toContain(SECRET_KEY);
+  });
+});
+
+describe('/api/tts', () => {
+  it('streams PCM with the right headers, then serves the repeat from cache', async () => {
+    const body = { text: 'Sure, taking you to gold.', language: 'en' };
+    const first = await post('/api/tts', body, { 'x-session-id': 'sess1' });
+    expect(first.status).toBe(200);
+    expect(first.headers.get('x-sample-rate')).toBe('24000');
+    expect(first.headers.get('x-audio-format')).toBe('pcm_s16le');
+    expect(first.headers.get('x-tts-cache')).toBe('miss');
+    expect(first.headers.get('x-tts-model')).toBe('eleven_flash_v2_5');
+    const bytes = (await first.arrayBuffer()).byteLength;
+    expect(bytes).toBeGreaterThan(1000);
+    expect(bytes % 2).toBe(0); // whole 16-bit samples
+
+    const second = await post('/api/tts', body, { 'x-session-id': 'sess1' });
+    expect(second.headers.get('x-tts-cache')).toBe('hit');
+    expect((await second.arrayBuffer()).byteLength).toBe(bytes);
+    expect(stack.requests).toHaveLength(1);
+    expect(stack.usage.get('sess1')).toMatchObject({ ttsCharacters: 25, ttsCharactersFromCache: 25 });
+  });
+
+  it('stops the upstream request when the browser hangs up', async () => {
+    const abort = new AbortController();
+    const res = await fetch(`${server.base}/api/tts`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text: 'x'.repeat(200), language: 'en' }),
+      signal: abort.signal,
+    });
+    const reader = res.body!.getReader();
+    await reader.read();
+    abort.abort();
+    await new Promise((r) => setTimeout(r, 200));
+    // Nothing half-finished was cached.
+    const again = await post('/api/tts', { text: 'x'.repeat(200), language: 'en' });
+    expect(again.headers.get('x-tts-cache')).toBe('miss');
+    await again.arrayBuffer();
+  });
+
+  it('returns clear JSON errors', async () => {
+    const empty = await post('/api/tts', { text: '' });
+    expect(empty.status).toBe(400);
+    expect(((await empty.json()) as { error: { code: string } }).error.code).toBe('empty_text');
+  });
+});
+
+describe('/api/scribe-token', () => {
+  it('returns a wss URL with a token and keyterms, and never the API key', async () => {
+    const res = await post('/api/scribe-token', { language: 'th', mode: 'hands-free' });
+    const text = await res.text();
+    expect(res.status).toBe(200);
+    expect(text).not.toContain(SECRET_KEY);
+    const { url, commitStrategy } = JSON.parse(text) as { url: string; commitStrategy: string };
+    const u = new URL(url);
+    expect(u.protocol).toBe('wss:');
+    expect(u.searchParams.get('token')).toBe('fake-token');
+    expect(u.searchParams.get('language_code')).toBe('th');
+    expect(u.searchParams.getAll('keyterms')).toContain('Icarus');
+    expect(commitStrategy).toBe('vad');
+  });
+
+  it('uses manual commits for push-to-talk', async () => {
+    const r = (await (await post('/api/scribe-token', { language: 'en', mode: 'push-to-talk' })).json()) as { commitStrategy: string };
+    expect(r.commitStrategy).toBe('manual');
+  });
+
+  it('turns on language detection for auto', async () => {
+    const { url } = (await (await post('/api/scribe-token', { language: 'auto' })).json()) as { url: string };
+    const q = new URL(url).searchParams;
+    expect(q.has('language_code')).toBe(false);
+    expect(q.get('include_language_detection')).toBe('true');
+  });
+});
+
+describe('other endpoints', () => {
+  it('health never contains the key', async () => {
+    const text = await (await fetch(`${server.base}/api/health`)).text();
+    expect(text).not.toContain(SECRET_KEY);
+    expect(JSON.parse(text)).toMatchObject({ ok: true, apiKeySet: true, assistant: 'mock' });
+  });
+
+  it('tracks STT seconds and logs friction', async () => {
+    await post('/api/usage', { sttSeconds: 12.5 }, { 'x-session-id': 'abc12345' });
+    expect(stack.usage.get('abc12345').sttSeconds).toBe(12.5);
+    expect((await post('/api/usage', { sttSeconds: 'lots' })).status).toBe(400);
+
+    const res = await post('/api/friction', { type: 'voice_final', text: 'what does yield mean', language: 'en', confidence: 0.93, screen: 'asset.gold', userId: 'u1' }, { 'x-session-id': 'abc12345' });
+    expect(res.status).toBe(204);
+    expect(stack.frictionEvents[0]).toMatchObject({ text: 'what does yield mean', screen: 'asset.gold', sessionId: 'abc12345', confidence: 0.93 });
+    expect((await post('/api/friction', { text: '' })).status).toBe(400);
+  });
+
+  it('allows cross-origin calls from the frontend', async () => {
+    const res = await fetch(`${server.base}/api/health`, { headers: { origin: 'http://localhost:5173' } });
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
+    const pre = await fetch(`${server.base}/api/ask`, { method: 'OPTIONS' });
+    expect(pre.status).toBe(204);
+  });
+});
