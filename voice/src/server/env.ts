@@ -142,7 +142,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
 
     assistantMode: mode,
     assistantUrl: orUndefined(env.ASSISTANT_URL),
-    assistantTimeoutMs: num(env.ASSISTANT_TIMEOUT_MS, 15_000),
+    assistantTimeoutMs: num(env.ASSISTANT_TIMEOUT_MS, 60_000),
     assistantUserId: orUndefined(env.ASSISTANT_USER_ID),
     mockDelayMs: num(env.MOCK_ASSISTANT_DELAY_MS, 120),
 

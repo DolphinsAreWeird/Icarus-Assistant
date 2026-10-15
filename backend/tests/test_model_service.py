@@ -43,7 +43,8 @@ def test_real_model_fee_path_and_legacy_envelope(client):
     assert reply["debug"]["route"] == "deterministic_fee"
     assert reply["numerical_summaries"]
     assert reply["ui_actions"] == []
-    assert reply["speech"] == reply["text"]
+    assert reply["speech"] in reply["text"]
+    assert reply["speech_exact"] is True
     assert reply["disclaimer"] in reply["text"]
 
 

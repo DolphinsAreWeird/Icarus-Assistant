@@ -35,6 +35,9 @@ export interface PrototypeContext {
 
 export interface BackendReply {
   text: string;
+  speech?: string;
+  emotion?: string;
+  suggestions?: string[];
   speak?: boolean;
   ui_actions?: Array<Record<string, unknown>>;
   sources?: Array<Record<string, unknown>>;
@@ -158,18 +161,18 @@ export function toPrototypeReply(r: BackendReply, lang: 'en' | 'th', ctx?: Proto
     const action = toPrototypeAction(a);
     if (action) actions.push(action);
   }
-  let speech = buyReadback(actions, ctx, proto, lang) ?? r.text;
+  let speech = buyReadback(actions, ctx, proto, lang) ?? r.speech ?? r.text;
   const preview = cards.trade ? parsePreview(cards.trade) : null;
   if (preview) speech = `${buildReadback(preview, lang, { prompt: false })} ${STRINGS[lang].lines.tapToConfirm}`;
   return {
     reply: {
       text: r.text,
       speech,
-      emotion: cards.trade || actions.some((a) => a.type === 'review') ? 'excited' : cards.chart || cards.steps ? 'curious' : 'happy',
+      emotion: r.emotion ?? (cards.trade || actions.some((a) => a.type === 'review') ? 'excited' : cards.chart || cards.steps ? 'curious' : 'happy'),
       speak: r.speak ?? true,
       ui_actions: actions,
       sources: sourceLabels(r.sources),
-      suggestions: [],
+      suggestions: r.suggestions ?? [],
       offer: null,
     },
     ...cards,
@@ -189,6 +192,7 @@ export interface BackendBridgeOptions {
   url: string;
   userId: string;
   getInstance: () => PrototypeLike | null;
+  ready?: () => boolean;
   /** Put the U-topia routing around the backend (withUtopiaRouting). */
   wrap?: (fn: (q: string, ctx: unknown) => Promise<PrototypeReply>) => (q: string, ctx: unknown) => unknown;
   showTrade: (card: Record<string, unknown>, lang: 'en' | 'th') => void;
@@ -203,15 +207,18 @@ export interface BackendBridgeOptions {
 
 /** Hand the prototype's questions to the backend. Returns false if the prototype has not mounted yet. */
 export function installBackend(o: BackendBridgeOptions): boolean {
-  const icarus = (window as unknown as { Icarus?: { setBackend?: (fn: unknown) => void } }).Icarus;
+  const icarus = (window as unknown as { Icarus?: { setBackend?: (fn: unknown) => void; getContext?: () => PrototypeContext } }).Icarus;
   if (!icarus?.setBackend) return false;
   const fetchImpl = o.fetchImpl ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
   const sessionId = `app-${Date.now().toString(36)}`;
+  let generation = 0;
 
   const ask = async (text: string, rawCtx: unknown): Promise<PrototypeReply> => {
+    const turn = ++generation;
     o.hideCards();
     const ctx = (rawCtx ?? undefined) as PrototypeContext | undefined;
     const lang = langOf(text, ctx);
+    if (o.ready && !o.ready()) return plainReply(lang === 'th' ? 'รอโหลดบัญชีสาธิตก่อน แล้วลองอีกครั้ง' : 'Wait for the demo account to load, then try again.', 'Demo account loading');
     const proto = o.getInstance();
     const voice = proto?.state?.asst === 'voice';
     let res: Response;
@@ -220,11 +227,14 @@ export function installBackend(o: BackendBridgeOptions): boolean {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(toChatRequest(text, ctx, { sessionId, userId: o.userId, voice })),
+        signal: AbortSignal.timeout(60000),
       });
     } catch {
       return plainReply(COPY[lang].unreachable, `Backend not reachable at ${o.url}`);
     }
     const body = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+    const changed = () => turn !== generation || Boolean(ctx?.screen_revision && icarus.getContext?.().screen_revision !== ctx.screen_revision);
+    if (changed()) return plainReply(lang === 'th' ? 'หน้าจอเปลี่ยนแล้ว โปรดถามอีกครั้ง' : 'The screen changed. Ask again using the current view.', 'Screen changed');
     if (!res.ok || !body || typeof body.text !== 'string') {
       // The backend's errors carry a message for the user in English and Thai.
       const detail = (body?.detail ?? null) as Record<string, unknown> | null;
@@ -232,7 +242,7 @@ export function installBackend(o: BackendBridgeOptions): boolean {
       return plainReply(message, `Backend error ${res.status}${detail?.code ? ` (${String(detail.code)})` : ''}`);
     }
     const { reply, trade, chart, steps } = toPrototypeReply(body as unknown as BackendReply, lang, ctx, proto);
-    const later = (show: () => void) => window.setTimeout(show, o.cardDelayMs ?? 650);
+    const later = (show: () => void) => window.setTimeout(() => { if (turn === generation) show(); }, o.cardDelayMs ?? 650);
     if (trade) later(() => o.showTrade(trade, lang));
     else if (chart && o.showChart) later(() => o.showChart?.(chart, lang));
     else if (steps && o.showSteps) later(() => o.showSteps?.(steps, lang));

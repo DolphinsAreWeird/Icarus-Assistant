@@ -46,3 +46,6 @@ Thumbs.db
 .worktrees/
 .test-tmp/
 .pytest_cache/
+.npm-cache/
+pnpm-lock.yaml
+pnpm-workspace.yaml

@@ -139,9 +139,20 @@ export function showTradeCard(card: Record<string, unknown>, o: TradeCardOptions
   };
 
   o.log?.('preview_shown', { asset: assetId, side, preview_id: card.preview_id, source: 'backend' });
-  cancel.onclick = () => {
-    o.log?.('trade_cancelled', { preview_id: card.preview_id });
-    hideTradeCard();
+  cancel.onclick = async () => {
+    confirm.disabled = cancel.disabled = true;
+    const fetchImpl = o.fetchImpl ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
+    try {
+      const response = await fetchImpl(`${o.backendUrl}/trades/${encodeURIComponent(String(card.preview_id))}/cancel`, {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ user_id: o.userId }),
+      });
+      if (!response.ok) throw new Error('Cancellation failed');
+      o.log?.('trade_cancelled', { preview_id: card.preview_id });
+      hideTradeCard();
+    } catch {
+      status.textContent = t.failed;
+      cancel.disabled = false;
+    }
   };
   confirm.onclick = async () => {
     confirm.disabled = cancel.disabled = true;

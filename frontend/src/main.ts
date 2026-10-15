@@ -11,6 +11,7 @@ import { hideTradeCard, showTradeCard } from './trade-card';
 import { renderUbotMock } from './ubot-mock';
 import { installUtopiaRouting, withUtopiaRouting, type PrototypeInstance } from './utopia-bridge';
 import { attachTts, installVoice } from './voice-bridge';
+import { installDemoData } from './demo-data';
 
 // Oasis's export has two pages that link to each other by file name. ?page=dashboard picks the second.
 const PAGES: Record<string, string> = {
@@ -126,9 +127,12 @@ async function main() {
       // ?backend: answers come from Luka and First's backend instead of the demo answers (backend-bridge.ts).
       const backend = backendFromLocation(location.search);
       if (backend) {
+        const demo = installDemoData(instance, backend.url, backend.userId, message => status(message, 'error'));
+        void demo.refresh().catch(error => status(`Demo account could not load: ${error.message}`, 'error'));
         installBackend({
           ...backend,
           getInstance: () => instance as PrototypeLike | null,
+          ready: demo.ready,
           wrap: (ask) => withUtopiaRouting(utopia, ask),
           hideCards: () => {
             hideTradeCard();
@@ -152,11 +156,13 @@ async function main() {
               userId: backend.userId,
               getPhone,
               log: (type, data) => (instance as { log?: (t: string, d?: unknown) => void } | null)?.log?.(type, data),
-              onConfirmed: (_result, sentence) =>
+              onConfirmed: (_result, sentence) => {
+                void demo.refresh().catch(error => status(`Purchase confirmed; account refresh failed: ${error.message}`, 'error'));
                 (window as unknown as { Icarus?: { receiveResponse?: (r: unknown) => void } }).Icarus?.receiveResponse?.({
                   text: sentence, speech: sentence, emotion: 'excited', speak: true, ui_actions: [],
                   sources: ['confirm_trade · demo account (simulated)'], suggestions: [], offer: null,
-                }),
+                });
+              },
             }),
         });
       }

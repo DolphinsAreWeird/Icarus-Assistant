@@ -12,6 +12,8 @@ from app.assistant.loop import UnknownUser
 from app.contracts import ChatReply, SourceRef
 from app.model_runtime import ConversationSession, SnapshotAdapter
 from app.model_snapshot import build_snapshot
+from app.demo_data import bind_screen, model_screen_context
+from app.demo_intents import handle_intent
 
 
 class SessionsBusy(Exception):
@@ -87,7 +89,27 @@ def reply_envelope(result, snapshot_id):
                                  provider="; ".join(dict.fromkeys(p["provider"] for p in provenance)) or "model knowledge",
                                  as_of=min((p["observed_at"] for p in provenance), default=None),
                                  freshness=freshness))
-    return ChatReply(text=text, speech=text, speak=True, ui_actions=[], sources=sources,
+    spoken = summaries[0]["text"] if summaries else result["text"]
+    th = result.get("language") == "th"
+    for record in result.get("sources", []):
+        tool = record["data"].get("tool")
+        data = record["data"].get("data", {})
+        if data.get("status") in ("error", "unavailable"):
+            continue
+        if tool == "explain_displayed_chart":
+            spoken = (f"กราฟที่แสดงเปลี่ยนจาก {data['first_displayed_price']} เป็น {data['last_displayed_price']} {data['currency']} เปลี่ยนแปลง {data['displayed_change_pct']} เปอร์เซ็นต์ เป็นข้อมูลย้อนหลังที่บันทึกไว้" if th else
+                      f"The displayed chart goes from {data['first_displayed_price']} to {data['last_displayed_price']} {data['currency']}, a change of {data['displayed_change_pct']} percent. These are saved historical observations.")
+            break
+        if tool == "get_portfolio" and "total_including_cash" in data:
+            spoken = (f"พอร์ตจำลองรวมเงินสดมีมูลค่า {data['total_including_cash']} {data['currency']} ตรวจสอบรายละเอียดบนหน้าจอ" if th else
+                      f"Your simulated portfolio, including cash, is valued at {data['total_including_cash']} {data['currency']}. Check the breakdown on screen.")
+            break
+        if tool == "get_prices" and data.get("prices"):
+            p = data["prices"][0]
+            spoken = (f"ราคาอ้างอิง {p['asset_id']} คือ {p['price']} {p['currency']} ตรวจสอบเวลาของข้อมูลบนหน้าจอ ไม่ใช่ราคาเสนอซื้อขาย" if th else
+                      f"The reference price for {p['asset_id']} is {p['price']} {p['currency']}. Check the observation time on screen; this is not an executable quote.")
+            break
+    return ChatReply(text=text, speech=spoken, speech_exact=bool(summaries), speak=True, ui_actions=[], sources=sources,
                      status=result.get("status", "ok"), limitations=limitations, disclaimer=disclaimer,
                      numerical_summaries=summaries, evidence=result.get("sources", []),
                      debug={"engine": "model", "route": result.get("route"), "snapshot_id": snapshot_id,
@@ -118,10 +140,19 @@ class ModelService:
             previous = deepcopy(session.__dict__)
             try:
                 session.language, session.today = language, today
+                intent_reply = handle_intent(req, self.state, self.cache, user_id, language)
+                if intent_reply is not None:
+                    return intent_reply
                 payload = build_snapshot(self.cache, self.state, user_id)
+                bind_screen(payload, req.screen_context)
                 adapter = SnapshotAdapter(payload)
-                context = req.screen_context.model_dump() if req.screen_context else None
-                result = session.ask(req.text, offline=self.offline, model=self.model,
+                context = model_screen_context(req.screen_context)
+                message = req.text
+                if message.strip().lower().rstrip("?.! ") in ("what does this chart mean", "explain this chart", "อธิบายกราฟนี้", "กราฟนี้หมายความว่าอะไร"):
+                    message = "/chart"
+                if message.strip().lower().rstrip("?.! ") in ("what is in my portfolio", "show my portfolio", "my portfolio", "พอร์ตของฉัน"):
+                    message = "/portfolio"
+                result = session.ask(message, offline=self.offline, model=self.model,
                                      data_adapter=adapter, screen_context=context)
                 return reply_envelope(result, payload["snapshot_id"])
             except Exception:

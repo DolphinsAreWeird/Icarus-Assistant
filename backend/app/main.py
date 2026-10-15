@@ -11,11 +11,12 @@ from app import knowledge
 from app.assistant.llm import ChatModel, LLMError, RateLimited
 from app.assistant.loop import Assistant, UnknownUser
 from app.config import OFFLINE, POLL_INTERVAL_S
-from app.contracts import ChatReply, ChatRequest, ConfirmRequest, ErrorBody
+from app.contracts import ChatReply, ChatRequest, ConfirmRequest, ErrorBody, PreviewRequest
 from app.market.cache import PriceCache
 from app.market.history import PERIODS, period_rows, summarize
 from app.state import DemoState
-from app.trades import TradeError, confirm_trade, portfolio
+from app.trades import TradeError, confirm_trade, portfolio, prepare_trade
+from app.demo_data import demo_bundle
 from app.model_service import ModelService, SessionsBusy
 
 ERRORS = {
@@ -166,6 +167,31 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
         except SessionsBusy:
             fail(409, "sessions_busy")
         return {"ok": True, "users": list(state.users)}
+
+    @app.get("/demo/state/{user_id}")
+    def demo_state(user_id: str):
+        if user_id not in state.users:
+            fail(404, "unknown_user")
+        return demo_bundle(cache, state, user_id)
+
+    @app.post("/trades/preview")
+    def preview(body: PreviewRequest):
+        if body.user_id not in state.users:
+            fail(404, "unknown_user")
+        try:
+            return prepare_trade(state, cache, body.user_id, body.asset_id, body.side, body.amount_thb)
+        except TradeError as e:
+            fail(409, e.code, **e.details)
+
+    @app.post("/trades/{preview_id}/cancel")
+    def cancel(preview_id: str, body: ConfirmRequest):
+        with state.lock:
+            item = state.previews.get(preview_id)
+            if item is None or item["user_id"] != body.user_id:
+                fail(404, "preview_not_found")
+            if item["status"] == "pending":
+                item["status"] = "cancelled"
+            return {"status": item["status"], "preview_id": preview_id}
 
     return app
 

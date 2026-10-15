@@ -57,6 +57,8 @@ class ChatRequest(BaseModel):
                 "chart_period": snap.get("period"),
                 "focused_element": snap.get("focus"),
                 "entered_amount": (snap.get("buy") or {}).get("amount_thb"),
+                "screen_revision": snap.get("screen_revision"),
+                "display_version": snap.get("display_version"),
             }
         return d
 
@@ -76,15 +78,33 @@ class ChatReply(BaseModel):
     sources: list[SourceRef]
     debug: dict = Field(default_factory=dict)
     speech: str | None = None
+    speech_exact: bool = False
     status: str = "ok"
     limitations: list[str] = Field(default_factory=list)
     disclaimer: str = ""
     numerical_summaries: list[dict] = Field(default_factory=list)
     evidence: list[dict] = Field(default_factory=list)
+    emotion: str = "curious"
+    suggestions: list[str] = Field(default_factory=list)
 
 
 class ConfirmRequest(BaseModel):
     user_id: str
+
+
+class PreviewRequest(BaseModel):
+    user_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,64}$")
+    asset_id: Literal["btc", "eth", "gold"]
+    side: Literal["buy", "sell"] = "buy"
+    amount_thb: float = Field(gt=0, le=1000000000, allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def cents_only(self):
+        from decimal import Decimal
+        value = Decimal(str(self.amount_thb))
+        if value != value.quantize(Decimal("0.01")):
+            raise ValueError("amount_thb requires at most two decimal places")
+        return self
 
 
 class ErrorBody(BaseModel):
