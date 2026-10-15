@@ -115,6 +115,12 @@ class ForecastTests(unittest.TestCase):
             self.assertGreater(len(new), len(old))
             data.pop("return_interval")
 
+    def test_renderer_discloses_no_improvement_on_reference(self):
+        data = {"asset_id":"btc", "as_of":"2026-09-30", "rolling_20_next_day_volatility_pct":0,
+                "ewma_094_next_day_volatility_pct":0, "return_interval":evaluate_returns([0.0]*600)}
+        self.assertIn("did not beat", render_tool_data("get_risk_forecast", data, "en"))
+        self.assertIn("ไม่ดีกว่า", render_tool_data("get_risk_forecast", data, "th"))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -21,3 +21,21 @@ Every historical-data consumer now checks asset identity, quote currency, canoni
 Market ingestion only publishes an asset when the full requested month range is available and valid. Failed refreshes preserve that asset's existing series and exit with a failure report. Each newly published series retains its archive hashes/URLs. Writes use a temporary file in the destination directory and atomic replacement; a failed serialization or replacement preserves the previous artifact. The downloader defaults to all three supported assets.
 
 All 75 automated tests pass, including simulated failed downloads/replacements, corrupted metadata, nonfinite prices and invalid provider envelopes. All 99 cached archives revalidated with zero failures and 1,004 daily observations per asset. Forecasts were regenerated successfully using the shared validation. No live API request is needed to reproduce those local checks.
+
+## Forecast robustness across historical windows
+
+The new expanding-window check evaluates three non-overlapping test periods per asset: 2025-04-26 to 2025-08-23 (120 returns), 2025-10-03 to 2026-03-11 (160), and 2026-03-14 to 2026-09-30 (201). Each prefix selects and calibrates using only its own earlier periods. There are gaps between the test windows. These are development backtests on available history, not new forward validation, and assets/windows are not claimed independent.
+
+| Asset | Test coverage, earliest to latest | Windows reaching 90% target | Windows beating rolling reference score |
+|---|---|---:|---:|
+| BTC | 99.17%, 84.38%, 91.04% | 2 / 3 | 0 / 3 |
+| ETH | 97.50%, 91.88%, 95.02% | 3 / 3 | 0 / 3 |
+| PAXG | 99.17%, 90.62%, 89.05% | 2 / 3 | 1 / 3 |
+
+Calibration is not consistently beneficial. High coverage can come from overly broad intervals, and coverage can fall below target in a different period. No parameters or selected production artifacts were changed in response to these results. `/risk` now explicitly reports when the saved selected model did not beat its simple reference. Treat the prediction component as an uncertainty-explanation experiment; it has not established trading advantage or reliable nominal coverage.
+
+```powershell
+python model/evaluate_regimes.py
+```
+
+Full hashes, cutoffs and scoring metrics are in ignored `model/results/forecast_regimes.json`. The check does not overwrite forecasts used by the assistant.

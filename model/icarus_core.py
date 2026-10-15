@@ -296,6 +296,10 @@ def render_tool_data(name, data, language):
                          f"nominal coverage target {interval['nominal_coverage_pct']}%, "
                          f"observed test coverage {coverage}% across {test['observations']} days. "
                          "Actual returns can fall outside this range; it is not a maximum loss bound.")
+            reference = interval["test_metrics"].get("rolling_reference_uncalibrated")
+            if reference and test["mean_interval_score_log_return_pct"] >= reference["mean_interval_score_log_return_pct"]:
+                extra += (" แบบที่เลือกไม่ดีกว่าแบบอ้างอิงอย่างง่ายด้านคะแนนช่วงในการทดสอบนี้" if th else
+                          " The selected model did not beat the simple reference on interval score in this saved test.")
         if th:
             return f"{ASSETS[data['asset_id']]}: แบบทดลอง ณ {data['as_of']} สำหรับวันถัดไป ในหน่วยผลตอบแทน USDT: ความผันผวนรายวันจาก rolling {data['rolling_20_next_day_volatility_pct']}%; EWMA {data['ewma_094_next_day_volatility_pct']}% ไม่บอกทิศทาง ไม่ใช่การคาดการณ์ ณ วันนี้หรือขอบเขตขาดทุนที่รับประกัน" + extra
         return f"{ASSETS[data['asset_id']]}: experimental next-day risk at historical cutoff {data['as_of']}, using USDT returns: rolling daily volatility {data['rolling_20_next_day_volatility_pct']}%; EWMA {data['ewma_094_next_day_volatility_pct']}%. No direction prediction, current forecast, or guaranteed loss bound." + extra

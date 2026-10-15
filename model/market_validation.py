@@ -60,6 +60,12 @@ def validate_forecast(data, asset):
                 raise ValueError("INVALID_FORECAST_INTERVAL")
             if type(test["observations"]) is not int or test["observations"] < 1 or interval.get("as_of") != data["as_of"]:
                 raise ValueError("INVALID_FORECAST_INTERVAL")
+            reference = interval["test_metrics"].get("rolling_reference_uncalibrated")
+            if reference is not None:
+                for row in (test, reference):
+                    score = Decimal(str(row["mean_interval_score_log_return_pct"]))
+                    if not score.is_finite() or score < 0:
+                        raise ValueError("INVALID_FORECAST_SCORE")
     except (KeyError, TypeError, InvalidOperation, OverflowError):
         raise ValueError("INVALID_FORECAST_ARTIFACT") from None
     return data
