@@ -55,6 +55,8 @@ export interface Strings {
     previewUnreadable: string;
     /** After a read-back when confirming is by tap only (the app's preview card). */
     tapToConfirm: string;
+    /** After a read-back of a buy set up on the app's own review screen. */
+    tapConfirmPurchase: string;
   };
   /** Words the speech engine may get wrong. Left side is replaced by the right side. */
   pronunciations: Record<string, string>;
@@ -80,6 +82,10 @@ export const STRINGS: Record<Lang, Strings> = {
       ethereum: 'Ethereum',
       eth: 'Ethereum',
       usdt: 'USDT',
+      // The app's own asset ids (frontend prototype, backend/data/app_ui.json).
+      xau: 'gold',
+      aapl: 'Apple',
+      tsla: 'Tesla',
     },
     words: {
       percent: 'percent',
@@ -124,6 +130,7 @@ export const STRINGS: Record<Lang, Strings> = {
       longReplyPointer: 'The rest is on your screen.',
       previewUnreadable: "I can't read that out loud. Please check the card on your screen.",
       tapToConfirm: 'Tap Confirm on the card when you are ready.',
+      tapConfirmPurchase: 'Tap Confirm purchase when you are ready.',
     },
     pronunciations: {
       'U-topia': 'You topia',
@@ -150,6 +157,10 @@ export const STRINGS: Record<Lang, Strings> = {
       ethereum: 'อีเธอเรียม',
       eth: 'อีเธอเรียม',
       usdt: 'USDT',
+      // THAI REVIEW: the app's own asset ids.
+      xau: 'ทอง',
+      aapl: 'แอปเปิล',
+      tsla: 'เทสลา',
     },
     words: {
       percent: 'เปอร์เซ็นต์',
@@ -196,6 +207,8 @@ export const STRINGS: Record<Lang, Strings> = {
       previewUnreadable: 'อ่านรายการนี้ออกเสียงไม่ได้ ช่วยดูการ์ดบนหน้าจอ',
       // THAI REVIEW: "tap Confirm on the card when ready".
       tapToConfirm: 'พร้อมเมื่อไหร่ แตะยืนยันบนการ์ดได้เลย',
+      // THAI REVIEW: "tap Confirm purchase when ready".
+      tapConfirmPurchase: 'พร้อมเมื่อไหร่ แตะยืนยันการซื้อได้เลย',
     },
     pronunciations: {
       'U-topia': 'ยูโทเปีย',

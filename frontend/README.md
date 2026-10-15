@@ -38,7 +38,7 @@ http://localhost:8787/app/?backend                         backend at http://loc
 http://localhost:8787/app/?backend=http://127.0.0.1:8010&user=u_small
 ```
 
-`src/backend-bridge.ts` plugs into the prototype's own hook (`Icarus.setBackend`), so the prototype file is not edited. Typed and spoken questions both go to `POST /chat`. "Ask U-topia" and the U-Bot handoffs still run first. A trade preview appears on a card with the **backend's** numbers (`src/trade-card.ts`), Icarus reads it back exactly, and the only way to buy is a tap on Confirm, which calls `POST /trades/{preview_id}/confirm`. The prototype's screens still show its own demo data. What still has to be agreed between the parts is in [`../INTEGRATION.md`](../INTEGRATION.md).
+`src/backend-bridge.ts` plugs into the prototype's own hook (`Icarus.setBackend`), so the prototype file is not edited. Typed and spoken questions both go to `POST /chat`, with the prototype's own `getContext()` as the snapshot. The backend answers with the prototype's own screen actions, which run as they are: "put 1,000 baht in gold" opens gold, types 1,000 and stops on Review purchase, where only the user taps Confirm purchase. Icarus reads the purchase back exactly, with the numbers from the prototype's own `calc()` (what that screen shows). "Ask U-topia" and the U-Bot handoffs still run first. What still has to be agreed between the parts is in [`../INTEGRATION.md`](../INTEGRATION.md).
 
 ## U-Bot: Ask U-topia and handoffs
 

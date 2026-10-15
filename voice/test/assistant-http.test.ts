@@ -1,7 +1,7 @@
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
-import { HttpAssistant, errorReply, normalizeReply, toBackendRequest, toScreenContext, withReadbackFields } from '../src/server/assistant/http';
+import { HttpAssistant, errorReply, normalizeReply, toBackendRequest, withReadbackFields } from '../src/server/assistant/http';
 import { buildReadback, extractPreview } from '../src/shared/readback';
 import type { AssistantRequest } from '../src/shared/types';
 
@@ -22,24 +22,22 @@ const SELL_CARD = {
 const REQ: AssistantRequest = { text: 'Put 1,000 baht in gold', language: 'en', userId: 'demo-user', sessionId: 's-1' };
 
 describe("speaking the backend's contract (backend/app/contracts.py)", () => {
-  it('sends session, user, language and voice mode, plus the older fields', () => {
-    const body = toBackendRequest({ ...REQ, snapshot: { screen: 'asset_detail', asset: 'GOLD', period: '1M' } }, 'u_new');
-    expect(body).toMatchObject({ session_id: 's-1', user_id: 'u_new', text: REQ.text, lang: 'en', input_mode: 'voice', userId: 'demo-user', language: 'en' });
-    expect(body.screen_context).toEqual({ screen_id: 'asset_detail', selected_asset: 'gold', chart_period: '1m', visible_elements: [], focused_element: null, entered_amount: null });
+  it('sends session, user, language and voice mode, the snapshot as it is, plus the older fields', () => {
+    const snapshot = { screen: 'asset', asset: { id: 'XAU' }, period: '1M' };
+    const body = toBackendRequest({ ...REQ, snapshot }, 'u_new');
+    expect(body).toEqual({ session_id: 's-1', user_id: 'u_new', text: REQ.text, lang: 'en', input_mode: 'voice', snapshot, language: 'en', userId: 'demo-user' });
     expect(toBackendRequest({ ...REQ, language: 'auto' }).lang).toBeNull(); // the backend detects it
     expect(toBackendRequest({ ...REQ, sessionId: undefined }).session_id).toBe('voice');
+    expect(toBackendRequest(REQ)).not.toHaveProperty('snapshot');
   });
 
-  it('only sends screen values the backend accepts, and no screen_context without a screen', () => {
-    expect(toScreenContext({ asset: 'gold' })).toBeUndefined();
-    expect(toScreenContext({ screen: 'asset', period: '3M' })?.chart_period).toBeNull(); // 3M is not allowed there
-    expect(toScreenContext({ screen: 'buy', asset: { id: 'XAU' }, entered_amount: 1000, focus: 'buy.fee_line' })).toMatchObject({
-      selected_asset: 'xau', entered_amount: 1000, focused_element: 'buy.fee_line',
-    });
+  it("passes the app's own screen actions through untouched", () => {
+    const actions = [{ type: 'open_asset', asset: 'XAU' }, { type: 'type_amount', value: 1000 }, { type: 'review' }, { type: 'highlight', target: 'buy.fee_line' }];
+    expect(normalizeReply({ text: 'ok', ui_actions: actions }).ui_actions).toEqual(actions);
   });
 });
 
-describe('the trade card: the read-back must say what the backend will charge', () => {
+describe('an older backend\'s trade card: the read-back must say what it will charge', () => {
   it('buy: the fee is INCLUDED in what the user pays, so 995 goes into gold, total 1,000', () => {
     const reply = normalizeReply({ text: "Here's your preview.", speak: true, ui_actions: [BUY_CARD], sources: [] });
     expect(reply.ui_actions[0]).toMatchObject({ type: 'show_card', card_type: 'trade_preview' });
@@ -103,7 +101,7 @@ describe('HttpAssistant against a stand-in for the backend', () => {
         const b = JSON.parse(raw);
         const ok = typeof b.session_id === 'string' && typeof b.user_id === 'string' && typeof b.text === 'string' &&
           [null, 'en', 'th'].includes(b.lang) && ['text', 'voice'].includes(b.input_mode) &&
-          (b.screen_context === undefined || [null, '1d', '1w', '1m', '1y'].includes(b.screen_context.chart_period));
+          (b.snapshot === undefined || (typeof b.snapshot === 'object' && b.snapshot !== null));
         if (!ok) {
           res.writeHead(422, { 'content-type': 'application/json' }).end(JSON.stringify({ detail: [{ msg: 'invalid' }] }));
           return;
@@ -123,7 +121,7 @@ describe('HttpAssistant against a stand-in for the backend', () => {
 
   it('gets a reply the voice layer can read back and speak', async () => {
     const url = await standIn();
-    const reply = await new HttpAssistant(url, 5000, 'u_new').ask({ ...REQ, snapshot: { screen: 'asset_detail', period: 'ALL' } });
+    const reply = await new HttpAssistant(url, 5000, 'u_new').ask({ ...REQ, snapshot: { screen: 'asset', period: 'ALL' } });
     expect(reply.speak).toBe(true);
     expect(extractPreview(reply)).toMatchObject({ amount: 995, fee: 5, total: 1000, currency: 'THB' });
     expect(reply.sources).toHaveLength(1);
