@@ -72,6 +72,8 @@ def confirm_trade(state: DemoState, user_id: str, preview_id: str) -> dict:
             raise TradeError("preview_not_found")
         if preview["status"] == "confirmed":
             return preview["result"]
+        if preview["status"] == "cancelled":
+            raise TradeError("preview_cancelled")
         if state.clock() > preview["expires_at"]:
             preview["status"] = "expired"
             raise TradeError("preview_expired")
@@ -106,6 +108,16 @@ def confirm_trade(state: DemoState, user_id: str, preview_id: str) -> dict:
                   "journey_stage": user["journey"]["stage"]}
         preview.update(status="confirmed", result=result)
         return result
+
+
+def cancel_pending(state: DemoState, user_id: str) -> int:
+    """Cancel the user's open previews, so a late tap on an old card can't buy. Returns how many."""
+    with state.lock:
+        pending = [p for p in state.previews.values()
+                   if p["user_id"] == user_id and p["status"] == "pending"]
+        for p in pending:
+            p["status"] = "cancelled"
+        return len(pending)
 
 
 def portfolio(user: dict, cache: PriceCache, now_iso: str) -> dict:

@@ -1,11 +1,16 @@
 """How Icarus drives the app's screens.
 
 Two layers:
-1. ACTIONS: the closed set of UI actions Oasis's prototype can run (its doAction switch).
-   validate() rejects anything else. There is no "confirm" action, on purpose: the
-   user taps Confirm purchase themselves.
+1. ACTIONS: the closed set of UI actions we send. validate() rejects anything else.
+   Most are actions Oasis's prototype runs (its doAction switch). Two follow the team
+   contract (context.md section 8, frontend/src/backend-bridge.ts): highlight uses
+   element_id, and card carries our trade preview. There is no "confirm" action, on
+   purpose: the user taps Confirm on the card.
+   We don't send the prototype's buy-screen actions (start_buy, type_amount, review):
+   its buy screen adds its own fee, so purchases go on our card with our numbers
+   (INTEGRATION.md, point 1).
 2. The planner: one function per intent the model can choose ("show an asset",
-   "prepare a buy"...). Each one turns the intent into the exact action sequence,
+   "change the chart"...). Each one turns the intent into the exact action sequence,
    starting from the screen the user is on. The model picks the intent and its
    values; code builds the sequence.
 """
@@ -14,6 +19,7 @@ from dataclasses import dataclass
 from app import knowledge
 
 MAX_ACTIONS_PER_TURN = 8
+CARD_TYPES = ("trade_preview", "chart", "steps")  # in order of priority when a reply has more than one
 
 
 class UIError(Exception):
@@ -47,22 +53,23 @@ ACTIONS = {
     "open_asset": {"asset": lambda v: v in app()["assets"]},
     "set_period": {"period": lambda v: v in app()["periods"]},
     "set_filter": {"filter": lambda v: v in app()["filters"]},
-    "start_buy": {"asset": lambda v: v in app()["assets"]},
-    "type_amount": {"value": lambda v: isinstance(v, (int, float)) and v >= app()["min_buy_thb"]},
-    "select_wallet": {"wallet": lambda v: v in app()["wallets"]},
-    "review": {},
-    "cancel_buy": {},
     "toggle_freeze": {"value": lambda v: isinstance(v, bool)},
     "hide_balance": {"value": lambda v: isinstance(v, bool)},
-    "highlight": {"target": lambda v: v in app()["elements"]},
+    "highlight": {"element_id": lambda v: v in app()["elements"]},
     "start_guide": {"asset": lambda v: v in app()["assets"]},
+    "card": {"card_type": lambda v: v in CARD_TYPES, "data": lambda v: isinstance(v, dict)},
 }
 
 
 def finalize(actions: list[dict]) -> list[dict]:
-    """A guide takes over the screens, so it runs alone."""
+    """A guide takes over the screens, so it runs alone. At most one card per reply:
+    the most important one (a trade preview beats a chart beats steps)."""
     guides = [a for a in actions if a["type"] == "start_guide"]
-    return guides[:1] if guides else actions
+    if guides:
+        return guides[:1]
+    cards = [a for a in actions if a["type"] == "card"]
+    keep = min(cards, key=lambda a: CARD_TYPES.index(a["card_type"]), default=None)
+    return [a for a in actions if a["type"] != "card" or a is keep]
 
 
 def describe(actions: list[dict]) -> str:
@@ -75,15 +82,11 @@ def describe(actions: list[dict]) -> str:
         "open_asset": lambda a: f"Opened the {names[a['asset']]} page.",
         "set_period": lambda a: f"Switched the chart to {a['period']}.",
         "set_filter": lambda a: f"The asset list now shows {a['filter']}.",
-        "start_buy": lambda a: f"Opened the buy screen for {names[a['asset']]}.",
-        "type_amount": lambda a: f"Typed {a['value']:g} baht.",
-        "select_wallet": lambda a: f"Picked the {app()['wallets'][a['wallet']]}.",
-        "review": lambda a: "Opened the review screen. The user must tap Confirm purchase; nothing is bought yet.",
-        "cancel_buy": lambda a: "Cancelled the purchase. Nothing was bought.",
         "toggle_freeze": lambda a: "Froze the card." if a["value"] else "Unfroze the card.",
         "hide_balance": lambda a: "Hid the balances." if a["value"] else "Showed the balances.",
-        "highlight": lambda a: f"Highlighted {app()['elements'][a['target']]['shows'].lower()}.",
+        "highlight": lambda a: f"Highlighted {app()['elements'][a['element_id']]['shows'].lower()}.",
         "start_guide": lambda a: f"Started a step-by-step guide to buying {names[a['asset']]}.",
+        "card": lambda a: "Showed a preview card. The user checks it and taps Confirm on the card; nothing is bought yet.",
     }
     return " ".join(say[a["type"]](a) for a in actions)
 
@@ -107,16 +110,16 @@ def validate(action: dict) -> None:
 
 # ---------- reading where the user is ----------
 
-OLD_SCREEN_NAMES = {"asset_detail": "asset"}
+OLD_SCREEN_NAMES = {"asset_detail": "asset"}  # the bridge's name for the asset page
 
 
 def to_app_asset(asset_id: str | None) -> str | None:
-    """'gold' or 'XAU' -> 'XAU'. Our data ids and the app's ids both work."""
+    """'gold', 'XAU' or 'xau' -> 'XAU'. Our data ids and the app's ids both work."""
     if not asset_id:
         return None
     assets = app()["assets"]
-    if asset_id in assets:
-        return asset_id
+    if asset_id.upper() in assets:
+        return asset_id.upper()
     for app_id, a in assets.items():
         if a["data_id"] == asset_id:
             return app_id
@@ -184,30 +187,6 @@ def filter_assets(state: UIState, filter: str) -> list[dict]:
     return [{"type": "set_filter", "filter": filter}]
 
 
-def prepare_buy(state: UIState, asset: str, amount_thb: float, wallet: str = "thb") -> list[dict]:
-    """Fill in the app's own buy screens and stop on the review screen, at Confirm."""
-    if amount_thb < app()["min_buy_thb"]:
-        raise UIError("below_minimum", f"the minimum buy is {app()['min_buy_thb']} baht")
-    if wallet not in app()["wallets"]:
-        raise UIError("unknown_wallet", f"no wallet called {wallet!r}")
-    acts = []
-    if not (state.screen in ("buy", "buy_review") and state.asset == asset):
-        acts += _open_asset(state, asset)
-        acts.append({"type": "start_buy", "asset": asset})
-    acts += [{"type": "type_amount", "value": amount_thb},
-             {"type": "select_wallet", "wallet": wallet},
-             {"type": "review"}]
-    state.screen, state.asset = "buy_review", asset
-    return acts
-
-
-def cancel_buy(state: UIState) -> list[dict]:
-    if state.screen not in ("buy", "buy_review"):
-        raise UIError("no_buy_open", "there is no purchase open to cancel")
-    state.screen = "asset"
-    return [{"type": "cancel_buy"}]
-
-
 def guide_me(state: UIState, asset: str) -> list[dict]:
     return [{"type": "start_guide", "asset": asset}]
 
@@ -227,13 +206,12 @@ def point_at(state: UIState, element_id: str) -> list[dict]:
     if element is None:
         raise UIError("unknown_element", f"no element called {element_id!r}")
     screen, acts = element["screen"], []
+    if screen in ("buy", "buy_review") and state.screen not in ("buy", "buy_review"):
+        raise UIError("not_on_buy_screen", "that is only on the app's buy screen, which isn't open")
     if screen == "buy_review" and state.screen != "buy_review":
-        raise UIError("not_on_review", "the Confirm button only appears after a purchase is set up")
-    if screen == "buy" and state.screen not in ("buy", "buy_review"):
-        acts += _open_asset(state, state.asset) + [{"type": "start_buy", "asset": state.asset}]
-        state.screen = "buy"
-    elif screen == "asset":
+        raise UIError("not_on_review", "the Confirm button only appears on the review screen")
+    if screen == "asset":
         acts += _open_asset(state, state.asset)
     elif screen not in ("buy", "buy_review"):
         acts += _navigate(state, screen)
-    return acts + [{"type": "highlight", "target": element_id}]
+    return acts + [{"type": "highlight", "element_id": element_id}]

@@ -13,7 +13,7 @@ from app.assistant.loop import Assistant, UnknownUser
 from app.config import OFFLINE, POLL_INTERVAL_S
 from app.contracts import ChatReply, ChatRequest, ConfirmRequest, ErrorBody
 from app.market.cache import PriceCache
-from app.market.history import PERIODS, period_rows
+from app.market.history import PERIODS, period_rows, summarize
 from app.state import DemoState
 from app.trades import TradeError, confirm_trade, portfolio
 
@@ -25,6 +25,7 @@ ERRORS = {
     "assistant_failed": ("Icarus couldn't answer just now. Try again.", "Icarus ตอบไม่ได้ตอนนี้ ลองอีกครั้งนะ"),
     "preview_not_found": ("That preview doesn't exist.", "ไม่พบรายการนี้"),
     "preview_expired": ("That preview expired. Ask again for a fresh price.", "รายการนี้หมดเวลาแล้ว ขอราคาใหม่อีกครั้งนะ"),
+    "preview_cancelled": ("That preview was cancelled. Nothing was bought.", "รายการนี้ถูกยกเลิกแล้ว ไม่มีการซื้อ"),
     "not_enough_cash": ("Not enough baht in your balance.", "ยอดเงินไม่พอ"),
     "not_enough_holdings": ("You don't hold enough of that.", "คุณถือไม่พอ"),
 }
@@ -74,6 +75,24 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True) -> FastAPI:
     def prices(ids: str | None = Query(None, description="comma separated, e.g. btc,gold")):
         wanted = ids.split(",") if ids else list(knowledge.assets())
         return {a: cache.get(a) for a in wanted if cache.get(a)}
+
+    @app.get("/market")
+    def market():
+        """For the app's screens, so they show the same baht numbers Icarus says.
+        Keyed by the app's asset ids. Assets we have no data for are left out."""
+        out = {}
+        for app_id, a in knowledge.app_ui()["assets"].items():
+            price = cache.get(a["data_id"]) if a["data_id"] else None
+            if price is None:
+                continue
+            changes = {"1D": price["change_24h_pct"]}
+            for p in PERIODS:
+                s = summarize(period_rows(a["data_id"], p)) if p != "1D" else None
+                if s:
+                    changes[p] = s["change_pct"]
+            out[app_id] = {"price_thb": price["price_thb"], "change_pct": changes,
+                           "freshness": price["freshness"], "as_of": price["as_of"]}
+        return {"currency": "THB", "fx_usd_thb": (cache.fx or {}).get("rate"), "assets": out}
 
     @app.get("/history/{asset_id}")
     def history(asset_id: str, period: str = "1M"):

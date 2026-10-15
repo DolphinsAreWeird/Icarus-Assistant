@@ -39,6 +39,12 @@ def ui_elements() -> dict:
 
 
 @cache
+def howto() -> dict:
+    """Step-by-step answers, checked against the prototype's screens."""
+    return _load("howto.json")["topics"]
+
+
+@cache
 def journey() -> dict:
     return _load("journey.json")
 

@@ -10,6 +10,20 @@ ALWAYS_OK_MAX = 10       # counting words like "2 steps" or "3 sentences"
 TOLERANCE = 0.03         # "about 142,700" for 142,712.36 is fine
 
 
+SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
+CARD_TEXT_MAX = 160  # Thai has no full stops, so cap the length instead
+
+
+def first_sentence(text: str) -> str:
+    """The first sentence, for replies that come with a chart or steps card: the card has the rest,
+    and the voice shouldn't read the steps out."""
+    first = SENTENCE_END.split(text.strip(), maxsplit=1)[0]
+    if len(first) > CARD_TEXT_MAX:
+        cut = first.rfind(" ", 0, CARD_TEXT_MAX)
+        first = first[: cut if cut > 0 else CARD_TEXT_MAX].rstrip(" ,")
+    return first
+
+
 def detect_language(text: str, fallback: str = "en") -> str:
     return "th" if THAI.search(text) else fallback
 

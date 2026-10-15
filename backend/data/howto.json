@@ -1,0 +1,75 @@
+{
+  "_note": "Step-by-step answers for 'how do I...' questions, checked against Oasis's prototype screens on 15 Oct. The model only picks a topic; these words are what the user sees. Keep each step short. Thai needs a Thai speaker's check (th_reviewed).",
+  "topics": {
+    "buy": {
+      "en": {"title": "How to buy", "steps": [
+        {"title": "Open the asset", "text": "Go to Invest and tap the asset you want.", "element_id": null},
+        {"title": "Tap Buy", "text": "It's at the bottom of the asset's page.", "element_id": "asset.buy_button"},
+        {"title": "Type an amount", "text": "In baht. The minimum is 100 baht.", "element_id": "buy.amount_input"},
+        {"title": "Review", "text": "Pick the wallet to pay from, then tap Review purchase.", "element_id": "buy.review_button"},
+        {"title": "Confirm", "text": "Check the fee and total. Nothing is bought until you tap Confirm purchase.", "element_id": "buy.confirm_button"}]},
+      "th": {"title": "วิธีซื้อ", "steps": [
+        {"title": "เปิดสินทรัพย์", "text": "ไปที่ Invest แล้วแตะสินทรัพย์ที่ต้องการ", "element_id": null},
+        {"title": "แตะ Buy", "text": "อยู่ด้านล่างของหน้าสินทรัพย์", "element_id": "asset.buy_button"},
+        {"title": "ใส่จำนวนเงิน", "text": "เป็นเงินบาท ขั้นต่ำ 100 บาท", "element_id": "buy.amount_input"},
+        {"title": "ตรวจสอบ", "text": "เลือกกระเป๋าที่จะจ่าย แล้วแตะ Review purchase", "element_id": "buy.review_button"},
+        {"title": "ยืนยัน", "text": "ดูค่าธรรมเนียมและยอดรวม จะยังไม่ซื้อจนกว่าคุณจะแตะ Confirm purchase", "element_id": "buy.confirm_button"}]},
+      "th_reviewed": false
+    },
+    "read_chart": {
+      "en": {"title": "How to read a price chart", "steps": [
+        {"title": "Left to right is time", "text": "The left edge is the start of the period, the right edge is now.", "element_id": "asset.chart"},
+        {"title": "Higher means pricier", "text": "When the line goes up, the price went up.", "element_id": "asset.chart"},
+        {"title": "Change the period", "text": "Tap 1D, 1W, 1M, 3M, 1Y or ALL under the chart.", "element_id": "asset.chart"},
+        {"title": "Big swings mean more risk", "text": "A jumpy line means the price can move a lot, both ways.", "element_id": null}]},
+      "th": {"title": "วิธีอ่านกราฟราคา", "steps": [
+        {"title": "ซ้ายไปขวาคือเวลา", "text": "ขอบซ้ายคือต้นช่วงเวลา ขอบขวาคือตอนนี้", "element_id": "asset.chart"},
+        {"title": "ยิ่งสูงยิ่งแพง", "text": "เส้นขึ้น แปลว่าราคาขึ้น", "element_id": "asset.chart"},
+        {"title": "เปลี่ยนช่วงเวลา", "text": "แตะ 1D 1W 1M 3M 1Y หรือ ALL ใต้กราฟ", "element_id": "asset.chart"},
+        {"title": "แกว่งแรงคือเสี่ยงมาก", "text": "เส้นที่ขึ้นลงแรง แปลว่าราคาเปลี่ยนได้มากทั้งขึ้นและลง", "element_id": null}]},
+      "th_reviewed": false
+    },
+    "freeze_card": {
+      "en": {"title": "How to freeze your card", "steps": [
+        {"title": "Open Card", "text": "Tap Card at the bottom.", "element_id": "card.balance"},
+        {"title": "Tap Freeze", "text": "New payments are blocked. Your money stays where it is.", "element_id": null},
+        {"title": "Undo any time", "text": "Tap Unfreeze to use the card again.", "element_id": null}]},
+      "th": {"title": "วิธีล็อกบัตร", "steps": [
+        {"title": "เปิดหน้า Card", "text": "แตะ Card ด้านล่าง", "element_id": "card.balance"},
+        {"title": "แตะ Freeze", "text": "การจ่ายใหม่จะถูกบล็อก เงินของคุณยังอยู่เหมือนเดิม", "element_id": null},
+        {"title": "ปลดได้ตลอด", "text": "แตะ Unfreeze เพื่อใช้บัตรอีกครั้ง", "element_id": null}]},
+      "th_reviewed": false
+    },
+    "hide_balance": {
+      "en": {"title": "How to hide your balance", "steps": [
+        {"title": "Go Home", "text": "Your total balance is at the top.", "element_id": "home.balance"},
+        {"title": "Tap the eye", "text": "It's next to the balance. Tap it again to show the numbers.", "element_id": "home.balance"}]},
+      "th": {"title": "วิธีซ่อนยอดเงิน", "steps": [
+        {"title": "ไปหน้าแรก", "text": "ยอดเงินรวมอยู่ด้านบน", "element_id": "home.balance"},
+        {"title": "แตะรูปตา", "text": "อยู่ข้างยอดเงิน แตะอีกครั้งเพื่อแสดงตัวเลข", "element_id": "home.balance"}]},
+      "th_reviewed": false
+    },
+    "check_portfolio": {
+      "en": {"title": "How to see what you own", "steps": [
+        {"title": "Open Invest", "text": "Tap Invest at the bottom.", "element_id": "invest.portfolio_value"},
+        {"title": "See the split", "text": "Open your portfolio to see how your money is split between assets.", "element_id": "portfolio.allocation"}]},
+      "th": {"title": "วิธีดูสิ่งที่คุณถือ", "steps": [
+        {"title": "เปิด Invest", "text": "แตะ Invest ด้านล่าง", "element_id": "invest.portfolio_value"},
+        {"title": "ดูสัดส่วน", "text": "เปิดพอร์ตเพื่อดูว่าเงินแบ่งอยู่ในสินทรัพย์ไหนบ้าง", "element_id": "portfolio.allocation"}]},
+      "th_reviewed": false
+    },
+    "swap": {
+      "en": {"title": "How to swap", "steps": [
+        {"title": "Open Payments", "text": "Tap Payments at the bottom, or Swap on Home.", "element_id": null},
+        {"title": "Pick what you give", "text": "Choose the asset you want to swap from.", "element_id": "swap.from_asset"},
+        {"title": "Pick what you get", "text": "Choose the asset you want to receive.", "element_id": "swap.to_asset"},
+        {"title": "Check before you confirm", "text": "Look at the amounts and fee on screen first.", "element_id": null}]},
+      "th": {"title": "วิธีสวอป", "steps": [
+        {"title": "เปิด Payments", "text": "แตะ Payments ด้านล่าง หรือ Swap ที่หน้าแรก", "element_id": null},
+        {"title": "เลือกสิ่งที่จะแลก", "text": "เลือกสินทรัพย์ที่ต้องการแลกออก", "element_id": "swap.from_asset"},
+        {"title": "เลือกสิ่งที่จะได้", "text": "เลือกสินทรัพย์ที่ต้องการรับ", "element_id": "swap.to_asset"},
+        {"title": "ตรวจก่อนยืนยัน", "text": "ดูจำนวนและค่าธรรมเนียมบนหน้าจอก่อน", "element_id": null}]},
+      "th_reviewed": false
+    }
+  }
+}

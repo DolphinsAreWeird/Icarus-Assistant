@@ -7,10 +7,17 @@ from pydantic import BaseModel, Field, model_validator
 class ScreenContext(BaseModel):
     screen_id: str
     selected_asset: str | None = None
-    chart_period: str | None = None   # the app's periods: 1D 1W 1M 3M 1Y ALL
+    chart_period: str | None = None   # the app's periods: 1D 1W 1M 3M 1Y ALL (any case)
     visible_elements: list[str] = Field(default_factory=list)
     focused_element: str | None = None
     entered_amount: float | None = None
+
+
+    @model_validator(mode="after")
+    def periods_in_app_case(self):
+        if self.chart_period:
+            self.chart_period = self.chart_period.upper()  # the bridge sends "1m"
+        return self
 
 
 class ChatRequest(BaseModel):

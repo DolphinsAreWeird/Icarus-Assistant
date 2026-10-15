@@ -9,7 +9,8 @@ import re
 import time
 
 from app import knowledge, ui
-from app.assistant.checks import asks_for_advice, detect_language, mentioned_assets, unbacked_numbers
+from app.assistant.checks import (asks_for_advice, detect_language, first_sentence, mentioned_assets,
+                                  unbacked_numbers)
 from app.assistant.llm import ChatModel, parse_arguments
 from app.assistant.prompt import FALLBACK_REPLY, REFUSAL_REPLY, SYSTEM_PROMPT, turn_context
 from app.contracts import ChatReply, ChatRequest, SourceRef
@@ -96,6 +97,8 @@ class Assistant:
 
         # ---- after the model: plain code ----
         ctx.ui_actions = ui.finalize(ctx.ui_actions)
+        if any(a["type"] == "card" and a["card_type"] in ("chart", "steps") for a in ctx.ui_actions):
+            text = first_sentence(text)  # the card shows the details; say just the headline
         for action in ctx.ui_actions:  # last gate: only the closed set ever leaves the backend
             ui.validate(action)
         envelopes = list(ctx.results.values())

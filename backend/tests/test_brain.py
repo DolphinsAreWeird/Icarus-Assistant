@@ -17,7 +17,9 @@ from app.state import DemoState
 from app.tools import tool_specs
 from app.trades import TradeError, confirm_trade, prepare_trade
 
-PROTOTYPE = Path(__file__).resolve().parents[2] / "frontend" / "prototype" / "Icarus Prototype.dc.html"
+REPO = Path(__file__).resolve().parents[2]
+PROTOTYPE = REPO / "frontend" / "prototype" / "Icarus Prototype.dc.html"
+BRIDGE = REPO / "frontend" / "src" / "backend-bridge.ts"
 
 PRICES = {"fx": {"rate": 33.5, "as_of": "2026-10-14", "source": "test"},
           "prices": {"gold": {"asset_id": "gold", "price_usd": 4000.0, "price_thb": 134_000.0,
@@ -116,7 +118,17 @@ def test_validate_rejects_anything_off_the_list(action):
 def test_every_action_we_send_is_one_the_prototype_runs():
     runs = set(re.findall(r"case '(\w+)':", PROTOTYPE.read_text(encoding="utf-8")))
     runs.add("start_guide")  # handled before doAction, in splitActs
-    assert set(ui.ACTIONS) <= runs
+    assert set(ui.ACTIONS) - {"card"} <= runs  # card goes to the team's trade card, not doAction
+
+
+@pytest.mark.skipif(not BRIDGE.exists(), reason="frontend bridge not in this checkout")
+def test_the_bridge_passes_on_everything_we_send():
+    bridge = BRIDGE.read_text(encoding="utf-8")
+    assert "a.type === 'highlight' && typeof a.element_id === 'string'" in bridge
+    for card_type in ui.CARD_TYPES:
+        assert f"a.card_type === '{card_type}'" in bridge, card_type
+    passed = set(re.search(r"SCREEN_ACTIONS = new Set\(\[([^\]]*)\]", bridge).group(1).replace("'", "").replace(" ", "").split(","))
+    assert set(ui.ACTIONS) - {"card", "highlight"} <= passed
 
 
 @pytest.mark.skipif(not PROTOTYPE.exists(), reason="prototype not in this checkout")
@@ -132,31 +144,6 @@ def test_every_element_we_know_exists_in_the_prototype():
 
 # ---------- the planner: same intent, different starting screens ----------
 
-def test_prepare_buy_from_the_assets_own_page():
-    s = ui.UIState("asset", "XAU")
-    acts = ui.prepare_buy(s, "XAU", 1000)
-    assert acts == [{"type": "start_buy", "asset": "XAU"}, {"type": "type_amount", "value": 1000},
-                    {"type": "select_wallet", "wallet": "thb"}, {"type": "review"}]
-    assert s.screen == "buy_review"
-
-
-def test_prepare_buy_from_home_opens_the_asset_first():
-    acts = ui.prepare_buy(ui.UIState("home", "BTC"), "XAU", 1000, "usd")
-    assert types(acts) == ["open_asset", "start_buy", "type_amount", "select_wallet", "review"]
-    assert acts[3] == {"type": "select_wallet", "wallet": "usd"}
-
-
-def test_prepare_buy_again_on_the_buy_screen_just_retypes():
-    acts = ui.prepare_buy(ui.UIState("buy_review", "XAU"), "XAU", 2000)
-    assert types(acts) == ["type_amount", "select_wallet", "review"]
-
-
-def test_prepare_buy_below_minimum_does_nothing():
-    with pytest.raises(ui.UIError) as e:
-        ui.prepare_buy(ui.UIState("asset", "XAU"), "XAU", 50)
-    assert e.value.code == "below_minimum"
-
-
 @pytest.mark.parametrize("start, expected", [
     ("asset", ["set_period"]),
     ("portfolio", ["set_period"]),
@@ -170,7 +157,7 @@ def test_change_period_goes_where_the_chart_is(start, expected):
 @pytest.mark.parametrize("start, element, expected", [
     ("asset", "home.balance", ["navigate", "highlight"]),
     ("home", "asset.chart", ["open_asset", "highlight"]),
-    ("asset", "buy.fee_line", ["start_buy", "highlight"]),
+    ("buy", "buy.fee_line", ["highlight"]),
     ("asset", "asset.change24h", ["highlight"]),
     ("buy_review", "buy.confirm_button", ["highlight"]),
 ])
@@ -178,9 +165,10 @@ def test_point_at_goes_to_the_elements_screen(start, element, expected):
     assert types(ui.point_at(ui.UIState(start, "XAU"), element)) == expected
 
 
-def test_point_at_confirm_needs_a_purchase_set_up():
-    with pytest.raises(ui.UIError):
-        ui.point_at(ui.UIState("asset", "XAU"), "buy.confirm_button")
+def test_point_at_buy_screen_parts_needs_the_buy_screen_open():
+    for element in ("buy.confirm_button", "buy.fee_line"):
+        with pytest.raises(ui.UIError):
+            ui.point_at(ui.UIState("asset", "XAU"), element)
 
 
 def test_other_intents():
@@ -193,9 +181,6 @@ def test_other_intents():
     assert ui.set_card_frozen(ui.UIState("home"), True) == [{"type": "toggle_freeze", "value": True}]
     assert ui.filter_assets(ui.UIState("home"), "Crypto") == [{"type": "set_filter", "filter": "Crypto"}]
     assert ui.guide_me(ui.UIState("home"), "XAU") == [{"type": "start_guide", "asset": "XAU"}]
-    with pytest.raises(ui.UIError):
-        ui.cancel_buy(ui.UIState("home"))
-    assert ui.cancel_buy(ui.UIState("buy_review")) == [{"type": "cancel_buy"}]
 
 
 def test_state_from_the_apps_snapshot():
@@ -203,34 +188,75 @@ def test_state_from_the_apps_snapshot():
     review = {**SNAPSHOT, "screen": "buy", "label": "Buy Gold · review"}
     assert ui.state_from_snapshot(review).screen == "buy_review"
     assert ui.state_from_snapshot(None, "asset_detail", "gold") == ui.UIState("asset", "XAU")
+    assert ui.to_app_asset("xau") == "XAU" and ui.to_app_asset("btc") == "BTC"
 
 
 # ---------- through the brain ----------
 
-def test_put_1000_baht_in_gold_from_the_app(cache, state):
+def test_put_1000_baht_in_gold_opens_gold_and_shows_our_card(cache, state):
     fake = FakeLLM([
-        calls(("prepare_buy", {"asset_id": "XAU", "amount_thb": 1000})),
-        text("It's set up. Check the fee and total, then tap Confirm purchase."),
+        calls(("prepare_trade", {"asset_id": "XAU", "side": "buy", "amount_thb": 1000})),
+        text("Here's your preview. You pay 1,000 baht and the fee is 5 baht. Tap Confirm on the card."),
     ])
-    reply = ask(Assistant(fake, state, cache), "Put 1,000 baht in gold", snapshot=SNAPSHOT)
-    assert types(reply.ui_actions) == ["start_buy", "type_amount", "select_wallet", "review"]
-    assert tool_results(fake, 1)[0] == {"ok": True, "done": (
-        "Opened the buy screen for Gold. Typed 1000 baht. Picked the THB Wallet. Opened the review "
-        "screen. The user must tap Confirm purchase; nothing is bought yet.")}
-    assert reply.debug["screen_after"] == "buy_review"
+    reply = ask(Assistant(fake, state, cache), "Put 1,000 baht in gold", snapshot={**SNAPSHOT, "screen": "home"})
+    assert types(reply.ui_actions) == ["open_asset", "card"]
+    card = reply.ui_actions[1]
+    assert card["card_type"] == "trade_preview"
+    assert card["data"]["fee_thb"] == 5.0 and card["data"]["you_pay_thb"] == 1000
+    assert card["data"]["qty"] == pytest.approx(995 / 134_000)
+    assert reply.debug["unbacked_numbers"] == []
     assert state.users["u_new"]["cash_thb"] == 5000.0  # nothing bought: the user taps Confirm
+
+
+def test_on_golds_page_the_card_comes_without_moving(cache, state):
+    fake = FakeLLM([calls(("prepare_trade", {"asset_id": "XAU", "side": "buy", "amount_thb": 1000})), text("ok")])
+    reply = ask(Assistant(fake, state, cache), "buy 1000 baht", snapshot=SNAPSHOT)
+    assert types(reply.ui_actions) == ["card"]
+
+
+def test_buy_problems_come_back_as_data_with_no_card(cache, state):
+    fake = FakeLLM([calls(("prepare_trade", {"asset_id": "BTC", "side": "buy", "amount_thb": 9000}),
+                          ("prepare_trade", {"asset_id": "BTC", "side": "buy", "amount_thb": 50}),
+                          ("prepare_trade", {"asset_id": "AAPL", "side": "buy", "amount_thb": 500})),
+                    text("You have 5,000 baht, and the minimum is 100.")])
+    reply = ask(Assistant(fake, state, cache), "buy", snapshot=SNAPSHOT)
+    results = tool_results(fake, 1)
+    assert results[0]["data"] == {"ok": False, "reason": "not_enough_cash", "cash_thb": 5000.0}
+    assert results[1]["data"]["reason"] == "below_minimum"
+    assert results[2]["reason"] == "no_data"
+    assert reply.ui_actions == [] and reply.debug["unbacked_numbers"] == []
+
+
+def test_cancel_stops_a_late_tap_on_the_card(cache, state):
+    fake = FakeLLM([calls(("prepare_trade", {"asset_id": "XAU", "side": "buy", "amount_thb": 1000})), text("ok"),
+                    calls(("cancel_trade", {})), text("Cancelled.")])
+    bot = Assistant(fake, state, cache)
+    preview_id = ask(bot, "buy gold 1000", snapshot=SNAPSHOT).ui_actions[0]["data"]["preview_id"]
+    ask(bot, "cancel that", snapshot=SNAPSHOT)
+    assert tool_results(fake, 3)[-1]["done"] == "Cancelled the preview. Nothing was bought."
+    with pytest.raises(TradeError) as e:
+        confirm_trade(state, "u_new", preview_id)
+    assert e.value.code == "preview_cancelled"
+    assert state.users["u_new"]["cash_thb"] == 5000.0
 
 
 def test_two_intents_in_one_turn_chain_from_where_the_first_ended(cache, state):
     fake = FakeLLM([
         calls(("show_asset", {"asset_id": "BTC", "period": "1Y"}),
-              ("prepare_buy", {"asset_id": "BTC", "amount_thb": 500})),
+              ("prepare_trade", {"asset_id": "BTC", "side": "buy", "amount_thb": 500})),
         text("Done."),
     ])
     reply = ask(Assistant(fake, state, cache), "show bitcoin over a year then set up 500 baht",
                 snapshot={**SNAPSHOT, "screen": "home"})
-    assert types(reply.ui_actions) == ["open_asset", "set_period", "start_buy", "type_amount",
-                                       "select_wallet", "review"]  # no second open_asset
+    assert types(reply.ui_actions) == ["open_asset", "set_period", "card"]  # no second open_asset
+
+
+def test_stand_in_brain_still_works(cache, state):
+    """KP's rule-based stand-in (scripts/stand_in_brain.py) calls prepare_trade with our data ids."""
+    from scripts.stand_in_brain import StandInModel
+    reply = ask(Assistant(StandInModel(), state, cache), "put 1,000 baht in gold")
+    assert types(reply.ui_actions) == ["open_asset", "card"]
+    assert reply.text.startswith("Here's your preview. You pay 1,000 baht")
 
 
 def test_a_guide_runs_alone(cache, state):
@@ -256,10 +282,10 @@ def test_tool_calls_written_as_plain_json_still_run():
 
 
 def test_failed_intent_tells_the_model_and_adds_nothing(cache, state):
-    fake = FakeLLM([calls(("cancel_buy", {})), text("There's no purchase open.")])
-    reply = ask(Assistant(fake, state, cache), "cancel it", snapshot={**SNAPSHOT, "screen": "home"})
+    fake = FakeLLM([calls(("highlight_element", {"element_id": "buy.confirm_button"})), text("It's not open.")])
+    reply = ask(Assistant(fake, state, cache), "where is confirm", snapshot={**SNAPSHOT, "screen": "home"})
     assert reply.ui_actions == []
-    assert tool_results(fake, 1)[0]["reason"] == "no_buy_open"
+    assert tool_results(fake, 1)[0]["reason"] == "not_on_buy_screen"
 
 
 def test_too_many_actions_are_refused(cache, state):
@@ -277,9 +303,10 @@ def test_explain_uses_the_numbers_on_screen_and_highlights(cache, state):
     reply = ask(Assistant(fake, state, cache), "What does this line mean?", snapshot=snap)
     result = tool_results(fake, 1)[0]
     assert result["data"]["numbers"]["change_pct"] == 3.4
-    assert result["data"]["numbers"]["currency"] == "USD"  # caught live: it said "baht"
+    assert result["data"]["numbers"]["currency"] == "THB"  # the app sends everything in baht now
+    assert result["data"]["numbers"]["say"]["change"] == "up about 3.4%"
     assert result["source"]["provider"] == "app screen (demo data)"
-    assert reply.ui_actions == [{"type": "highlight", "target": "asset.chart"}]
+    assert reply.ui_actions == [{"type": "highlight", "element_id": "asset.chart"}]
     assert reply.debug["unbacked_numbers"] == []
 
 
@@ -329,15 +356,15 @@ def test_request_shape(cache, state):
     assert "Reply language: Thai" in call["messages"][0]["content"]
     assert "The app shows: Gold · 1M chart." in call["messages"][0]["content"]
     names = {t["function"]["name"] for t in call["tools"]}
-    assert {"prepare_buy", "show_asset", "go_to_screen", "explain_element"} <= names
-    assert "prepare_trade" not in names
+    assert {"prepare_trade", "cancel_trade", "show_asset", "go_to_screen", "explain_element"} <= names
+    assert not names & {"prepare_buy", "cancel_buy"}
 
 
 def test_tool_schemas_use_the_apps_ids():
     specs = {t["function"]["name"]: t["function"]["parameters"] for t in tool_specs()}
     app = knowledge.app_ui()
-    assert specs["prepare_buy"]["properties"]["asset_id"]["enum"] == list(app["assets"])
-    assert specs["prepare_buy"]["required"] == ["asset_id", "amount_thb"]
+    assert specs["prepare_trade"]["properties"]["asset_id"]["enum"] == list(app["assets"])
+    assert specs["prepare_trade"]["required"] == ["asset_id", "side", "amount_thb"]
     assert specs["change_chart_period"]["properties"]["period"]["enum"] == app["periods"]
     assert specs["highlight_element"]["properties"]["element_id"]["enum"] == list(app["elements"])
 
@@ -420,17 +447,145 @@ def test_trade_preview_and_idempotent_confirm(cache, state):
 
 # ---------- HTTP API ----------
 
-def test_api_with_the_voice_servers_request(cache):
-    fake = FakeLLM([calls(("prepare_buy", {"asset_id": "XAU", "amount_thb": 1000})),
-                    text("Set up. Tap Confirm purchase when you're happy.")])
+def test_api_with_the_bridges_request(cache):
+    """The exact request frontend/src/backend-bridge.ts sends (toChatRequest): no snapshot, lowercase ids."""
+    fake = FakeLLM([calls(("prepare_trade", {"asset_id": "XAU", "side": "buy", "amount_thb": 1000})),
+                    text("Here's your preview. Tap Confirm on the card.")])
     api = TestClient(create_app(llm=fake, offline=True, poll=False))
     assert api.get("/health").json()["assistant"] == "fake/scripted"
     assert len(api.get("/history/gold?period=1W").json()["rows"]) == 168
 
-    reply = api.post("/chat", json={"text": "Put 1,000 baht in gold", "language": "en",
-                                    "snapshot": SNAPSHOT, "userId": "demo-user"}).json()
-    assert types(reply["ui_actions"]) == ["start_buy", "type_amount", "select_wallet", "review"]
-    assert reply["speak"] is False and reply["sources"] == []
+    reply = api.post("/chat", json={
+        "session_id": "app-x", "user_id": "u_new", "text": "Put 1,000 baht in gold", "lang": "en",
+        "input_mode": "text",
+        "screen_context": {"screen_id": "asset_detail", "selected_asset": "gold", "chart_period": "1m",
+                           "visible_elements": [], "focused_element": None, "entered_amount": None}}).json()
+    assert types(reply["ui_actions"]) == ["card"]  # already on gold's page
+    preview_id = reply["ui_actions"][0]["data"]["preview_id"]
+    r = api.post(f"/trades/{preview_id}/confirm", json={"user_id": "u_new"})
+    assert r.status_code == 200 and r.json()["cash_thb"] == 4000.0
 
     err = api.post("/chat", json={"text": "hi", "user_id": "nobody"})
     assert err.status_code == 404 and err.json()["detail"]["code"] == "unknown_user"
+
+
+def test_lowercase_period_from_the_bridge_works(cache, state):
+    fake = FakeLLM([calls(("explain_element", {"element_id": "asset.chart"})), text("ok")])
+    req = ChatRequest(text="what is this", user_id="u_new",
+                      screen_context={"screen_id": "asset_detail", "selected_asset": "gold", "chart_period": "1m"})
+    assert req.screen_context.chart_period == "1M"
+    Assistant(fake, state, cache).chat(req)
+    assert tool_results(fake, 1)[0]["data"]["numbers"]["summary"]["points"] == 30
+
+
+# ---------- numbers the way people say them, charts and steps ----------
+
+def test_numbers_are_said_rounded_in_baht():
+    from app import display
+    assert display.baht(3_607_006) == "about 3.6 million baht"
+    assert display.baht(2_000_000) == "about 2 million baht"
+    assert display.baht(139_618.62) == "about 140,000 baht"
+    assert display.baht(4_825.5) == "about 4,800 baht"
+    assert display.baht(5) == "5 baht"
+    assert display.baht(2_729_983, "th") == "ประมาณ 2.7 ล้านบาท"
+    assert display.change(-23.97) == "down about 24%" and display.change(0.42) == "up about 0.4%"
+    assert display.exact_baht(1000) == "1,000 baht" and display.exact_baht(2.5) == "2.50 baht"
+    # and the numbers check accepts them against the exact tool numbers
+    assert unbacked_numbers("about 3.6 million baht, down about 24%", [{"a": 3_607_006, "c": -23.97}], "") == []
+
+
+def test_history_comes_with_say_text(cache, state):
+    fake = FakeLLM([calls(("get_history", {"asset_id": "BTC", "period": "1Y"})), text("ok")])
+    ask(Assistant(fake, state, cache), "bitcoin past year?")
+    say = tool_results(fake, 1)[0]["data"]["say"]
+    assert say["change"].startswith(("up about", "down about")) and say["change"].endswith("over the past year")
+    assert "million baht" in say["start"]
+
+
+def test_chart_card_for_one_asset_is_in_baht(cache, state):
+    fake = FakeLLM([calls(("show_chart", {"asset_ids": ["BTC"], "period": "1Y"})),
+                    text("Bitcoin is down about 24% over the past year.")])
+    reply = ask(Assistant(fake, state, cache), "show me past performance of BTC", snapshot={**SNAPSHOT, "screen": "home"})
+    card = reply.ui_actions[0]
+    assert card["card_type"] == "chart" and card["data"]["unit"] == "THB"
+    points = card["data"]["series"][0]["points"]
+    assert len(points) == 40 and points[-1][1] > 1_000_000  # baht, not dollars
+    assert "points" not in json.dumps(tool_results(fake, 1)[0])  # the model gets the summary, not 40 points
+
+
+def test_comparing_assets_charts_change_in_percent(cache, state):
+    fake = FakeLLM([calls(("show_chart", {"asset_ids": ["BTC", "XAU"], "period": "1M"})), text("ok")])
+    reply = ask(Assistant(fake, state, cache), "compare bitcoin and gold", snapshot={**SNAPSHOT, "screen": "home"})
+    data = reply.ui_actions[0]["data"]
+    assert data["unit"] == "%" and [s["asset_id"] for s in data["series"]] == ["BTC", "XAU"]
+    assert all(s["points"][0][1] == 0 for s in data["series"])  # both start at 0%
+
+
+def test_chart_of_the_asset_on_screen_switches_the_real_chart(cache, state):
+    fake = FakeLLM([calls(("show_chart", {"asset_ids": ["XAU"], "period": "1Y"})), text("ok")])
+    reply = ask(Assistant(fake, state, cache), "show gold over a year", snapshot=SNAPSHOT)  # on Gold's page
+    assert reply.ui_actions == [{"type": "set_period", "period": "1Y"},
+                                {"type": "highlight", "element_id": "asset.chart"}]
+
+
+def test_chart_refuses_assets_without_data(cache, state):
+    fake = FakeLLM([calls(("show_chart", {"asset_ids": ["AAPL"], "period": "1M"})), text("ok")])
+    reply = ask(Assistant(fake, state, cache), "apple chart", snapshot=SNAPSHOT)
+    assert reply.ui_actions == [] and tool_results(fake, 1)[0]["reason"] == "no_data"
+
+
+def test_steps_card_comes_from_the_reviewed_file(cache, state):
+    fake = FakeLLM([calls(("show_steps", {"topic": "buy"})), text("Here's how, step by step.")])
+    reply = ask(Assistant(fake, state, cache), "how do I buy?", snapshot={**SNAPSHOT, "screen": "home"})
+    card = reply.ui_actions[0]
+    assert card["card_type"] == "steps" and card["data"]["title"] == "How to buy"
+    steps = card["data"]["steps"]
+    assert [s["n"] for s in steps] == [1, 2, 3, 4, 5]
+    assert steps[1]["show_me"] == [{"type": "open_asset", "asset": "XAU"},
+                                   {"type": "highlight", "element_id": "asset.buy_button"}]
+    assert steps[2]["show_me"] == []  # the buy screen isn't open, so nothing to point at yet
+    for step in steps:
+        for action in step["show_me"]:
+            ui.validate(action)
+
+
+def test_one_card_per_reply_and_a_trade_wins(cache, state):
+    fake = FakeLLM([calls(("show_steps", {"topic": "buy"}), ("show_chart", {"asset_ids": ["BTC"], "period": "1M"}),
+                          ("prepare_trade", {"asset_id": "XAU", "side": "buy", "amount_thb": 1000})), text("ok")])
+    reply = ask(Assistant(fake, state, cache), "everything", snapshot=SNAPSHOT)
+    assert [a["card_type"] for a in reply.ui_actions if a["type"] == "card"] == ["trade_preview"]
+
+
+def test_every_howto_topic_is_complete():
+    elements = knowledge.ui_elements()
+    for topic, t in knowledge.howto().items():
+        assert len(t["en"]["steps"]) == len(t["th"]["steps"]) >= 2, topic
+        for step in t["en"]["steps"] + t["th"]["steps"]:
+            assert step["element_id"] is None or step["element_id"] in elements, (topic, step)
+
+
+def test_market_endpoint_gives_the_app_baht_prices(cache):
+    api = TestClient(create_app(llm=FakeLLM([]), offline=True, poll=False))
+    m = api.get("/market").json()
+    assert m["currency"] == "THB"
+    assert set(m["assets"]) <= {"BTC", "ETH", "XAU"}  # app ids; no data for AAPL and TSLA
+    gold = m["assets"]["XAU"]
+    assert gold["price_thb"] > 50_000 and set(gold["change_pct"]) >= {"1D", "1W", "1M", "1Y"}
+
+
+def test_with_a_chart_or_steps_card_only_the_headline_is_said(cache, state):
+    from app.assistant.checks import first_sentence
+    # caught live: the model read every step out loud next to the steps card
+    fake = FakeLLM([calls(("show_steps", {"topic": "buy"})),
+                    text("To buy, go to its page and tap Buy. Enter the amount. Review and confirm.")])
+    reply = ask(Assistant(fake, state, cache), "how do I buy?", snapshot={**SNAPSHOT, "screen": "home"})
+    assert reply.text == "To buy, go to its page and tap Buy."
+    assert first_sentence("Bitcoin is down about 24%. The chart shows the rest.") == "Bitcoin is down about 24%."
+    assert len(first_sentence("ก" * 100 + " " + "ข" * 100)) <= 160
+
+
+def test_trade_replies_are_not_trimmed(cache, state):
+    fake = FakeLLM([calls(("prepare_trade", {"asset_id": "XAU", "side": "buy", "amount_thb": 1000})),
+                    text("Here's your preview. The fee is 5 baht. Tap Confirm on the card.")])
+    reply = ask(Assistant(fake, state, cache), "buy gold 1000", snapshot=SNAPSHOT)
+    assert reply.text.endswith("Tap Confirm on the card.")
