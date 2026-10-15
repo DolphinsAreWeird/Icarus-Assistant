@@ -2,6 +2,8 @@
 
 This file records the first integration phase. The subsequent connected demo, latest committed model import, live gateway check and comparison with main are documented in [DEMO_HANDOFF.md](DEMO_HANDOFF.md).
 
+Latest demo checkpoints: `25ca2e7` imports committed model work into backend; `9530035` connects tools, account screens and voice; `2bf1a45` fixes browser-observed chart help, verifies consistent fees and adds the launcher/runbook. Final verification: 135 backend, 79 model, 75 frontend and 386 voice tests pass, as do both TypeScript checks and builds. Main remains at `14401ce`; nothing was pushed or merged into main.
+
 ## 1. Baseline and design — `42f9af4`
 
 Created branch `backend` from `assistant-model` at `16ba286`, using `D:\Uhackathon\.worktrees\backend`. The original checkout stays on `assistant-model`; its uncommitted model edits were left untouched and are not included here. There was no branch literally named `model`.

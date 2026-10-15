@@ -69,7 +69,7 @@ Without `?backend`, the original prototype's standalone fixtures and behavior re
 
 ## Verification and practical limits
 
-Backend tests cover the existing behavior plus demo commands, ambiguity/negation rejection, exact chart binding, manual/card fee consistency, half-cent rounding, cancellation, idempotency and updated account values. Frontend tests run the actual unchanged design export with the new adapter, including manual trades and screen revision changes. Voice tests cover the existing stack and new numerical-script/evidence handling. See the final checkpoint summary for counts.
+Final committed-code verification: **135 backend tests passed; 79 model tests passed; 75 frontend tests passed; 386 voice tests passed**. Both TypeScript typechecks and frontend/voice builds passed. Two existing installed Python dependency deprecation warnings remain. Backend tests cover demo commands, ambiguity/negation rejection, exact chart binding, fee consistency, half-cent rounding, cancellation, idempotency and account updates. Frontend tests run the actual unchanged design export with the new adapter. Voice tests exercise the existing stack and numerical-script/evidence handling.
 
 A real **“What is slippage?”** request passed through Node `/api/ask` → Python `/chat` → the configured gateway: HTTP 200, status ok, one source, speech script prepared, about **11.72 seconds**. This is one connection smoke check, not broad semantic or latency evaluation. Explicit demo commands returned HTTP 200 in roughly 0–31 ms at the host clock's coarse resolution; these bypass the model and do not establish general model speed.
 
@@ -78,3 +78,7 @@ The same running services passed a fee-script → fake `/api/tts` check: HTTP 20
 Keep the demo labels visible: accounts/fees are fictional, saved reference prices may be delayed, THB conversion assumes USDT=USD, and gold uses PAXG. The model's forecasts remain experimental historical-cutoff estimates. General gateway answers can take many seconds; the voice HTTP timeout is now 60 seconds. Thai phrasing and financial guidance still require Luka/First review.
 
 Production authentication, shared durable storage, deployment, real execution and live feed policy are outside this local demo. No real purchase or public deployment occurred.
+
+## Running review instance
+
+The final code is running locally at `http://localhost:18787/app/?backend=http://127.0.0.1:18000&user=u_new`, using the existing model configuration and fake audio. Backend PID: `12156`; voice PID: `7608`. To stop these two processes: `Stop-Process -Id 12156,7608`. These IDs apply only to this launch. A browser-verified chart-help screenshot is saved in ignored `.demo-runtime/connected-demo.jpg`.
