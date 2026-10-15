@@ -182,6 +182,39 @@ await voice.start(); // inside a click
 
 If a reply has a separate `speech` field, our server speaks that instead of `text`. `emotion` is passed through on the `assistantReply` event.
 
+## U-Bot: "Ask U-topia" and handoffs
+
+[U-Bot](https://u.bot/) is U-topia's own AI assistant (its page calls it "agentic payments"). It is behind a login and we found **no public API**. The organizers want us to use it, so we do two things now, with a mock where the real thing is missing:
+
+1. **Ask U-topia (mocked).** A question like "What is U-Coin?" is answered from a small glossary (`src/config/utopia-glossary.ts`). Every answer is built only from what U-topia says publicly and from our context file, is marked **unverified**, and the app labels it: *"Based on: Mock answer, not checked by U-topia yet"*. The glossary only **defines** things. "How do I...", fees or "my payment failed" go to U-Bot instead of getting a guess.
+2. **Handoff (real link, no API needed).** Things Icarus cannot do are handed to U-Bot with a card and an **Open U-Bot** button: travel, rides and groceries (U-Bot's own screens say "Review & pay in U-topia Pay" for these), non-finance tasks (drawing, writing, building apps, translating, weather), U-topia questions the glossary cannot answer, and a request the prototype does not understand (a real request, not a misheard word).
+
+**Never handed off: advice.** "What should I buy?" and "Should I buy U-Coin?" are refused by Icarus itself (hard rule 1). A test checks this for 8 phrasings in English and Thai.
+
+How it flows: `POST /api/utopia/route { text, language, fallback? }` answers `{ kind: 'answer' | 'handoff' | 'none' }`. The app asks before every request. `none` means a normal in-app request and Icarus answers as always. If the voice server is down, nothing changes. The mock assistant in `voice/` uses the same service, and its handoff reply carries a new UI action:
+
+```json
+{ "type": "handoff", "target": "u-bot", "reason": "commerce", "label": "Open U-Bot", "url": "https://u.bot/", "question": "book me a flight to Phuket" }
+```
+
+`handoff` is **not in the context.md contract**. Agree it with Luka, First and Oasis. We also propose two agent tools: `ask_utopia(question, language)` and `handoff_to_ubot(reason, question, language)`. Both are covered by `UtopiaService.route()` in `src/server/utopia/service.ts`.
+
+**When U-Bot has an API:** set `UTOPIA_MODE=http` and `UTOPIA_URL` (and `UTOPIA_API_KEY` if needed). The request we propose is in `src/server/utopia/knowledge.ts` (`HttpUtopiaKnowledge`). It is **our proposal, not their contract, and untested against a real U-Bot**. It mirrors what U-Bot's own app does: its "Ask U-Topia" mode puts `[Context: question is about U-Topia]` in front of the question. Whatever a real LLM answers is screened before Icarus says it (`src/server/utopia/safety.ts`): **no digits, currency signs or "percent"** (hard rule 3), **no advice or guarantees** (hard rule 1). An answer that fails is not shown, and the user is handed to U-Bot instead. A failing, slow or empty U-Bot also becomes a handoff.
+
+**Until then, the best upgrade is manual.** Ask U-Bot the glossary questions yourself, check its answers, paste them into `utopia-glossary.ts` and set `verified: true` with `checkedBy` and `checkedOn`. A test fails if an entry claims to be verified without those, or if any answer contains a number.
+
+Limits to know:
+- The **Open U-Bot** link goes to U-Bot's front door and the user must sign in. U-Bot has **no public deep link** (we looked), so the card also offers **Copy my question** to paste there.
+- What we know about U-Bot comes from its public page and its static code, not from a logged-in session. We never called its private endpoints.
+- Say on stage that this is a mock plus a handoff (hard rule 5).
+- Ask Maya Nicks (U-topia's head of AI, who designed U-Bot): what counts as "using U-Bot", whether there is an API or test account, whether a deep link or prefilled question is possible, and whether we may build our glossary from its answers.
+
+## Choosing the voices
+
+`npm run voices` lists every voice on the account and measures its **real pitch** from the free sample ElevenLabs publishes (no credits used). Add `--library --lang th` to search the public Voice Library, and filters like `--gender female --age young --descriptive cute`. It prints the pitch in Hz, a band (low, mid-low, mid, HIGH, VERY HIGH), whether a free plan may use the voice, and a link to listen. Pitch is a guide, not a verdict: a person has to listen.
+
+A voice from the library must be **added to the account** before it can be used (it takes one of the account's voice slots). Then put its ID in `VOICE_ID_EN` or `VOICE_ID_TH` and run `npm run check -- --speak`. English and Thai can be two different voices.
+
 ## Connect the real assistant
 
 One config change in `.env`:

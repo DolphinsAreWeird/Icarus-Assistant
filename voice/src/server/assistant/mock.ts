@@ -8,6 +8,7 @@ import { STRINGS, fill } from '../../config/strings';
 import { detectLang } from '../../shared/lang';
 import { formatExactNumber } from '../../shared/speech-format';
 import type { Assistant, AssistantReply, AssistantRequest, Lang } from '../../shared/types';
+import type { UtopiaService } from '../utopia/service';
 
 const ASSETS: Array<{ id: string; words: RegExp }> = [
   { id: 'gold', words: /gold|ทอง/i },
@@ -23,7 +24,10 @@ const NAVIGATE = /\b(take me|go to|open|show me|navigate)\b|พาไป|ไป�
 let previewCounter = 0;
 
 export class MockAssistant implements Assistant {
-  constructor(private readonly delayMs = 120) {}
+  constructor(
+    private readonly delayMs = 120,
+    private readonly utopia?: UtopiaService,
+  ) {}
 
   async ask(req: AssistantRequest): Promise<AssistantReply> {
     // Pretend to think. Real assistants take much longer than this.
@@ -34,6 +38,22 @@ export class MockAssistant implements Assistant {
     const replies = MOCK_REPLIES[lang];
     const asset = ASSETS.find((a) => a.words.test(text))?.id ?? 'gold';
     const assetName = STRINGS[lang].assetNames[asset] ?? asset;
+
+    // Questions about U-topia, and things Icarus cannot do (travel, drawing...): answer or hand off to U-Bot.
+    const routed = await this.utopia?.route(text, lang);
+    if (routed?.kind === 'answer') {
+      const label = routed.source === 'mock' ? 'mock:utopia_glossary (not verified by U-topia)' : 'u-bot:ask_utopia';
+      return { text: routed.answer, speak: true, ui_actions: [], sources: [label] };
+    }
+    if (routed?.kind === 'handoff') {
+      const h = routed.handoff;
+      return {
+        text: h.message,
+        speak: true,
+        ui_actions: [{ type: 'handoff', target: h.target, reason: h.reason, label: h.label, url: h.url, question: h.question }],
+        sources: ['handoff:u-bot'],
+      };
+    }
 
     if (REFUSAL.test(text)) {
       return { text: replies.refusal, speak: true, ui_actions: [], sources: ['mock:guardrail'] };

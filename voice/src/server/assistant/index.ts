@@ -8,13 +8,14 @@
 
 import type { Assistant } from '../../shared/types';
 import type { ServerConfig } from '../env';
+import type { UtopiaService } from '../utopia/service';
 import { HttpAssistant } from './http';
 import { MockAssistant } from './mock';
 
-export function createAssistant(cfg: ServerConfig): Assistant {
+export function createAssistant(cfg: ServerConfig, utopia?: UtopiaService): Assistant {
   if (cfg.assistantMode === 'http') {
     if (!cfg.assistantUrl) throw new Error('ASSISTANT_MODE=http needs ASSISTANT_URL');
     return new HttpAssistant(cfg.assistantUrl, cfg.assistantTimeoutMs);
   }
-  return new MockAssistant(cfg.mockDelayMs);
+  return new MockAssistant(cfg.mockDelayMs, utopia);
 }

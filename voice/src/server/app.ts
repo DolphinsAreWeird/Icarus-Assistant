@@ -22,6 +22,7 @@ import type { FrictionSink } from './friction';
 import { planSpeech } from './speech-plan';
 import { TtsError, type TtsService } from './tts';
 import type { UsageTracker } from './usage';
+import type { UtopiaService } from './utopia/service';
 
 export interface AppDeps {
   cfg: ServerConfig;
@@ -31,15 +32,17 @@ export interface AppDeps {
   port: ElevenLabsPort | null;
   usage: UsageTracker;
   friction: FrictionSink;
+  /** Answers about U-topia, and handoffs to U-Bot. */
+  utopia: UtopiaService;
   log?: (line: string) => void;
 }
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
 export function createApp(deps: AppDeps): express.Express {
-  const { cfg, assistant, tts, port, usage, friction } = deps;
+  const { cfg, assistant, tts, port, usage, friction, utopia } = deps;
   const log = deps.log ?? ((l: string) => console.log(l));
-  const redact = makeRedactor(cfg.apiKey);
+  const redact = makeRedactor(cfg.apiKey, cfg.utopiaApiKey);
   const app = express();
   app.disable('x-powered-by');
 
@@ -75,6 +78,7 @@ export function createApp(deps: AppDeps): express.Express {
       voices: { en: Boolean(cfg.voiceIdEn), th: Boolean(cfg.voiceIdTh) },
       ttsModels: { en: cfg.ttsModelsEn, th: cfg.ttsModelsTh },
       assistant: cfg.assistantMode,
+      utopia: cfg.utopiaMode,
       stt: { commitStrategy: cfg.stt.commitStrategy, vadSilenceSecs: cfg.stt.vadSilenceSecs },
     });
   });
@@ -128,6 +132,21 @@ export function createApp(deps: AppDeps): express.Express {
     } catch (err) {
       log(`[ask] assistant failed: ${redact((err as Error).message)}`);
       fail(res, 502, 'assistant_failed', 'The assistant did not answer.');
+    }
+  });
+
+  // ---- U-topia questions and handoffs to U-Bot ----
+  // Body: { text, language, fallback? }. Reply: { kind: 'answer' | 'handoff' | 'none', ... } (see UtopiaRoute).
+  app.post('/api/utopia/route', async (req, res) => {
+    const body = isObject(req.body) ? req.body : {};
+    const text = typeof body.text === 'string' ? body.text.trim() : '';
+    if (!text || text.length > 1000) return fail(res, 400, 'bad_request', 'text is required (up to 1000 characters).');
+    const language: LangSetting = ['en', 'th', 'auto'].includes(body.language as string) ? (body.language as LangSetting) : 'auto';
+    try {
+      res.json(await utopia.route(text, language, { fallback: body.fallback === true }));
+    } catch (err) {
+      log(`[utopia] route failed: ${redact((err as Error).message)}`);
+      res.json({ kind: 'none' }); // never block the conversation because this helper broke
     }
   });
 

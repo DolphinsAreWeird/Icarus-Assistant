@@ -41,6 +41,15 @@ export interface ServerConfig {
     droppedKeyterms: string[];
   };
 
+  /** Where answers about U-topia come from. mock = our glossary. http = a real U-Bot endpoint (none exists yet). */
+  utopiaMode: 'mock' | 'http';
+  utopiaUrl: string | undefined;
+  /** Stays on the server. Never sent to the browser. */
+  utopiaApiKey: string | undefined;
+  utopiaTimeoutMs: number;
+  /** Where the "Open U-Bot" button goes. */
+  ubotUrl: string;
+
   assistantMode: 'mock' | 'http';
   assistantUrl: string | undefined;
   assistantTimeoutMs: number;
@@ -75,6 +84,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   }
   const mode = (env.ASSISTANT_MODE?.trim() || 'mock') as ServerConfig['assistantMode'];
   if (!['mock', 'http'].includes(mode)) throw new Error(`ASSISTANT_MODE must be mock or http, got "${mode}"`);
+
+  const utopiaMode = (env.UTOPIA_MODE?.trim() || 'mock') as ServerConfig['utopiaMode'];
+  if (!['mock', 'http'].includes(utopiaMode)) throw new Error(`UTOPIA_MODE must be mock or http, got "${utopiaMode}"`);
 
   const { kept, dropped } = sanitizeKeyterms(KEYTERMS);
   const origins = env.ALLOWED_ORIGINS?.trim();
@@ -111,6 +123,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
       droppedKeyterms: dropped,
     },
 
+    utopiaMode,
+    utopiaUrl: orUndefined(env.UTOPIA_URL),
+    utopiaApiKey: orUndefined(env.UTOPIA_API_KEY),
+    utopiaTimeoutMs: num(env.UTOPIA_TIMEOUT_MS, 8000),
+    ubotUrl: orUndefined(env.UBOT_URL) ?? 'https://u.bot/',
+
     assistantMode: mode,
     assistantUrl: orUndefined(env.ASSISTANT_URL),
     assistantTimeoutMs: num(env.ASSISTANT_TIMEOUT_MS, 15_000),
@@ -124,6 +142,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
 }
 
 /** Replace the API key with [redacted] in anything we print. */
-export function makeRedactor(apiKey: string | undefined): (text: string) => string {
-  return (text: string) => (apiKey ? text.split(apiKey).join('[redacted]') : text);
+export function makeRedactor(...secrets: Array<string | undefined>): (text: string) => string {
+  const keys = secrets.filter((s): s is string => Boolean(s));
+  return (text: string) => keys.reduce((out, key) => out.split(key).join('[redacted]'), text);
 }

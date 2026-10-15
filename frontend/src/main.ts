@@ -4,6 +4,8 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { setMascotFallback } from './assets';
 import { createDcApp, installHelmet } from './dc-runtime';
+import { hideHandoffCard, showHandoffCard } from './handoff-card';
+import { installUtopiaRouting, type PrototypeInstance } from './utopia-bridge';
 import { attachTts, installVoice } from './voice-bridge';
 
 const PROTOTYPE_URL = 'prototype/Icarus%20Prototype.dc.html';
@@ -50,7 +52,7 @@ async function main() {
 
   installHelmet(app.helmet);
 
-  let instance: { goBack?: () => void } | null = null;
+  let instance: (PrototypeInstance & { goBack?: () => void }) | null = null;
   const voice = installVoice({
     getComponent: () => instance,
     onStatus: (s) => status(s.text, s.kind),
@@ -63,8 +65,14 @@ async function main() {
   // window.Icarus is created when the prototype mounts, one tick later.
   const started = Date.now();
   const wait = setInterval(() => {
-    if (attachTts(voice)) {
+    if (attachTts(voice) && instance) {
       clearInterval(wait);
+      // "Ask U-topia" answers and handoffs to U-Bot, wrapped around the prototype's own answers.
+      installUtopiaRouting({
+        getInstance: () => instance,
+        showCard: (handoff, th) => showHandoffCard(handoff, { th, getPhone: () => document.querySelector('[data-screen-label="Phone"]') }),
+        hideCard: hideHandoffCard,
+      });
       void describeServer().then((text) => status(text));
     } else if (Date.now() - started > 5000) {
       clearInterval(wait);
