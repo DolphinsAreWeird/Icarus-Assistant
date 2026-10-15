@@ -1,0 +1,8 @@
+# Icarus's local model. Create it with:  ollama create icarus -f ollama/Modelfile
+# Qwen3-Coder 30B-A3B: a mixture-of-experts model, only about 3B parameters run per token,
+# so it answers in 1 to 3 s on an M3 Max. Best tool calling of the local models we tested.
+FROM hf.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:UD-Q4_K_XL
+
+# The default 262k context loads 44 GB. Our turns need well under 16k.
+PARAMETER num_ctx 16384
+PARAMETER temperature 0.2

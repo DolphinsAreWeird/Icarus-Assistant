@@ -64,3 +64,29 @@ def download_history(asset_id: str, asset: dict, fx: dict[str, float]) -> dict[s
 def load_history(asset_id: str, interval: str, history_dir=HISTORY_DIR) -> list[dict]:
     path = history_file(asset_id, interval, history_dir)
     return json.loads(path.read_text()) if path.exists() else []
+
+
+# Chart period -> (candle interval, number of candles)
+PERIODS = {"1d": ("1h", 24), "1w": ("1h", 168), "1m": ("1d", 30), "1y": ("1d", 365)}
+
+
+def period_rows(asset_id: str, period: str, history_dir=HISTORY_DIR) -> list[dict]:
+    interval, count = PERIODS[period]
+    return load_history(asset_id, interval, history_dir)[-count:]
+
+
+def summarize(rows: list[dict]) -> dict | None:
+    """What the LLM needs about a chart: start, end, change, high, low. Not every point."""
+    if not rows:
+        return None
+    first, last = rows[0], rows[-1]
+    high = max(rows, key=lambda r: r["close_thb"])
+    low = min(rows, key=lambda r: r["close_thb"])
+    return {
+        "start": {"t": first["t"], "close_thb": first["close_thb"]},
+        "end": {"t": last["t"], "close_thb": last["close_thb"]},
+        "change_pct": round((last["close_thb"] / first["close_thb"] - 1) * 100, 2),
+        "high": {"t": high["t"], "close_thb": high["close_thb"]},
+        "low": {"t": low["t"], "close_thb": low["close_thb"]},
+        "points": len(rows),
+    }

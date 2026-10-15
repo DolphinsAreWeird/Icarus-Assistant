@@ -30,3 +30,30 @@ OFFLINE=1 .venv/bin/python -m scripts.fetch_market   # no network, snapshot only
 Freshness of every price: `live` (under 2 min), `delayed` (last good value), `offline` (from the snapshot file).
 
 Mocked, say so on stage: fee schedule (`fees.json`), both users. Binance quotes in USDT; we treat 1 USDT as 1 USD.
+
+## The assistant (minimal version)
+
+Runs on a local model through Ollama: free, offline, about 1 to 3 s per answer on an M3 Max.
+
+One-time setup (about 18 GB download, needs about 19 GB of free memory while running):
+
+```
+ollama pull hf.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:UD-Q4_K_XL
+ollama create icarus -f ollama/Modelfile      # same weights, 16k context instead of 262k
+```
+
+The first question after a restart takes about 30 s while the model loads. After that it stays loaded for 2 hours.
+Other OpenAI-compatible providers still work if we need them: `LLM_PROVIDER=groq` + `GROQ_API_KEY`,
+or `LLM_PROVIDER=gemini` + `GEMINI_API_KEY`. `LLM_MODEL` overrides the model.
+
+```
+.venv/bin/uvicorn app.main:app --port 8000         # API, docs at http://localhost:8000/docs (OFFLINE=1 for snapshot only)
+.venv/bin/python -m scripts.chat --user u_new --screen asset_detail --asset gold --period 1m --focus asset.chart
+```
+
+| Endpoint | What |
+|---|---|
+| `POST /chat` | `{session_id, user_id, text, lang?, input_mode?, screen_context?}` -> `{text, speak, ui_actions, sources, debug}` |
+| `POST /trades/{preview_id}/confirm` | `{user_id}`. The only way a trade happens. Safe to call twice |
+| `GET /prices?ids=btc,gold`, `GET /history/{id}?period=1d/1w/1m/1y`, `GET /portfolio/{user_id}` | same data the tools use |
+| `POST /demo/reset`, `GET /health` | |
