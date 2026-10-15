@@ -14,6 +14,7 @@ from icarus_core import (ROOT, fee_quote, fee_text, guidance_context, invoke, lo
 from orion_probe import request
 from profile_context import merge_profile
 from data_adapter import adapter_tools
+from input_grounding import monetary_mentions, validate_monetary_arguments
 
 
 def number_tokens(text):
@@ -136,13 +137,7 @@ def source_only_explanation(message):
 
 def bound_amount_currencies(text):
     """Only a currency adjacent to an amount is a monetary input, not a topic mention."""
-    labels = {"usdt":"USDT","usd":"USD","eur":"EUR","thb":"THB","baht":"THB", "บาท":"THB",
-              "dollar":"USD","dollars":"USD","ดอลลาร์":"USD","$":"USD"}
-    pattern = r"\d+(?:,\d{3})*(?:\.\d+)?\s*(USDT|USD|EUR|THB|baht|dollars?|บาท|ดอลลาร์)(?![a-z])"
-    found = [labels[match[1].lower()] for match in re.finditer(pattern,text,re.IGNORECASE)]
-    if re.search(r"\$\s*\d",text):
-        found.append("USD")
-    return set(found)
+    return {mention["currency"] for mention in monetary_mentions(text)}
 
 
 def parse_data_command(message):
@@ -379,6 +374,7 @@ def answer(message, *, language="en", profile_id="new", today="2026-10-15", mode
                 args = json.loads(call["function"]["arguments"])
                 try:
                     validate_tool_currency(name,message,memory)
+                    validate_monetary_arguments(name,args,message,memory,profile)
                     data = call_tool(name,args)
                 except ValueError as exc:
                     data = {"status":"error","code":str(exc),"no_action_executed":True}
