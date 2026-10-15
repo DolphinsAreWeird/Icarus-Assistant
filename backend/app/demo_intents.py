@@ -38,11 +38,12 @@ def parse_intent(message):
     m = re.fullmatch(rf"(?:how did|how has)\s+({ALIASES})\s+(?:do|perform)(?:\s+(?:over|this|the past)\s+(?:a )?(year|month|week))?", t)
     if m:
         return "show_chart", {"asset_ids": [asset(m[1])], "period": {"month": "1M", "week": "1W"}.get(m[2], "1Y")}
-    m = re.fullmatch(rf"(?:walk me through buying|guide me through buying|สอนซื้อ)\s*({ALIASES})", t)
+    m = re.fullmatch(rf"(?:walk me through buying|guide me through buying|สอนซื้อ)\s*({ALIASES})(?: step by step)?", t)
     if m:
         return "guide_me", {"asset_id": asset(m[1])}
     simple = {
         "how do i buy": ("show_steps", {"topic": "buy"}), "ซื้อยังไง": ("show_steps", {"topic": "buy"}),
+        "show me how to buy": ("show_steps", {"topic": "buy"}),
         "freeze my card": ("set_card_frozen", {"frozen": True}), "ล็อกบัตรของฉัน": ("set_card_frozen", {"frozen": True}),
         "unfreeze my card": ("set_card_frozen", {"frozen": False}),
         "hide my balance": ("set_balances_hidden", {"hidden": True}), "show my balance": ("set_balances_hidden", {"hidden": False}),

@@ -157,7 +157,7 @@ async function main() {
               getPhone,
               log: (type, data) => (instance as { log?: (t: string, d?: unknown) => void } | null)?.log?.(type, data),
               onConfirmed: (_result, sentence) => {
-                void demo.refresh().catch(error => status(`Purchase confirmed; account refresh failed: ${error.message}`, 'error'));
+                void demo.confirmed().catch(error => status(`Purchase confirmed; account refresh failed: ${error.message}`, 'error'));
                 (window as unknown as { Icarus?: { receiveResponse?: (r: unknown) => void } }).Icarus?.receiveResponse?.({
                   text: sentence, speech: sentence, emotion: 'excited', speak: true, ui_actions: [],
                   sources: ['confirm_trade · demo account (simulated)'], suggestions: [], offer: null,

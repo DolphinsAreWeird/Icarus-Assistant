@@ -2,10 +2,13 @@
 so the demo history and live trades follow the same rules."""
 
 
+from decimal import Decimal, ROUND_HALF_UP
+
+
 def trade_fee(amount_thb: float, fees: dict) -> float:
     """Fee for a buy or sell worth amount_thb: a percent, with a minimum."""
-    fee = amount_thb * fees["trading_fee_pct"] / 100
-    return round(max(fee, fees["min_fee_thb"]), 2)
+    fee = Decimal(str(amount_thb)) * Decimal(str(fees["trading_fee_pct"])) / 100
+    return float(max(fee, Decimal(str(fees["min_fee_thb"]))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
 def buy_quantity(amount_thb: float, price_thb: float, fees: dict) -> tuple[float, float]:

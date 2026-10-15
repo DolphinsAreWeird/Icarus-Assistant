@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 import os
 import threading
 import time
+import re
 
 from app.assistant.checks import detect_language
 from app.assistant.loop import UnknownUser
@@ -99,6 +100,11 @@ def reply_envelope(result, snapshot_id):
         if tool == "explain_displayed_chart":
             spoken = (f"กราฟที่แสดงเปลี่ยนจาก {data['first_displayed_price']} เป็น {data['last_displayed_price']} {data['currency']} เปลี่ยนแปลง {data['displayed_change_pct']} เปอร์เซ็นต์ เป็นข้อมูลย้อนหลังที่บันทึกไว้" if th else
                       f"The displayed chart goes from {data['first_displayed_price']} to {data['last_displayed_price']} {data['currency']}, a change of {data['displayed_change_pct']} percent. These are saved historical observations.")
+            for summary in summaries:
+                if summary.get("source_id") == record["id"]:
+                    clean = spoken + f" ({data['start'][:10]} – {data['end'][:10]})"
+                    text = text.replace(summary["text"], clean)
+                    summary["text"] = clean
             break
         if tool == "get_portfolio" and "total_including_cash" in data:
             spoken = (f"พอร์ตจำลองรวมเงินสดมีมูลค่า {data['total_including_cash']} {data['currency']} ตรวจสอบรายละเอียดบนหน้าจอ" if th else
@@ -148,9 +154,11 @@ class ModelService:
                 adapter = SnapshotAdapter(payload)
                 context = model_screen_context(req.screen_context)
                 message = req.text
-                if message.strip().lower().rstrip("?.! ") in ("what does this chart mean", "explain this chart", "อธิบายกราฟนี้", "กราฟนี้หมายความว่าอะไร"):
+                chart_question = message.strip().lower().rstrip("?.! ")
+                if (re.fullmatch(r"what does (?:this )?(?:(?:gold|bitcoin|ethereum|pax gold) )?chart mean", chart_question)
+                    or chart_question in ("explain this chart", "อธิบายกราฟนี้", "กราฟนี้หมายความว่าอะไร")):
                     message = "/chart"
-                if message.strip().lower().rstrip("?.! ") in ("what is in my portfolio", "show my portfolio", "my portfolio", "พอร์ตของฉัน"):
+                if message.strip().lower().rstrip("?.! ") in ("what is in my portfolio", "show my portfolio", "explain my portfolio", "my portfolio", "พอร์ตของฉัน"):
                     message = "/portfolio"
                 result = session.ask(message, offline=self.offline, model=self.model,
                                      data_adapter=adapter, screen_context=context)

@@ -1,5 +1,7 @@
 # Backend checkpoints — 2026-10-16
 
+This file records the first integration phase. The subsequent connected demo, latest committed model import, live gateway check and comparison with main are documented in [DEMO_HANDOFF.md](DEMO_HANDOFF.md).
+
 ## 1. Baseline and design — `42f9af4`
 
 Created branch `backend` from `assistant-model` at `16ba286`, using `D:\Uhackathon\.worktrees\backend`. The original checkout stays on `assistant-model`; its uncommitted model edits were left untouched and are not included here. There was no branch literally named `model`.

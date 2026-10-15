@@ -39,7 +39,7 @@ const app = createApp({
   friction: createFrictionLogger(cfg.logDir),
 });
 
-const server = app.listen(cfg.port, () => {
+const server = app.listen(cfg.port, cfg.host ?? '127.0.0.1', () => {
   const line = (label: string, value: string) => console.log(`  ${label.padEnd(12)} ${value}`);
   console.log('\nIcarus voice server');
   line('Test page', `http://localhost:${cfg.port}`);

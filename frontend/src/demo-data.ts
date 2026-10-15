@@ -60,7 +60,7 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
     const old = original.calc!(id, raw, wallet);
     if (!bundle) return old;
     const total = Number(raw) || 0;
-    const fee = Math.round(Math.max(total * bundle.fees.trading_fee_pct / 100, bundle.fees.min_fee_thb) * 100) / 100;
+    const fee = Math.max(Math.round(Math.round(total * 100) * bundle.fees.trading_fee_pct / 100), Math.round(bundle.fees.min_fee_thb * 100)) / 100;
     const price = bundle.assets[id]?.price_thb;
     const avail = proto.state.thbBal;
     const ok = Number.isFinite(total) && total >= bundle.fees.min_buy_thb && total <= avail && Boolean(price) && wallet === 'thb';
@@ -95,6 +95,11 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
       perf: [], info: [{ k: 'Data', v: current?.freshness ?? 'unavailable' }, { k: 'Account', v: 'Simulated' }, { k: 'Gold proxy', v: 'PAXG' }],
       ...(proto.state.assetId === 'XAU' ? { name: 'PAX Gold', desc: 'Tokenized gold proxy (PAXG). Saved observations converted approximately to THB.' } : {}) };
     view.buy.unitPrice = `1 unit ≈ ${money(current?.price_thb ?? 0)}`;
+    if (proto.state.assetId === 'XAU') {
+      view.asset.qty = `${Number(proto.state.hold.XAU ?? 0).toFixed(8)} PAXG`;
+      view.buy.qty = `${Number(calc.qty).toFixed(8)} PAXG`;
+      if (proto.state.lastBuy?.asset === 'XAU') view.done.qty = `${Number(proto.state.lastBuy.qty).toFixed(8)} PAXG`;
+    }
     view.buy.fee = money(calc.fee); view.buy.total = money(calc.total); view.buy.amt = money(calc.amt);
     view.walletOpts = view.walletOpts.filter((w: any) => w.id === 'thb');
     view.allocList = view.allocList.map((a: any) => ({ ...a, value: a.value.replace('$', '฿'), change: 'Current valuation' }));
@@ -119,13 +124,20 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
         const preview = pending;
         await request(`/trades/${encodeURIComponent(preview.preview_id)}/confirm`, { user_id: userId });
         pending = null;
-        await refresh();
         proto.setState({ buyStep: 'done', lastBuy: { asset: proto.state.assetId, amt: preview.amount_thb - preview.fee_thb, fee: preview.fee_thb, total: preview.amount_thb, qty: preview.qty } });
+        finishTimer();
+        await refresh();
       }
     } catch (error) { onError((error as Error).message); }
     finally { busy = false; }
   };
   proto.toReview = () => bundle ? manual(false) : onError('Wait for the demo account to load before trading.');
   proto.confirm = () => bundle ? manual(true) : onError('Wait for the demo account to load before trading.');
-  return { refresh, ready: () => Boolean(bundle) };
+  const finishTimer = () => {
+    if (!proto.state.timer) return;
+    const timer = proto.state.timer, ms = Date.now() - timer.start;
+    proto.setState({ results: { ...proto.state.results, [timer.mode]: ms }, timer: null });
+    proto.log?.('timer', { mode: timer.mode, ms });
+  };
+  return { refresh, ready: () => Boolean(bundle), confirmed: () => { finishTimer(); return refresh(); } };
 }

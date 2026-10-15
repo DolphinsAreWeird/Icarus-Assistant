@@ -59,6 +59,8 @@ def _prepare_trade(state, cache, user_id, asset_id, side, amount_thb):
         if qty > held:
             raise TradeError("not_enough_holdings", held_value_thb=round(held * price_thb, 2))
         received, fee = sell_proceeds(amount_thb, fees)
+        if received <= 0:
+            raise TradeError("bad_amount")
         preview.update(fee_thb=fee, qty=round(qty, 8), you_get_thb=received)
 
     if "grams_per_unit" in asset:

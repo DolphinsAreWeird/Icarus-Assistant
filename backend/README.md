@@ -2,7 +2,7 @@
 
 ## Model branch integration (default)
 
-This backend now serves `model/session.py` through `POST /chat`. The original navigation/trade assistant is available with `ASSISTANT_ENGINE=legacy`. Model mode returns no executable UI or trade actions. Existing price, history, portfolio and simulated trade-confirmation routes remain available.
+This backend serves `model/session.py` through `POST /chat`, with focused demo commands mapped to the existing checked navigation, chart, guide and simulated trade-preview tools. The original assistant is available with `ASSISTANT_ENGINE=legacy`. Only an explicit confirmation tap changes the demo account. See [DEMO_HANDOFF.md](DEMO_HANDOFF.md) for the current demo runbook and comparison with main.
 
 Windows quick start from this worktree:
 
@@ -14,7 +14,7 @@ Copy-Item .env.example .env
 .venv\Scripts\python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-The example configuration serves saved market observations and offline retrieval previews. `/fee 1000`, `/prices THB btc gold`, `/prices USDT btc eth`, `/portfolio`, `/set goal retirement`, and `/profile` use deterministic model paths without gateway calls. Ordinary offline questions return a knowledge retrieval preview, labeled in the reply. `/chart` remains unavailable until exact displayed chart points and revisions are integrated.
+The example configuration serves saved market observations and offline retrieval previews. `/fee 1000`, `/prices THB btc gold`, `/prices USDT btc eth`, `/portfolio`, `/set goal retirement`, and `/profile` use deterministic model paths without gateway calls. Focused app commands also work offline. Ordinary offline questions return a labeled knowledge retrieval preview. The connected frontend now supplies chart revisions and display versions; `/chart` and the chart-help button resolve the exact server-owned displayed series. A missing or outdated version returns unavailable.
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8000/chat -Method Post -ContentType application/json -Body '{"session_id":"demo-1","user_id":"u_small","text":"/prices THB btc gold","lang":"en"}'
@@ -24,7 +24,7 @@ For gateway reasoning, set `ICARUS_MODEL_OFFLINE=0`, `ICARUS_LLM_BASE_URL`, `ICA
 
 Open the existing frontend at `http://localhost:8787/app/?backend&user=u_small`. The backend allows the local frontend origins on ports 8787, 5173 and 3000 by default; use `CORS_ORIGINS` for an explicit comma-separated override.
 
-The reply retains `text`, `speak`, `ui_actions`, `sources`, `debug` and adds `speech`, `status`, `numerical_summaries`, `limitations`, `disclaimer`, and `evidence`. `text` already includes the summaries and caveats for existing clients. A richer client should render either that combined text or its structured components to avoid duplication. Full source origin, observation times, currency and delivery labels are in `evidence`.
+The reply retains `text`, `speak`, `ui_actions`, `sources`, `debug` and adds `speech`, `speech_exact`, `status`, `numerical_summaries`, `limitations`, `disclaimer`, `evidence`, `emotion`, and `suggestions`. `text` includes summaries and caveats. `speech` selects a concise verified script; the existing voice service preserves exact numerical values when `speech_exact` is true. Full source origin, observation times, currency and delivery labels are in `evidence`.
 
 Sessions are isolated by demo user and session ID, expire after 30 idle minutes, and are capped at 128. A busy conversation or a full session store returns a structured HTTP 429; reset during an active model turn returns 409. `/demo/reset` clears both demo accounts and model conversations. This is single-process, in-memory demo state: run one worker, on loopback. User IDs are demo selectors and provide no authentication.
 

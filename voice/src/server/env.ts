@@ -11,6 +11,7 @@ export const VOICE_ROOT = path.resolve(here, '../..');
 
 export interface ServerConfig {
   port: number;
+  host?: string;
   /** undefined when not set. Required for real ElevenLabs calls. */
   apiKey: string | undefined;
   /** Use fake ElevenLabs audio and tokens. For working on the UI with no key and no credits. */
@@ -103,6 +104,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
 
   return {
     port: num(env.PORT, 8787),
+    host: env.VOICE_HOST?.trim() || '127.0.0.1',
     apiKey: orUndefined(env.ELEVENLABS_API_KEY),
     fakeElevenLabs: fake,
     restBaseUrl: orUndefined(env.ELEVENLABS_BASE_URL),
