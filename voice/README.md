@@ -31,8 +31,10 @@ No key or credits yet? `npm run dev:fake` gives fake tones instead of speech and
 | `npm run dev` | Server and test page (rebuilds the browser code first) |
 | `npm run dev:fake` | Same, with fake ElevenLabs. No key needed |
 | `npm run check` | Checks the key, models, Thai support, voice IDs, token minting against the live API. Add `-- --speak` to hear a test line |
-| `npm run pregenerate` | Makes the demo audio files in `demo-audio/`. `-- --dry` shows the credit cost first |
+| `npm run pregenerate` | Makes the demo audio files in `demo-audio/`. `-- --dry` shows the credit cost first. `-- --verify` checks every clip with the live Scribe, amounts included |
 | `npm run bench` | Measures the pipeline speed with no mic. Reports real numbers |
+| `npm run voices` | Lists voices and measures their pitch from the free samples (no credits). `-- --library --lang th` searches the Voice Library |
+| `npm run audition` | Makes the finalist voices say our lines, then measures pitch, speed, and whether Scribe understood them and the amounts |
 | `npm run build:client` | Builds `dist/icarus-voice.js` for the frontend |
 | `npm test` | Unit and integration tests |
 
@@ -158,7 +160,7 @@ export function useIcarusVoice(serverUrl: string) {
 
 Notes:
 
-- **Voices.** Both languages currently use **Sarah** (a premade voice, `EXAVITQu4vr4xnSDxMaL`) as a stand-in. ElevenLabs does not list Thai as a verified language for any of the 21 premade voices on the account, but the Thai model speaks it, and Scribe transcribed our Thai speech back exactly. **A Thai speaker still has to listen**, and may want a different Thai voice. Pick voices on the ElevenLabs **Voices** page, copy each voice ID into `VOICE_ID_EN` and `VOICE_ID_TH`, then run `npm run check -- --speak`.
+- **Voices.** English is **Brittney** (`XiPS9cXxAVbaIWtGDHDh`) and Thai is **Malee** (`mYcpTKg1oj1H5CtzUZNO`), both from the ElevenLabs Voice Library, picked on 15 Oct for the cute theme after an audition (see [Choosing the voices](#choosing-the-voices)). Before that, Sarah (a premade voice) was a stand-in. **A Thai speaker still has to listen to Malee.**
 - **Key permissions.** A restricted key works for the app if it has **Text to Speech** and **Speech to Text**. `npm run check` also wants **Models: read** and **Voices: read**, and explains if they are missing.
 - If ElevenLabs text-to-speech fails, the module falls back to the browser's own voice (macOS has an English voice and a Thai one called Kanya). It sounds different, but everything keeps working.
 
@@ -182,16 +184,85 @@ await voice.start(); // inside a click
 
 If a reply has a separate `speech` field, our server speaks that instead of `text`. `emotion` is passed through on the `assistantReply` event.
 
+## U-Bot: "Ask U-topia" and handoffs
+
+[U-Bot](https://u.bot/) is U-topia's own AI assistant (its page calls it "agentic payments"). It is behind a login and we found **no public API**. The organizers want us to use it, so we do two things now, with a mock where the real thing is missing:
+
+1. **Ask U-topia (mocked).** A question like "What is U-Coin?" is answered from a small glossary (`src/config/utopia-glossary.ts`). Every answer is built only from what U-topia says publicly and from our context file, is marked **unverified**, and the app labels it: *"Based on: Mock answer, not checked by U-topia yet"*. The glossary only **defines** things. "How do I...", fees or "my payment failed" go to U-Bot instead of getting a guess.
+2. **Handoff (real link, no API needed).** Things Icarus cannot do are handed to U-Bot with a card and an **Open U-Bot** button: travel, rides and groceries (U-Bot's own screens say "Review & pay in U-topia Pay" for these), non-finance tasks (drawing, writing, building apps, translating, weather), U-topia questions the glossary cannot answer, and a request the prototype does not understand (a real request, not a misheard word).
+
+**Never handed off: advice.** "What should I buy?" and "Should I buy U-Coin?" are refused by Icarus itself (hard rule 1). A test checks this for 8 phrasings in English and Thai.
+
+How it flows: `POST /api/utopia/route { text, language, fallback? }` answers `{ kind: 'answer' | 'handoff' | 'none' }`. The app asks before every request. `none` means a normal in-app request and Icarus answers as always. If the voice server is down, nothing changes. The mock assistant in `voice/` uses the same service, and its handoff reply carries a new UI action:
+
+```json
+{ "type": "handoff", "target": "u-bot", "reason": "commerce", "label": "Open U-Bot", "url": "https://u.bot/", "question": "book me a flight to Phuket" }
+```
+
+`handoff` is **not in the context.md contract**. Agree it with Luka, First and Oasis. We also propose two agent tools: `ask_utopia(question, language)` and `handoff_to_ubot(reason, question, language)`. Both are covered by `UtopiaService.route()` in `src/server/utopia/service.ts`.
+
+**The U-Bot mock (`UBOT_MODE=mock`, the default).** The real U-Bot's front door needs a login and has no deep link, so on stage a handoff would end at a sign-in page. Instead, "Open U-Bot" opens our **U-Bot mock** (`/app/?page=ubot&session=...`), clearly marked MOCK, with the user's question carried over. It shows sample options (rides, flights, hotels, groceries, food) and a "Review & pay in U-topia Pay" step like U-Bot's own screens. Nothing is booked and no money moves, and the page says so. The link holds a session id, not the question: the user's words stay on the server (`src/server/ubot-mock/`, sessions expire after an hour). Sample data is in `src/config/ubot-mock.ts`. `UBOT_MODE=link` goes back to the real front door.
+
+The mock also serves the "Ask U-topia" API we propose (`POST /mock/ubot/ask`). Set `UTOPIA_MODE=http` and `UTOPIA_URL=http://localhost:8787/mock/ubot/ask` to run the whole HTTP path; answers from the mock are labelled mock, never "U-Bot". A test does exactly this.
+
+**When U-Bot has an API:** set `UTOPIA_MODE=http` and `UTOPIA_URL` (and `UTOPIA_API_KEY` if needed). The request we propose is in `src/server/utopia/knowledge.ts` (`HttpUtopiaKnowledge`). It is **our proposal, not their contract, and untested against a real U-Bot**. It mirrors what U-Bot's own app does: its "Ask U-Topia" mode puts `[Context: question is about U-Topia]` in front of the question. Whatever a real LLM answers is screened before Icarus says it (`src/server/utopia/safety.ts`): **no digits, currency signs or "percent"** (hard rule 3), **no advice or guarantees** (hard rule 1). An answer that fails is not shown, and the user is handed to U-Bot instead. A failing, slow or empty U-Bot also becomes a handoff.
+
+**Until then, the best upgrade is manual.** Ask U-Bot the glossary questions yourself, check its answers, paste them into `utopia-glossary.ts` and set `verified: true` with `checkedBy` and `checkedOn`. A test fails if an entry claims to be verified without those, or if any answer contains a number.
+
+Limits to know:
+- With `UBOT_MODE=link`, the **Open U-Bot** link goes to U-Bot's front door and the user must sign in. U-Bot has **no public deep link** (we looked), so the card also offers **Copy my question** to paste there. The mock is what a deep link could look like: ask U-topia for one.
+- What we know about U-Bot comes from its public page and its static code, not from a logged-in session. We never called its private endpoints.
+- Say on stage that this is a mock plus a handoff (hard rule 5). The mock page says MOCK and "sample" on screen.
+- Ask Maya Nicks (U-topia's head of AI, who designed U-Bot): what counts as "using U-Bot", whether there is an API or test account, whether a deep link or prefilled question is possible, and whether we may build our glossary from its answers.
+
+## Choosing the voices
+
+`npm run voices` lists every voice on the account and measures its **real pitch** from the free sample ElevenLabs publishes (no credits used). Add `--library --lang th` to search the public Voice Library, and filters like `--gender female --age young --descriptive cute`. It prints the pitch in Hz, a band (low, mid-low, mid, HIGH, VERY HIGH), whether a free plan may use the voice, and a link to listen. Pitch is a guide, not a verdict: a person has to listen.
+
+Library voices **do not need to be added** to the account: on a paid plan, text-to-speech takes a library voice ID directly (we checked). Adding one to "My Voices" is optional and needs a key with the **Voices: write** permission (ours does not have it). Put the ID in `VOICE_ID_EN` or `VOICE_ID_TH` and run `npm run check -- --speak`. English and Thai can be two different voices. A free-plan key cannot use most library voices.
+
+### The audition (15 Oct): how we picked Brittney and Malee
+
+`npm run audition` makes every finalist (in `src/config/voice-candidates.ts`) say **our** lines: the greeting, the red-number explanation, the money read-back and the U-Bot handoff. It saves WAV files to `auditions/` (not committed) so people can listen, and measures each voice: the real pitch of what it said, the time to the first audio, how well the live Scribe understood it, and whether every **amount** came back right (1,000 / 15 / 1,015, whether Scribe writes digits or words). About 2,500 characters for all seven.
+
+| Voice | Language | Pitch (sample / saying our lines) | First audio (first / later) | Scribe understood (worst / average) | Amounts | Library tags |
+|---|---|---|---|---|---|---|
+| **Brittney** (picked) | EN | 308 / 276 Hz | 224 / 159 ms | 96% / 99% | all right | young, cute, social media, explainers |
+| Callie | EN | 254 / 222 to 258 Hz | 337 / 173 ms | 96% / 99% | all right | young, cute, conversational |
+| Emma | EN | 296 / 276 Hz | 148 / 168 ms | 96% / 99% | all right | young, cute, **animation characters** |
+| Jessica (premade) | EN | 219 / 216 Hz | 152 / 188 ms | 95% / 99% | all right | playful, warm |
+| **Malee** (picked) | TH | 281 / 271 Hz | 232 / 184 ms | 91% / 98% | all right | bright, cheerful, social media |
+| Aom | TH | 250 / 242 Hz | 129 / 183 ms | 91% / 98% | all right | smooth, calm, advertising |
+| Nueng | TH | 314 / 276 Hz | 130 / 171 ms | 91% / 97% | all right | **fast and loud**, social media |
+
+Every voice was understood and said every amount right, so the choice came down to pitch and style:
+
+- **Brittney**: the theme asks for a high voice, and she stays high (about 276 Hz) while explaining, which is Icarus's job. Callie wanders between 222 and 258 Hz, close to an ordinary voice. Emma is made for cartoons, which is wrong for reading money back.
+- **Malee**: the same pitch as Brittney (271 against 276 Hz), so Icarus sounds like one character in both languages. Nueng is described as fast and loud (Icarus should be calm). Aom is calm but lower.
+- The worst scores (91 to 96%) are all the U-Bot line: Scribe writes "U-Bot" as "YouBot" and "You topia Pay" as "Utopia Pay". It is the same for every voice.
+
+**Alternates, one line in `.env` each:** if Brittney sounds too peppy for money, use Callie (`7YaUDeaStRuoYg3FKsmU`). If Malee is too quick on the Thai read-back, use Aom (`nealpwJT5tCyJFKDzEq8`). Then run `npm run pregenerate -- --clean --verify` and commit `demo-audio/`.
+
+Things to know:
+
+- **Listen before the demo.** Numbers cannot tell you whether a voice sounds nice, and a Thai speaker has to check Malee. Thai lines leave out ค่ะ and ครับ: add ค่ะ to match Malee if the Thai reviewer wants it.
+- **First use is slow.** In one run, a library voice that had not spoken yet took 2 to 3 s to its first audio, then about 150 ms. The server now says one short word in each voice at start and every 20 minutes (`TTS_WARMUP_MINUTES`, a few characters each time).
+- **A library voice can disappear** if its owner removes it. Then text-to-speech fails with a clear "bad voice" error, the app falls back to the browser's voice, and the committed demo audio still plays.
+- `npm run pregenerate -- --verify` plays every demo clip into the live Scribe and fails if an amount is wrong. The committed demo audio (Brittney) passed: every line understood, every amount right.
+
 ## Connect the real assistant
 
-One config change in `.env`:
+Luka and First's backend (`../backend`, FastAPI) is the real brain. Start it, then three lines in `.env`:
 
 ```
 ASSISTANT_MODE=http
-ASSISTANT_URL=http://localhost:3000/ask
+ASSISTANT_URL=http://localhost:8000/chat
+ASSISTANT_USER_ID=u_new
 ```
 
-The server POSTs `{ text, language, snapshot, userId }` and expects `{ text, speak, ui_actions, sources }` back (`context.md` section 8). Or write a class with `ask(req)` and return it from `src/server/assistant/index.ts`.
+The adapter (`src/server/assistant/http.ts`) speaks their contract (`backend/app/contracts.py`): it sends `{ session_id, user_id, text, lang, input_mode: "voice", screen_context }` and turns their `card` actions into our `show_card`. It also sends the older fields (`language`, `snapshot`, `userId`); the backend ignores them. `ASSISTANT_USER_ID` matters: the backend only knows its demo users (`u_new`, `u_small`). The backend's own error messages (busy, not set up, price expired) are spoken in English or Thai instead of a generic failure.
+
+**Money.** The backend's trade card says what the user pays **with the fee included** (`you_pay_thb`). The read-back is built from it so the numbers add up: "nine hundred ninety-five baht into gold. Fee five baht. Total one thousand baht." (`src/shared/backend-card.ts`). For a sale the last part is "You get ...". If a number is missing, there is no read-back and no voice confirm: the user taps the card. Checked end to end on 15 Oct against the real backend code (with a stand-in for the model, see `../INTEGRATION.md`).
 
 The reply is not streamed. Whatever time the real assistant takes is added to the wait before Icarus speaks.
 
@@ -297,8 +368,11 @@ voice/
     elevenlabs-check.ts   npm run check
     pregenerate.ts        npm run pregenerate
     bench.ts              npm run bench
+    voice-scout.ts        npm run voices (pitch from the free samples)
+    voice-audition.ts     npm run audition (finalists say our lines, then get measured)
   src/
-    config/               everything editable: strings, commands, keyterms, thresholds, demo lines
+    config/               everything editable: strings, commands, keyterms, thresholds, demo lines,
+                          the U-topia glossary, handoff rules, voice finalists
     shared/               code used by both the server and the browser
       types.ts            the contracts and event types
       speech-format.ts    text to speakable text (markdown, money, percent, dates, short version)
@@ -330,6 +404,9 @@ voice/
       usage.ts            credit counting
       friction.ts         the friction log stub
       assistant/          mock, HTTP adapter, and the one switch
+      utopia/             "Ask U-topia" (mock glossary or HTTP) and handoffs to U-Bot, with the safety screen
+      warmup.ts           says one word in each voice at start, so the first real reply is fast
+      transcribe.ts       plays a clip into the live Scribe and checks words and amounts (scripts only)
       pregenerate.ts      logic behind npm run pregenerate
       bench.ts            logic behind npm run bench
       fake-elevenlabs.ts  fake TTS, for dev and tests

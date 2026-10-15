@@ -29,6 +29,8 @@ export interface ServerConfig {
   ttsOutputFormat: string;
   ttsSampleRate: number;
   ttsMaxChars: number;
+  /** Say one short word in each voice at start and every this many minutes (first use of a voice is slow). 0 = off. */
+  ttsWarmupMinutes: number;
 
   stt: {
     commitStrategy: 'manual' | 'vad';
@@ -41,9 +43,22 @@ export interface ServerConfig {
     droppedKeyterms: string[];
   };
 
+  /** Where answers about U-topia come from. mock = our glossary. http = a real U-Bot endpoint (none exists yet). */
+  utopiaMode: 'mock' | 'http';
+  utopiaUrl: string | undefined;
+  /** Stays on the server. Never sent to the browser. */
+  utopiaApiKey: string | undefined;
+  utopiaTimeoutMs: number;
+  /** Where the "Open U-Bot" button goes. */
+  ubotUrl: string;
+  /** mock: "Open U-Bot" opens our U-Bot mock with the question. link: the real U-Bot's front door. */
+  ubotMode: 'mock' | 'link';
+
   assistantMode: 'mock' | 'http';
   assistantUrl: string | undefined;
   assistantTimeoutMs: number;
+  /** Sent as user_id to the real assistant. Its backend only knows its demo users (u_new, u_small). */
+  assistantUserId: string | undefined;
   mockDelayMs: number;
 
   cacheDir: string;
@@ -76,6 +91,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   const mode = (env.ASSISTANT_MODE?.trim() || 'mock') as ServerConfig['assistantMode'];
   if (!['mock', 'http'].includes(mode)) throw new Error(`ASSISTANT_MODE must be mock or http, got "${mode}"`);
 
+  const utopiaMode = (env.UTOPIA_MODE?.trim() || 'mock') as ServerConfig['utopiaMode'];
+  if (!['mock', 'http'].includes(utopiaMode)) throw new Error(`UTOPIA_MODE must be mock or http, got "${utopiaMode}"`);
+
+  const ubotMode = (env.UBOT_MODE?.trim() || 'mock') as ServerConfig['ubotMode'];
+  if (!['mock', 'link'].includes(ubotMode)) throw new Error(`UBOT_MODE must be mock or link, got "${ubotMode}"`);
+
   const { kept, dropped } = sanitizeKeyterms(KEYTERMS);
   const origins = env.ALLOWED_ORIGINS?.trim();
   const fake = bool(env.FAKE_ELEVENLABS, false);
@@ -96,6 +117,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     ttsOutputFormat: outputFormat,
     ttsSampleRate: Number(pcm[1]),
     ttsMaxChars: num(env.TTS_MAX_CHARS, 1000),
+    ttsWarmupMinutes: num(env.TTS_WARMUP_MINUTES, 20),
 
     stt: {
       commitStrategy: strategy,
@@ -111,9 +133,17 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
       droppedKeyterms: dropped,
     },
 
+    utopiaMode,
+    utopiaUrl: orUndefined(env.UTOPIA_URL),
+    utopiaApiKey: orUndefined(env.UTOPIA_API_KEY),
+    utopiaTimeoutMs: num(env.UTOPIA_TIMEOUT_MS, 8000),
+    ubotUrl: orUndefined(env.UBOT_URL) ?? 'https://u.bot/',
+    ubotMode,
+
     assistantMode: mode,
     assistantUrl: orUndefined(env.ASSISTANT_URL),
     assistantTimeoutMs: num(env.ASSISTANT_TIMEOUT_MS, 15_000),
+    assistantUserId: orUndefined(env.ASSISTANT_USER_ID),
     mockDelayMs: num(env.MOCK_ASSISTANT_DELAY_MS, 120),
 
     cacheDir: path.resolve(VOICE_ROOT, env.AUDIO_CACHE_DIR?.trim() || '.audio-cache'),
@@ -124,6 +154,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
 }
 
 /** Replace the API key with [redacted] in anything we print. */
-export function makeRedactor(apiKey: string | undefined): (text: string) => string {
-  return (text: string) => (apiKey ? text.split(apiKey).join('[redacted]') : text);
+export function makeRedactor(...secrets: Array<string | undefined>): (text: string) => string {
+  const keys = secrets.filter((s): s is string => Boolean(s));
+  return (text: string) => keys.reduce((out, key) => out.split(key).join('[redacted]'), text);
 }

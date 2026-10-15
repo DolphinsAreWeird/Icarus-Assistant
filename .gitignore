@@ -24,3 +24,6 @@ voice/logs/
 .DS_Store
 .vscode/
 .idea/
+
+# Voice auditions (WAV files made by npm run audition)
+voice/auditions/

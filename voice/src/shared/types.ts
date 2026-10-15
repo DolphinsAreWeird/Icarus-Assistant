@@ -29,13 +29,47 @@ export type Snapshot = Record<string, unknown>;
 export type UiAction =
   | { type: 'highlight'; element_id: string; message?: string }
   | { type: 'show_card'; card_type: string; data: Record<string, unknown> }
-  | { type: 'navigate'; screen: string };
+  | { type: 'navigate'; screen: string }
+  /**
+   * NOT in the contract yet. Icarus cannot do this one, so it hands the user to U-Bot.
+   * The frontend shows a card with a link. See shared/types.ts Handoff and docs in voice/README.md.
+   */
+  | { type: 'handoff'; target: 'u-bot'; reason: HandoffReason; label: string; url: string; question: string };
+
+/** Why we hand off. */
+export type HandoffReason =
+  | 'utopia_question' // a question about U-topia that our glossary cannot answer
+  | 'commerce' // travel, rides, grocery orders: U-Bot prepares them, the user reviews and pays in U-topia Pay
+  | 'general'; // something else Icarus is not built for (drawing, writing, building apps, anything unclear)
+
+export interface Handoff {
+  target: 'u-bot';
+  reason: HandoffReason;
+  /** Button text. */
+  label: string;
+  /** What Icarus says. Always shown on screen. */
+  message: string;
+  /** Where the button goes. U-Bot has no public deep link, so this is its front door. */
+  url: string;
+  /** The user's own words, so they can paste them into U-Bot. */
+  question: string;
+  /** true when the button opens our U-Bot MOCK (UBOT_MODE=mock), not the real U-Bot. */
+  mock?: boolean;
+}
+
+/** What the U-topia router decided for a request. */
+export type UtopiaRoute =
+  | { kind: 'answer'; answer: string; language: Lang; source: 'mock' | 'u-bot'; verified: boolean; topic: string }
+  | { kind: 'handoff'; handoff: Handoff; language: Lang }
+  | { kind: 'none' };
 
 export interface AssistantRequest {
   text: string;
   language: LangSetting;
   snapshot?: Snapshot;
   userId: string;
+  /** One conversation (the backend keeps the history per user and session). */
+  sessionId?: string;
 }
 
 export interface AssistantReply {

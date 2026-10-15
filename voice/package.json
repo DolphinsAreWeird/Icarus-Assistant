@@ -16,7 +16,9 @@
     "predev": "npm run build:client && npm run build:app",
     "prestart": "npm run build:client && npm run build:app",
     "dev:fake": "FAKE_ELEVENLABS=1 npm run dev",
-    "build:app": "node scripts/build-app.mjs"
+    "build:app": "node scripts/build-app.mjs",
+    "voices": "tsx scripts/voice-scout.ts",
+    "audition": "tsx scripts/voice-audition.ts"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.72.0",

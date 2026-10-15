@@ -52,7 +52,7 @@ describe('/api/ask with the mock assistant', () => {
   it('speaks the assistant\'s own `speech` script when it provides one (as in the Oasis prototype)', async () => {
     const s = makeStack();
     const app = (await import('../src/server/app')).createApp({
-      cfg: s.cfg, tts: s.tts, port: s.port, usage: s.usage, friction: () => undefined, log: () => undefined,
+      cfg: s.cfg, tts: s.tts, port: s.port, usage: s.usage, utopia: s.utopia, friction: () => undefined, log: () => undefined,
       assistant: { ask: async () => ({ text: 'Gold is down \u20bf-2.3% (\u0e3f1,015). Details below.', speech: 'Gold is down about 2 percent today. Want a closer look?', emotion: 'curious', speak: true, ui_actions: [], sources: [] }) },
     });
     const srv = await listen(app);
@@ -85,7 +85,7 @@ describe('/api/ask with the mock assistant', () => {
     const seen: unknown[] = [];
     const s = makeStack();
     const app = (await import('../src/server/app')).createApp({
-      cfg: s.cfg, tts: s.tts, port: s.port, usage: s.usage, friction: () => undefined, log: () => undefined,
+      cfg: s.cfg, tts: s.tts, port: s.port, usage: s.usage, utopia: s.utopia, friction: () => undefined, log: () => undefined,
       assistant: { ask: async (req) => { seen.push(req); return { text: 'ok', speak: false, ui_actions: [], sources: [] }; } },
     });
     const srv = await listen(app);
@@ -93,13 +93,13 @@ describe('/api/ask with the mock assistant', () => {
     const res = await fetch(`${srv.base}/api/ask`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: 'hi there', language: 'en', snapshot, userId: 'u9' }) });
     expect(((await res.json()) as AskResponse).speech).toBeNull(); // speak:false means silence
     await srv.close();
-    expect(seen[0]).toEqual({ text: 'hi there', language: 'en', snapshot, userId: 'u9' });
+    expect(seen[0]).toEqual({ text: 'hi there', language: 'en', snapshot, userId: 'u9', sessionId: expect.any(String) });
   });
 
   it('offers no read-back when the preview card is incomplete', async () => {
     const s = makeStack();
     const app = (await import('../src/server/app')).createApp({
-      cfg: s.cfg, tts: s.tts, port: s.port, usage: s.usage, friction: () => undefined, log: () => undefined,
+      cfg: s.cfg, tts: s.tts, port: s.port, usage: s.usage, utopia: s.utopia, friction: () => undefined, log: () => undefined,
       assistant: { ask: async () => ({ text: 'Preview ready.', speak: true, sources: [], ui_actions: [{ type: 'show_card', card_type: 'preview', data: { preview_id: 'p', side: 'buy', asset: 'gold', amount: 1000, currency: 'THB' } }] }) },
     });
     const srv = await listen(app);
@@ -114,7 +114,7 @@ describe('/api/ask with the mock assistant', () => {
     expect((await post('/api/ask', { text: 'x'.repeat(2001) })).status).toBe(400);
     const s = makeStack();
     const app = (await import('../src/server/app')).createApp({
-      cfg: s.cfg, tts: s.tts, port: s.port, usage: s.usage, friction: () => undefined, log: () => undefined,
+      cfg: s.cfg, tts: s.tts, port: s.port, usage: s.usage, utopia: s.utopia, friction: () => undefined, log: () => undefined,
       assistant: { ask: async () => { throw new Error('boom ' + SECRET_KEY); } },
     });
     const srv = await listen(app);
@@ -223,5 +223,80 @@ describe('other endpoints', () => {
     expect(res.headers.get('access-control-allow-origin')).toBe('*');
     const pre = await fetch(`${server.base}/api/ask`, { method: 'OPTIONS' });
     expect(pre.status).toBe(204);
+  });
+});
+
+describe('/api/utopia/route (U-topia questions and handoffs to U-Bot)', () => {
+  const route = async (body: unknown) => (await (await post('/api/utopia/route', body)).json()) as Record<string, unknown>;
+
+  it('answers a definition from the mock glossary, clearly marked as mock', async () => {
+    expect(await route({ text: 'What is U-Coin?', language: 'en' })).toMatchObject({
+      kind: 'answer', source: 'mock', verified: false, topic: 'u-coin', answer: 'U-Coin is the native token of the U-topia ecosystem.',
+    });
+  });
+
+  it('hands off what Icarus cannot do, with a link to U-Bot and the user\'s own words', async () => {
+    const r = await route({ text: 'book me a flight to Phuket', language: 'en' });
+    expect(r).toMatchObject({ kind: 'handoff', handoff: { target: 'u-bot', reason: 'commerce', url: 'https://u.bot/', label: 'Open U-Bot', question: 'book me a flight to Phuket' } });
+  });
+
+  it('uses the language of the question when asked to auto-detect (the default)', async () => {
+    expect(await route({ text: 'ยูคอยน์คืออะไร' })).toMatchObject({ kind: 'answer', language: 'th' });
+  });
+
+  it('says none for normal requests and for advice', async () => {
+    expect(await route({ text: 'show me gold' })).toEqual({ kind: 'none' });
+    expect(await route({ text: 'Should I buy U-Coin?' })).toEqual({ kind: 'none' });
+  });
+
+  it('offers a handoff only on a real fallback', async () => {
+    expect(await route({ text: 'can you check the train times to Hua Hin', fallback: true })).toMatchObject({ kind: 'handoff' });
+    expect(await route({ text: 'can you check the train times to Hua Hin' })).toEqual({ kind: 'none' });
+  });
+
+  it('validates the request', async () => {
+    expect((await post('/api/utopia/route', { text: '' })).status).toBe(400);
+    expect((await post('/api/utopia/route', { text: 'x'.repeat(1001) })).status).toBe(400);
+  });
+
+  it('is reported in /api/health', async () => {
+    expect(await (await fetch(`${server.base}/api/health`)).json()).toMatchObject({ utopia: 'mock' });
+  });
+});
+
+describe('the mock assistant: U-topia answers and handoffs', () => {
+  it('answers "what is U-Coin" from the glossary and says where it came from', async () => {
+    const r = await ask('What is U-Coin?');
+    expect(r.reply.text).toBe('U-Coin is the native token of the U-topia ecosystem.');
+    expect(r.reply.sources[0]).toMatch(/not verified by U-topia/);
+    expect(r.reply.ui_actions).toEqual([]);
+    expect(r.speech?.text).toBe('U-Coin is the native token of the You topia ecosystem.'); // "U-topia" is spoken as "You topia"
+  });
+
+  it('hands off travel with a handoff action the frontend can show', async () => {
+    const r = await ask('book me a flight to Phuket');
+    expect(r.reply.ui_actions).toEqual([{ type: 'handoff', target: 'u-bot', reason: 'commerce', label: 'Open U-Bot', url: 'https://u.bot/', question: 'book me a flight to Phuket' }]);
+    expect(r.reply.text).toContain('U-Bot can help with travel');
+    expect(r.speech?.kind).toBe('reply');
+    expect(r.reply.sources).toEqual(['handoff:u-bot']);
+  });
+
+  it('answers a Thai definition in Thai', async () => {
+    const r = await ask('ยูคอยน์คืออะไร', 'th');
+    expect(r.speech?.language).toBe('th');
+    expect(r.reply.text).toContain('ยูคอยน์');
+  });
+
+  it('still refuses advice itself and never hands it to U-Bot', async () => {
+    for (const q of ['what should I buy?', 'Should I buy U-Coin?']) {
+      const r = await ask(q);
+      expect(r.reply.ui_actions.some((a) => a.type === 'handoff'), q).toBe(false);
+    }
+    expect((await ask('what should I buy?')).speech?.text).toMatch(/^I can't pick investments for you/);
+  });
+
+  it('keeps the normal mock replies working', async () => {
+    expect((await ask('take me to gold')).speech?.text).toBe('Sure, taking you to gold.');
+    expect((await ask('put 1,000 baht in gold')).preview).toMatchObject({ amount: 1000 });
   });
 });

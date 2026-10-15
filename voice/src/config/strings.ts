@@ -39,6 +39,8 @@ export interface Strings {
     deposit: string;
     fee: string;
     total: string;
+    /** For a sale the total is what the user receives. */
+    totalSell: string;
     prompt: string;
   };
   /** Fixed lines. These are cached, so they cost credits only once. */
@@ -51,6 +53,8 @@ export interface Strings {
     nothingToRepeat: string;
     longReplyPointer: string;
     previewUnreadable: string;
+    /** After a read-back when confirming is by tap only (the app's preview card). */
+    tapToConfirm: string;
   };
   /** Words the speech engine may get wrong. Left side is replaced by the right side. */
   pronunciations: Record<string, string>;
@@ -107,6 +111,7 @@ export const STRINGS: Record<Lang, Strings> = {
       deposit: 'Deposit {amount} {currency}.',
       fee: 'Fee {fee} {currency}.',
       total: 'Total {total} {currency}.',
+      totalSell: 'You get {total} {currency}.',
       prompt: 'Say confirm or cancel.',
     },
     lines: {
@@ -118,6 +123,7 @@ export const STRINGS: Record<Lang, Strings> = {
       nothingToRepeat: "I haven't said anything yet.",
       longReplyPointer: 'The rest is on your screen.',
       previewUnreadable: "I can't read that out loud. Please check the card on your screen.",
+      tapToConfirm: 'Tap Confirm on the card when you are ready.',
     },
     pronunciations: {
       'U-topia': 'You topia',
@@ -175,6 +181,8 @@ export const STRINGS: Record<Lang, Strings> = {
       deposit: 'ฝากเงิน {amount} {currency}.',
       fee: 'ค่าธรรมเนียม {fee} {currency}.',
       total: 'รวมทั้งหมด {total} {currency}.',
+      // THAI REVIEW: "you receive" for a sale.
+      totalSell: 'ได้รับ {total} {currency}.',
       prompt: 'พูดว่า ยืนยัน หรือ ยกเลิก',
     },
     lines: {
@@ -186,6 +194,8 @@ export const STRINGS: Record<Lang, Strings> = {
       nothingToRepeat: 'ยังไม่มีอะไรให้พูดซ้ำ',
       longReplyPointer: 'ที่เหลืออ่านได้บนหน้าจอ',
       previewUnreadable: 'อ่านรายการนี้ออกเสียงไม่ได้ ช่วยดูการ์ดบนหน้าจอ',
+      // THAI REVIEW: "tap Confirm on the card when ready".
+      tapToConfirm: 'พร้อมเมื่อไหร่ แตะยืนยันบนการ์ดได้เลย',
     },
     pronunciations: {
       'U-topia': 'ยูโทเปีย',

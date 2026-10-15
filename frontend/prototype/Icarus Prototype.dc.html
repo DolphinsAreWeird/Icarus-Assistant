@@ -835,8 +835,12 @@ class Component extends DCLogic {
   this.setState({asst:'voice',closing:false,fabBubble:null,voice:{phase:'speaking',transcript:'',you:'',line:'',said:0,muted:false,emotion:'happy',chips:[],sttOff:!this.srAvail()}},()=>this.say(this.greeting(ctx,th),'happy'));this.log('voice_start',{lang:this.state.lang});}
  setVoice(p){this.setState(s=>({voice:s.voice?{...s.voice,...p}:s.voice}));}
  listen(){this.setVoice({phase:'listening'});this.armSleep();const v=this.state.voice;if(v&&!v.muted)setTimeout(()=>this.startRec(),60);}
- say(line,emo,after){const tok=uid();this._vtok=tok;this.stopRec();this.setVoice({phase:'speaking',line,said:0,emotion:emo||'happy'});
-  this.ttsSpeak(line,{lang:this.state.lang,emotion:emo},i=>{if(this._vtok===tok)this.setVoice({said:i});},()=>{if(this._vtok!==tok)return;this.setVoice({said:line.length});this.listen();after&&after();});}
+ // Screen actions are paced by the voice: action k of n runs once k/n of the line has been spoken (and the previous action has had its time). Leftovers run after the line ends, even if the line was interrupted, so a buy is never left half-typed.
+ say(line,emo,after,acts){const tok=uid();this._vtok=tok;this.stopRec();this.setVoice({phase:'speaking',line,said:0,emotion:emo||'happy'});
+  const q=(acts||[]).slice(),n=q.length;let k=0,busy=0;
+  const pace=i=>{while(q.length&&Date.now()>=busy&&i>=line.length*k/n){const a=q.shift();k++;let w=400;try{w=this.doAction(a);}catch(e){}busy=Date.now()+w;}};
+  const end=()=>{this.listen();after&&after();};
+  this.ttsSpeak(line,{lang:this.state.lang,emotion:emo},i=>{if(this._vtok===tok){this.setVoice({said:i});pace(i);}},()=>{if(this._vtok!==tok){if(q.length)this.runActions(q);return;}this.setVoice({said:line.length});if(q.length)this.runActions(q,end);else end();});}
  armSleep(){clearTimeout(this._sl);this._sl=setTimeout(()=>{const v=this.state.voice;if(v&&v.phase==='listening'){this.stopRec();this.setVoice({phase:'asleep'});}},30000);}
  tapMascot(){const v=this.state.voice;if(!v)return;if(v.phase==='speaking'){this._vtok=null;this.stopTTS();this.setVoice({said:v.line.length});this.listen();this.log('voice_interrupt',{});}else if(v.phase==='asleep')this.listen();}
  toggleMute(){const v=this.state.voice;if(!v)return;const m=!v.muted;this.setVoice({muted:m});if(m)this.stopRec();else if(v.phase==='listening')setTimeout(()=>this.startRec(),60);}
@@ -847,8 +851,7 @@ class Component extends DCLogic {
   this.setState(s=>({voice:s.voice?{...s.voice,phase:'thinking',transcript:'',you:text,line:'',chips:[]}:s.voice,messages:[...s.messages,{id:uid(),role:'user',text}]}));
   const ctx=this.getContext(),demo=!this.backend;this.log(focus?'explain_ask':'question',{text,target:focus||null,context:ctx.label,mode:'voice'});
   Promise.resolve().then(()=>focus&&demo?this.rExplain(focus,this.state.lang==='th'):demo?this.demoRespond(text,ctx):this.backend(text,ctx)).then(r=>setTimeout(()=>{if(this._vtok!==tok||!r)return;
-   const sp=this.splitActs(r);this.applyResponse(r,demo);this.setVoice({chips:(r.suggestions||[]).slice(0,3)});this.runActions(sp.acts);
-   this.say(r.speech||r.text,r.emotion||'happy',sp.guide?()=>this.startGuide(sp.guide.asset||'XAU'):null);},demo?500:0));}
+   const sp=this.splitActs(r);this.applyResponse(r,demo);this.setVoice({chips:(r.suggestions||[]).slice(0,3)});this.say(r.speech||r.text,r.emotion||'happy',sp.guide?()=>this.startGuide(sp.guide.asset||'XAU'):null,sp.acts);},demo?500:0));}
  endVoice(){this.stopVoiceStuff();this.setState({asst:'closed',voice:null});}
  toText(){this.stopVoiceStuff();this.setState({asst:'open',voice:null});}
  playMsg(m){if(this.state.playing===m.id){this.stopTTS();this.setState({playing:null});return;}this.setState({playing:m.id});this.speak(m.speech||m.text,()=>this.setState(s=>s.playing===m.id?{playing:null}:null));}

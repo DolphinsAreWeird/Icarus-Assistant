@@ -113,17 +113,28 @@ export function installVoice(options: VoiceBridgeOptions = {}): IcarusVoice {
 }
 
 /** Speech out. Call after the prototype has mounted (window.Icarus is created then). */
-export function attachTts(voice: VoiceLike): boolean {
+export function attachTts(voice: VoiceLike, getComponent: () => unknown = () => null): boolean {
   const icarus = (window as unknown as { Icarus?: { setTTS?: (fn: unknown, stop: () => void) => void } }).Icarus;
   if (!icarus?.setTTS) return false;
   icarus.setTTS(
     async (speech: string, opts: { lang?: string; onProgress?: (i: number) => void } = {}) => {
-      const started = Date.now();
-      // The prototype highlights words as they are spoken. We estimate the progress, about 15 characters a second.
-      const tick = setInterval(() => opts.onProgress?.(Math.min(speech.length, Math.round(((Date.now() - started) / 1000) * 15))), 110);
+      // The prototype starts a guess-timer (about 70 ms a character) just before calling us, and moves on to the
+      // next line when it fires, even mid-sentence. Our promise already says when the audio really ends, so cancel it.
+      const component = getComponent() as { _st?: ReturnType<typeof setTimeout> } | null;
+      if (component?._st) clearTimeout(component._st);
+      // The prototype highlights words as they are spoken. We estimate about 15 characters a second,
+      // counted from the first audio, not from the request, so the caption does not run ahead of the voice.
+      let started = 0;
+      const offStart = voice.on('speakingStart', () => (started = Date.now()));
+      const tick = setInterval(() => {
+        if (started) opts.onProgress?.(Math.min(speech.length - 1, Math.round(((Date.now() - started) / 1000) * 15)));
+      }, 110);
       try {
-        await voice.speak(speech, { language: opts.lang === 'th' ? 'th' : 'en' });
+        // Go by the text, not only the setting: a Thai reply while the app is set to English must still get the Thai model.
+        const thai = opts.lang === 'th' || /[฀-๿]/.test(speech);
+        await voice.speak(speech, { language: thai ? 'th' : 'en' });
       } finally {
+        offStart();
         clearInterval(tick);
         opts.onProgress?.(speech.length);
       }

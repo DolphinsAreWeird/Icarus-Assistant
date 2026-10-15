@@ -9,3 +9,5 @@ Pre-generated speech for the demo lines. Made by `npm run pregenerate` (see `../
 **Commit this folder** once the lines sound right, so the whole team has the audio and nobody pays credits twice. If you change a voice or a model, run `npm run pregenerate -- --clean` and commit the new files.
 
 With these files in place the server plays the demo lines even when the network is down.
+
+**Current audio:** English, voice Brittney (`XiPS9cXxAVbaIWtGDHDh`), model `eleven_flash_v2_5`, made on 15 Oct. Checked with `npm run pregenerate -- --verify`: the live Scribe understood every line, and every amount in the read-back came back right. No Thai lines yet (they wait for the Thai review).

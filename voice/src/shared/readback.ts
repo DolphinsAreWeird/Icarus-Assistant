@@ -57,7 +57,8 @@ function pickAmount(data: Record<string, unknown>, keys: string[]): number | nul
 export function parsePreview(data: Record<string, unknown>): TradePreview | null {
   const id = pickString(data, ['preview_id', 'previewId', 'id']);
   const sideRaw = pickString(data, ['side', 'action', 'type'])?.toLowerCase();
-  const asset = pickString(data, ['asset_name', 'asset_label', 'asset', 'asset_id', 'symbol']);
+  // spoken_asset: a short name made for speech (the backend adapter sets it to the asset id, e.g. "gold").
+  const asset = pickString(data, ['spoken_asset', 'asset_name', 'asset_label', 'asset', 'asset_id', 'symbol']);
   const amount = pickAmount(data, ['amount', 'amount_in']);
   const fee = pickAmount(data, ['fee', 'fees', 'fee_amount']);
   const total = pickAmount(data, ['total', 'total_amount']);
@@ -76,8 +77,11 @@ export function extractPreview(reply: AssistantReply): TradePreview | null {
   return card ? parsePreview(card) : null;
 }
 
-/** The exact sentence for this preview, in this language. Includes the "say confirm or cancel" prompt. */
-export function buildReadback(preview: TradePreview, lang: Lang): string {
+/**
+ * The exact sentence for this preview, in this language. Ends with the "say confirm or cancel" prompt, unless
+ * `prompt: false` (when confirming is by tap only).
+ */
+export function buildReadback(preview: TradePreview, lang: Lang, options: { prompt?: boolean } = {}): string {
   const s = STRINGS[lang];
   const plural = s.currencyWords[preview.currency.toUpperCase()] ?? preview.currency;
   // "one dollar", not "one dollars". Baht, yen and Thai words do not change.
@@ -89,8 +93,8 @@ export function buildReadback(preview: TradePreview, lang: Lang): string {
   const parts = [
     fill(sideTemplate, { amount, currency: currencyFor(preview.amount), asset }),
     fill(s.readback.fee, { fee: spokenExactNumber(preview.fee, lang), currency: currencyFor(preview.fee) }),
-    fill(s.readback.total, { total: spokenExactNumber(preview.total, lang), currency: currencyFor(preview.total) }),
-    s.readback.prompt.endsWith('.') ? s.readback.prompt : `${s.readback.prompt}.`,
+    fill(preview.side === 'sell' ? s.readback.totalSell : s.readback.total, { total: spokenExactNumber(preview.total, lang), currency: currencyFor(preview.total) }),
   ];
+  if (options.prompt !== false) parts.push(s.readback.prompt.endsWith('.') ? s.readback.prompt : `${s.readback.prompt}.`);
   return parts.join(' ');
 }

@@ -12,6 +12,8 @@ import { TtsService } from '../src/server/tts';
 import { UsageTracker } from '../src/server/usage';
 import type { FrictionEvent } from '../src/server/friction';
 import type { SpeechArgs } from '../src/server/elevenlabs';
+import { MockUtopiaKnowledge } from '../src/server/utopia/knowledge';
+import { UtopiaService } from '../src/server/utopia/service';
 
 export const SECRET_KEY = 'test-secret-key-must-never-leak-123456';
 
@@ -38,16 +40,18 @@ export function makeStack(extra: Record<string, string> = {}, fake: FakeOptions 
   const cache = new TtsCache([cfg.cacheDir, cfg.demoAudioDir], cfg.cacheDir);
   const tts = new TtsService(cfg, port, cache, usage, (l) => logs.push(l));
   const frictionEvents: FrictionEvent[] = [];
+  const utopia = new UtopiaService(new MockUtopiaKnowledge(), cfg.ubotUrl);
   const app = createApp({
     cfg,
-    assistant: new MockAssistant(0),
+    assistant: new MockAssistant(0, utopia),
+    utopia,
     tts,
     port,
     usage,
     friction: (e) => void frictionEvents.push(e),
     log: (l) => logs.push(l),
   });
-  return { cfg, port, requests, logs, usage, cache, tts, app, frictionEvents };
+  return { cfg, port, requests, logs, usage, cache, tts, app, frictionEvents, utopia };
 }
 
 /** Start the app on a random port. Call close() when done. */
