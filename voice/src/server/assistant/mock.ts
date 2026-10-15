@@ -1,6 +1,6 @@
 // MOCK assistant. Canned replies so the voice layer can be tested alone.
 // Handles four things: explain, navigate, trade preview, refusal to give advice.
-// It does NOT look at real data. The fee and total below are made up (1.5%).
+// It does NOT look at real data. The fee is 1% on top, the same as the prototype's buy screen (FEE=0.01).
 // In the real assistant every number comes from a tool call (context.md rule 3).
 
 import { MOCK_REPLIES } from '../../config/mock-replies';
@@ -62,7 +62,7 @@ export class MockAssistant implements Assistant {
     if (TRADE.test(text)) {
       const side = /deposit|ฝาก/i.test(text) ? 'deposit' : 'buy';
       const amount = parseAmount(text) ?? 1000;
-      const fee = Math.round(amount * 0.015 * 100) / 100;
+      const fee = Math.round(amount * 0.01 * 100) / 100;
       const total = Math.round((amount + fee) * 100) / 100;
       return {
         text: fill(replies.previewText, { amount: formatExactNumber(amount), asset: assetName }),

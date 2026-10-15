@@ -36,17 +36,17 @@ describe('/api/ask with the mock assistant', () => {
   it('prepares a trade and reads it back from the CARD numbers, not the reply sentence', async () => {
     const r = await ask('put 1,000 baht in gold');
     expect(r.speech).toEqual({
-      text: 'one thousand baht into gold. Fee fifteen baht. Total one thousand fifteen baht. Say confirm or cancel.',
+      text: 'one thousand baht into gold. Fee ten baht. Total one thousand ten baht. Say confirm or cancel.',
       language: 'en',
       kind: 'readback',
     });
     expect(r.reply.text).not.toBe(r.speech?.text); // proves the spoken text is not the LLM text
-    expect(r.preview).toMatchObject({ amount: 1000, fee: 15, total: 1015, currency: 'THB', side: 'buy' });
+    expect(r.preview).toMatchObject({ amount: 1000, fee: 10, total: 1010, currency: 'THB', side: 'buy' });
   });
 
   it('reads back whatever amount the user said, exactly', async () => {
     const r = await ask('buy 2,500 baht of bitcoin');
-    expect(r.speech?.text).toBe('two thousand five hundred baht into Bitcoin. Fee thirty-seven point five zero baht. Total two thousand five hundred thirty-seven point five zero baht. Say confirm or cancel.');
+    expect(r.speech?.text).toBe('two thousand five hundred baht into Bitcoin. Fee twenty-five baht. Total two thousand five hundred twenty-five baht. Say confirm or cancel.');
   });
 
   it('speaks the assistant\'s own `speech` script when it provides one (as in the Oasis prototype)', async () => {
@@ -73,7 +73,7 @@ describe('/api/ask with the mock assistant', () => {
     const r = await ask('ซื้อทอง 1,000 บาท', 'th');
     expect(r.speech?.language).toBe('th');
     expect(r.speech?.kind).toBe('readback');
-    expect(r.speech?.text).toContain('1,015');
+    expect(r.speech?.text).toContain('1,010');
   });
 
   it('detects the language when set to auto', async () => {

@@ -260,9 +260,9 @@ ASSISTANT_URL=http://localhost:8000/chat
 ASSISTANT_USER_ID=u_new
 ```
 
-The adapter (`src/server/assistant/http.ts`) speaks their contract (`backend/app/contracts.py`): it sends `{ session_id, user_id, text, lang, input_mode: "voice", screen_context }` and turns their `card` actions into our `show_card`. It also sends the older fields (`language`, `snapshot`, `userId`); the backend ignores them. `ASSISTANT_USER_ID` matters: the backend only knows its demo users (`u_new`, `u_small`). The backend's own error messages (busy, not set up, price expired) are spoken in English or Thai instead of a generic failure.
+The adapter (`src/server/assistant/http.ts`) speaks their contract (`backend/app/contracts.py`): it sends `{ session_id, user_id, text, lang, input_mode: "voice", snapshot }`, with the app's context as the snapshot, untouched. The reply's `ui_actions` are the app's own screen actions (`open_asset`, `start_buy`, `type_amount`, `review`, `highlight`...) and pass straight through. `ASSISTANT_USER_ID` picks the backend's demo user (`u_new` or `u_small`); `demo-user` maps to `u_new` there anyway. The backend's own error messages (busy, not set up) are spoken in English or Thai instead of a generic failure.
 
-**Money.** The backend's trade card says what the user pays **with the fee included** (`you_pay_thb`). The read-back is built from it so the numbers add up: "nine hundred ninety-five baht into gold. Fee five baht. Total one thousand baht." (`src/shared/backend-card.ts`). For a sale the last part is "You get ...". If a number is missing, there is no read-back and no voice confirm: the user taps the card. Checked end to end on 15 Oct against the real backend code (with a stand-in for the model, see `../INTEGRATION.md`).
+**Money.** A buy now stops on the app's own review screen, and the user taps Confirm purchase there. In the app, Icarus reads it back exactly from the app's own calculator (`frontend/src/backend-bridge.ts`). The voice test page has no app screen, so a backend buy gets no read-back and no voice confirm there (it fails closed). An older backend that still sends a trade card gets the read-back from the card (`src/shared/backend-card.ts`): the numbers add up to what it will charge.
 
 The reply is not streamed. Whatever time the real assistant takes is added to the wait before Icarus speaks.
 

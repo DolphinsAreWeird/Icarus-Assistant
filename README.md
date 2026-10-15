@@ -49,7 +49,7 @@ Style for anything we write: plain English, short sentences, no em dashes. Icaru
 
 | Part | Owner | Where |
 |---|---|---|
-| Data pipeline, user journey, the assistant (the "brain") | Luka and First | _coming_ |
+| Data pipeline, user journey, the assistant (the "brain") | Luka and First | [`backend/`](backend/) |
 | **Voice in and out, and how Icarus talks (this repo's `voice/`)** | KP | [`voice/`](voice/) |
 | App mockup, frontend, friction dashboard | Oasis | [`frontend/`](frontend/) (the prototype, running and paired with voice) |
 
@@ -58,6 +58,14 @@ The parts connect through one reply format. The assistant returns `text`, `speak
 ## The demo (about 3 minutes)
 
 A volunteer who has never used a crypto app is asked to buy 1,000 baht of gold, once with the normal screens and once with Icarus, with a stopwatch on screen. Then they tap the chart and ask what it means, by voice. Last, the friction dashboard shows what people asked and where they got stuck.
+
+## How the parts connect
+
+[`INTEGRATION.md`](INTEGRATION.md): the whole chain (microphone, app, U-Bot router, backend, speech), how to run all three parts together, what was checked end to end, and what the team still has to agree.
+
+## Business plan
+
+[`docs/business-plan.md`](docs/business-plan.md): what Icarus costs to run per partner (team, model, voice, servers), how many machines, the price at a 20% margin, whether it pays for itself for U-topia, and the tiers we recommend. Every number comes from [`docs/cost_model.py`](docs/cost_model.py). [`docs/pricing-calculator.html`](docs/pricing-calculator.html) is the same model with sliders (open it in a browser).
 
 ## Voice
 

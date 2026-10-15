@@ -12,9 +12,9 @@ const replyWith = (data: Record<string, unknown>, card_type = 'preview'): Assist
 });
 
 describe('buildReadback', () => {
-  it('matches the demo line exactly', () => {
+  it('matches the demo line exactly (the app charges 1% on top: 1,000 + 10 = 1,010)', () => {
     const line = DEMO_LINES_EN.find((l) => l.id === 'readback')!;
-    expect(buildReadback(gold, 'en')).toBe(line.text);
+    expect(buildReadback({ ...gold, fee: 10, total: 1010 }, 'en')).toBe(line.text);
   });
 
   it('keeps every number exact, never "about"', () => {
