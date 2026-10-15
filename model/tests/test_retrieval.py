@@ -33,6 +33,13 @@ class RetrievalTests(unittest.TestCase):
         self.assertEqual(report["results"][0]["recall_at_5"], .5)
         self.assertEqual(retrieve("monkey keyboard"), [])
 
+    def test_everyday_paraphrases_and_noncrypto_fee_gas_disambiguation(self):
+        cases = read_json(ROOT / "evaluation" / "retrieval_challenge.json")
+        self.assertEqual(evaluate(cases)["failures"], [])
+        # Explicit crypto comparisons survive the narrow non-crypto scope gate.
+        self.assertIn("network_fees", [r["id"] for r in retrieve("Compare car fuel and Ethereum gas fees")])
+        self.assertIn("goal_risk_fit", [r["id"] for r in retrieve("Can Bitcoin help me grow this before I pay?")])
+
 
 if __name__ == "__main__":
     unittest.main()

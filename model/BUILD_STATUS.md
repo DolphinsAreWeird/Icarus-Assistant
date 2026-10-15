@@ -4,6 +4,10 @@ Latest checkpoint, 16 October 2026: work continues on the renamed `assistant-mod
 
 Checkpoint verification: 54 automated tests pass, including future-data leakage, frozen selection/calibration and invalid market metadata. Four new live English/Thai slippage/stablecoin scenarios pass structural checks; observed times range from about seven to nineteen seconds. Both `/risk` renderers expose the saved interval and empirical coverage without a model call. Luka/First review remains pending in parallel.
 
+Assistant-quality continuation: committed the prediction/retrieval checkpoint as `4a702b4`, then added a 16-query everyday-language retrieval challenge and a 12-scenario bilingual stress suite with multi-turn context, source requirements and separate local/model latency. Narrow concept expansion and non-crypto fee/gas disambiguation fix the observed retrieval misses. Live testing exposed unsupported tax prose and Thai truncation; focused missing-tax-evidence and essential-funds templates now address those cases without a provider call. See `evaluation/STRESS_EVALUATION.md` for findings and scope. Human review stays pending in parallel.
+
+Continuation verification: 61 automated tests pass. Both retrieval development suites pass. Focused conceptual explanations use JSON mode without calculation tools; amount, current-data and comparison requests retain the normal tool loop. No backend or frontend changes were made.
+
 ## Implemented
 
 - English/Thai source-backed retrieval and Qwen tool orchestration.

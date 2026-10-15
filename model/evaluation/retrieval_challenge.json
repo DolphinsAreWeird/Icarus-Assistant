@@ -1,0 +1,18 @@
+[
+  {"id":"send_en","lang":"en","query":"Why is sending ETH expensive when lots of people use it?","expected_ids":["network_fees"]},
+  {"id":"send_th","lang":"th","query":"ทำไมส่งเหรียญบน Ethereum ตอนคนใช้เยอะถึงแพง","expected_ids":["network_fees"]},
+  {"id":"execution_en","lang":"en","query":"I received fewer tokens than the quote shown before confirmation. What could explain that?","expected_ids":["execution_slippage","price_impact"]},
+  {"id":"execution_th","lang":"th","query":"จำนวนเหรียญที่ได้รับน้อยกว่าที่เห็นก่อนกดยืนยัน เกิดจากอะไรได้บ้าง","expected_ids":["execution_slippage","price_impact"]},
+  {"id":"closure_en","lang":"en","query":"If the exchange shuts down, can I always get my coins back?","expected_ids":["platform_custody_risk"]},
+  {"id":"closure_th","lang":"th","query":"เว็บเทรดปิดจะเอาเหรียญคืนได้แน่ไหม","expected_ids":["platform_custody_risk"]},
+  {"id":"interest_en","lang":"en","query":"Is earning interest on dollar-pegged tokens like a fixed bank deposit?","expected_ids":["stablecoin_mechanics"]},
+  {"id":"interest_th","lang":"th","query":"ฝากเหรียญผูกดอลลาร์แล้วได้เงินเหมือนฝากประจำไหม","expected_ids":["stablecoin_mechanics"]},
+  {"id":"concentration_en","lang":"en","query":"All my savings are in a single coin. Why might that be a problem?","expected_ids":["diversification"]},
+  {"id":"concentration_th","lang":"th","query":"เงินเก็บทั้งหมดอยู่ในเหรียญเดียว มีปัญหาอะไรบ้าง","expected_ids":["diversification"]},
+  {"id":"prediction_en","lang":"en","query":"Does yesterday's rally mean tomorrow will be green too?","expected_ids":["historical_limits"]},
+  {"id":"prediction_th","lang":"th","query":"เมื่อวานเขียวพรุ่งนี้จะเขียวต่อแน่ไหม","expected_ids":["historical_limits"]},
+  {"id":"unrelated_fee_en","lang":"en","query":"What is the fee for renewing my passport?","expected_ids":[]},
+  {"id":"unrelated_fee_th","lang":"th","query":"ค่าธรรมเนียมต่อพาสปอร์ตเท่าไร","expected_ids":[]},
+  {"id":"unrelated_gas_en","lang":"en","query":"Why is gas for my car expensive?","expected_ids":[]},
+  {"id":"unrelated_gas_th","lang":"th","query":"ราคาแก๊สหุงต้มแพงไหม","expected_ids":[]}
+]

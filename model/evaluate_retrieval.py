@@ -1,5 +1,6 @@
 """Measure curated bilingual retrieval coverage, independently of LLM prose."""
 import json
+import argparse
 from icarus_core import ROOT, read_json, retrieve
 
 
@@ -28,8 +29,12 @@ def evaluate(cases=None):
 
 
 if __name__ == "__main__":
-    report = evaluate()
-    target = ROOT / "results" / "retrieval.json"
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--suite", choices=["regression", "challenge"], default="regression")
+    args = parser.parse_args()
+    cases = None if args.suite == "regression" else read_json(ROOT / "evaluation" / "retrieval_challenge.json")
+    report = evaluate(cases)
+    target = ROOT / "results" / ("retrieval.json" if args.suite == "regression" else "retrieval_challenge.json")
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({key: report[key] for key in ("status", "by_language", "failures")}, indent=2))

@@ -4,6 +4,8 @@ This is the model/data-processing part of Icarus. It includes a local Python int
 
 The latest [modelling checkpoint](MODEL_CARD.md) documents daily-return intervals with separate model selection, calibration and testing, real-data results, bilingual retrieval coverage, and remaining modelling work. Regenerate all forecast artifacts with `python model/predict_risk.py --asset all`; `/risk` renders their historical cutoff, interval and measured test coverage in either language.
 
+The [harder bilingual evaluation](evaluation/STRESS_EVALUATION.md) adds everyday paraphrases, unsupported questions, injection attempts and multi-turn corrections. Run `python model/evaluate_retrieval.py --suite challenge` locally, or `python model/evaluate_assistant.py --live --suite stress --limit 12` against Orion. Structural passes and semantic review are recorded separately.
+
 The new [integration contract](INTEGRATION.md) explains validated app snapshots, current/reference-price adapters, exact screen/chart versions, and caller-bound account data. Start with `fixtures/app_snapshot.json` without a backend, or run `fetch_public_snapshot.py` for an explicitly labeled real USDT reference snapshot.
 
 ## What exists

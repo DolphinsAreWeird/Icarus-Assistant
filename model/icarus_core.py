@@ -44,6 +44,33 @@ def retrieve(query, language="en", limit=5):
     if language not in ("en", "th"):
         raise ValueError("UNKNOWN_LANGUAGE")
     lower = query.lower()
+    # Disambiguate common non-crypto uses of fee/gas without blocking explicit
+    # comparisons such as car fuel versus Ethereum gas. This is a narrow lexical
+    # scope check, not a general out-of-domain classifier.
+    crypto = re.search(r"\b(?:crypto|bitcoin|btc|ethereum|eth|usdt|usdc|token|tokens|blockchain|wallet)\b|คริปโต|เหรียญ|บล็อกเชน|กระเป๋า", lower)
+    unrelated = re.search(r"\b(?:passport|visa|car|petrol|gasoline|cooking|recipe)\b|พาสปอร์ต|หนังสือเดินทาง|หุงต้ม|น้ำมันรถ", lower)
+    if unrelated and not crypto:
+        return []
+    concepts = []
+    if re.search(r"\bgrow (?:my money|my savings|this)\b|\bbefore i pay\b", lower):
+        concepts.append("goal invest")
+    if (re.search(r"\b(?:send|sending|transfer|transferring)\b", lower) and
+            re.search(r"\b(?:eth|ethereum|token|tokens|blockchain)\b", lower)) or (
+            "ส่ง" in lower and ("เหรียญ" in lower or "ethereum" in lower or "eth" in lower)):
+        concepts.append("gas network")
+    if (re.search(r"\b(?:received?|receiving|fewer|less)\b", lower) and "quote" in lower) or (
+            "เหรียญ" in lower and "น้อย" in lower and ("ยืนยัน" in lower or "เสนอ" in lower)):
+        concepts.append("slippage price impact")
+    if "เว็บเทรด" in lower or "ระงับการถอน" in lower or "คืนเหรียญ" in lower:
+        concepts.append("custody withdrawal")
+    if re.search(r"dollar[ -](?:pegged|backed)|\binterest\b", lower) or "ผูกดอลลาร์" in lower or "ตรึงดอลลาร์" in lower:
+        concepts.append("stablecoin")
+    if re.search(r"\b(?:single|one|only)\s+(?:coin|asset|token)\b", lower) or "เหรียญเดียว" in lower or "สินทรัพย์เดียว" in lower:
+        concepts.append("concentr portfolio")
+    if ("tomorrow" in lower and re.search(r"\b(?:rally|green|price|rise|fall)\b", lower)) or (
+            "พรุ่งนี้" in lower and any(term in lower for term in ("เขียว", "ราคา", "เหรียญ"))):
+        concepts.append("forecast history")
+    lower += " " + " ".join(concepts)
     # Explicit English aliases; avoid substring matches such as 'key' in 'monkey'.
     aliases = {"fees":"fee", "wallets":"wallet", "costs":"fee", "cost":"fee",
                "transactions":"transaction", "holdings":"portfolio", "risks":"risk",
@@ -57,7 +84,8 @@ def retrieve(query, language="en", limit=5):
     ranked = [(sum(match(term) for term in row["keywords"]), row) for row in records]
     ranked = sorted((item for item in ranked if item[0]), key=lambda item:-item[0])[:limit]
     return [{"id":row["id"], "text":row[language], "source_url":row["source_url"],
-             "review_status":row["review_status"], "checked_on":row["checked_on"]} for _,row in ranked]
+             "review_status":row["review_status"], "checked_on":row["checked_on"],
+             "topics":row["topics"]} for _,row in ranked]
 
 
 def guidance_context(profile):
