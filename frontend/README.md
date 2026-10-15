@@ -2,7 +2,7 @@
 
 Oasis's Icarus prototype, running as a React app and **paired with our voice stack**: ElevenLabs text-to-speech and Scribe speech-to-text.
 
-The prototype file (`prototype/Icarus Prototype.dc.html`) is Oasis's design, **unchanged**. It is a React component written as an HTML template plus a logic class, and it needs a small runtime that was missing. `src/dc-runtime.ts` is that runtime. So Oasis can keep editing the design in their tool and drop in the new export: nothing here needs porting.
+The prototype file (`prototype/Icarus Prototype.dc.html`) is Oasis's design, with one change: in voice mode, `say()` paces the screen actions to the spoken line so screens do not run ahead of the voice. It is a React component written as an HTML template plus a logic class, and it needs a small runtime that was missing. `src/dc-runtime.ts` is that runtime. So Oasis can keep editing the design in their tool and drop in the new export. Keep the `say()` pacing in the design file, or the screens will run ahead again.
 
 ## Run it
 
@@ -32,7 +32,7 @@ If the mic is blocked or the voice server is not running, the prototype falls ba
 
 ```
 frontend/
-  prototype/Icarus Prototype.dc.html   Oasis's design, unchanged
+  prototype/Icarus Prototype.dc.html   Oasis's design (voice pacing in say())
   src/dc-runtime.ts                    runs a .dc.html file: parses it, compiles the template to React
   src/voice-bridge.ts                  attaches our TTS and Scribe speech-in to the prototype
   src/assets.ts                        draws placeholder mascots when the real images are missing

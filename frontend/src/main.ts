@@ -6,7 +6,29 @@ import { setMascotFallback } from './assets';
 import { createDcApp, installHelmet } from './dc-runtime';
 import { attachTts, installVoice } from './voice-bridge';
 
-const PROTOTYPE_URL = 'prototype/Icarus%20Prototype.dc.html';
+// Oasis's export has two pages that link to each other by file name. ?page=dashboard picks the second.
+const PAGES: Record<string, string> = {
+  'Icarus Prototype.dc.html': './',
+  'Icarus Business Dashboard.dc.html': './?page=dashboard',
+};
+const IS_DASHBOARD = new URLSearchParams(location.search).get('page') === 'dashboard';
+const PAGE_URL = IS_DASHBOARD
+  ? 'prototype/Icarus%20Business%20Dashboard.dc.html'
+  : 'prototype/Icarus%20Prototype.dc.html';
+
+/** Send links to the other .dc.html page to its route in this app. */
+function routePageLinks() {
+  document.addEventListener('click', (e) => {
+    const a = (e.target as Element | null)?.closest?.('a');
+    const href = a?.getAttribute('href');
+    if (!href) return;
+    const target = PAGES[decodeURIComponent(href)];
+    if (target) {
+      e.preventDefault();
+      location.href = target;
+    }
+  });
+}
 
 /** A small pill under the phone: what the voice stack is doing, and any problem. */
 function createStatusPill(): (text: string, kind?: 'info' | 'error') => void {
@@ -38,9 +60,9 @@ async function describeServer(): Promise<string> {
 }
 
 async function main() {
-  const status = createStatusPill();
-  const res = await fetch(PROTOTYPE_URL);
-  if (!res.ok) throw new Error(`Could not load the prototype (${res.status}).`);
+  routePageLinks();
+  const res = await fetch(PAGE_URL);
+  if (!res.ok) throw new Error(`Could not load the page (${res.status}).`);
   const html = await res.text();
 
   // Use the real mascot images if they are served next to the app. If not, draw placeholders.
@@ -49,6 +71,14 @@ async function main() {
   const app = createDcApp(html);
 
   installHelmet(app.helmet);
+
+  // The dashboard has no assistant, so it needs no voice.
+  if (IS_DASHBOARD) {
+    createRoot(document.getElementById('root') as HTMLElement).render(React.createElement(app.Root, {}));
+    return;
+  }
+
+  const status = createStatusPill();
 
   let instance: { goBack?: () => void } | null = null;
   const voice = installVoice({
@@ -63,7 +93,7 @@ async function main() {
   // window.Icarus is created when the prototype mounts, one tick later.
   const started = Date.now();
   const wait = setInterval(() => {
-    if (attachTts(voice)) {
+    if (attachTts(voice, () => instance)) {
       clearInterval(wait);
       void describeServer().then((text) => status(text));
     } else if (Date.now() - started > 5000) {
