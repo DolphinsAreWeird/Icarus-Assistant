@@ -1,0 +1,59 @@
+{
+  "btc": {
+    "name": "Bitcoin",
+    "name_th": "บิตคอยน์",
+    "type": "crypto",
+    "tier": "P0",
+    "source": "binance",
+    "symbol": "BTCUSDT",
+    "unit": "BTC",
+    "sell_hours": "24/7",
+    "aliases": ["bitcoin", "btc", "บิตคอยน์", "บิทคอยน์"],
+    "description_en": "Bitcoin is the first and biggest cryptocurrency. It's digital money that no bank or government controls. Its price can move a lot in a single day.",
+    "description_th": "บิตคอยน์คือคริปโตเคอร์เรนซีตัวแรกและใหญ่ที่สุด เป็นเงินดิจิทัลที่ไม่มีธนาคารหรือรัฐบาลไหนควบคุม ราคาขึ้นลงได้มากในวันเดียว",
+    "reviewed": false
+  },
+  "gold": {
+    "name": "Tokenized gold (PAX Gold)",
+    "name_th": "ทองคำโทเคน (PAX Gold)",
+    "type": "tokenized_gold",
+    "tier": "P0",
+    "source": "binance",
+    "symbol": "PAXGUSDT",
+    "unit": "PAXG",
+    "grams_per_unit": 31.1035,
+    "sell_hours": "24/7",
+    "aliases": ["gold", "paxg", "pax gold", "tokenized gold", "ทอง", "ทองคำ"],
+    "description_en": "Tokenized gold. Each PAX Gold token stands for 1 troy ounce (31.1 grams) of real gold, held in vaults by the issuer, Paxos. Its price follows the gold price.",
+    "description_th": "ทองคำในรูปแบบโทเคน แต่ละโทเคน PAX Gold แทนทองคำจริง 1 ทรอยออนซ์ (31.1 กรัม) ที่ผู้ออกคือ Paxos เก็บไว้ในห้องนิรภัย ราคาเคลื่อนตามราคาทองคำ",
+    "reviewed": false
+  },
+  "eth": {
+    "name": "Ethereum",
+    "name_th": "อีเธอเรียม",
+    "type": "crypto",
+    "tier": "P1",
+    "source": "binance",
+    "symbol": "ETHUSDT",
+    "unit": "ETH",
+    "sell_hours": "24/7",
+    "aliases": ["ethereum", "eth", "ether", "อีเธอเรียม", "อีเธอร์"],
+    "description_en": "Ethereum is the second biggest cryptocurrency. Many other apps and tokens are built on its network. Its price can move a lot in a single day.",
+    "description_th": "อีเธอเรียมคือคริปโตที่ใหญ่เป็นอันดับสอง แอปและโทเคนอื่นจำนวนมากสร้างอยู่บนเครือข่ายนี้ ราคาขึ้นลงได้มากในวันเดียว",
+    "reviewed": false
+  },
+  "usdt": {
+    "name": "Tether (USDT)",
+    "name_th": "เทเธอร์ (USDT)",
+    "type": "stablecoin",
+    "tier": "P1",
+    "source": "fixed",
+    "price_usd": 1.0,
+    "unit": "USDT",
+    "sell_hours": "24/7",
+    "aliases": ["tether", "usdt", "stablecoin", "เทเธอร์", "สเตเบิลคอยน์"],
+    "description_en": "Tether is a stablecoin: a crypto token designed to stay at 1 US dollar. In baht, its value moves with the dollar to baht exchange rate.",
+    "description_th": "เทเธอร์คือสเตเบิลคอยน์ เป็นโทเคนคริปโตที่ออกแบบให้มีมูลค่าคงที่ 1 ดอลลาร์สหรัฐ เมื่อคิดเป็นเงินบาท มูลค่าจะขึ้นลงตามอัตราแลกเปลี่ยนดอลลาร์กับบาท",
+    "reviewed": false
+  }
+}

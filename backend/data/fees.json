@@ -1,0 +1,10 @@
+{
+  "mock": true,
+  "note": "Made-up fee schedule for the demo. U-topia's real fees are unknown. Say so on stage.",
+  "trading_fee_pct": 0.25,
+  "min_fee_thb": 5,
+  "min_buy_thb": 100,
+  "deposit_fee_thb": 0,
+  "withdraw_fee_thb": 0,
+  "preview_expiry_s": 120
+}

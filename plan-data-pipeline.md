@@ -1,0 +1,333 @@
+# Data pipeline plan (Luka and First)
+
+Status: draft v2, 15 Oct 2026, day 1. Read context.md first. This file covers the "brain" side from section 7: market data, app knowledge, demo users, tools, journey state, friction events, and the API that Oasis and KP call. Anything marked "check" is not confirmed yet.
+
+## 1. Goal
+
+One backend, two outputs: the assistant and the friction dashboard.
+
+Every number Icarus says, and every number on Oasis's screens, comes from that backend. It has to keep working when the APIs or the wifi fail on stage.
+
+We don't need a training dataset. We need reliable tools, good app context, and clean event tracking.
+
+The demo that matters is one complete loop: a user gets stuck, Icarus helps them finish, and the business sees exactly where help was needed.
+
+## 2. Principles
+
+1. **One source of truth for numbers.** The app screens and Icarus read the same prices, fees and account state. If the chart says 2,410,000 baht and Icarus says 2,409,000, the demo looks broken.
+2. **Only the backend calls outside APIs.** The whole venue shares one IP, so other teams will burn rate limits too.
+3. **Always have something to serve.** Live first, then last known (labeled "delayed"), then the offline snapshot on disk.
+4. **Tools do the math, the LLM does the words.** Key amounts on cards are rendered straight from tool results, never from LLM text. A prompt alone won't make the model repeat every figure correctly.
+5. **No verdicts in data.** No tool output has a field like `better`, `recommended` or `score`.
+6. **The LLM can't execute anything.** Trades only happen through the confirm endpoint the user's tap calls.
+7. **Core loop first.** Build in priority order (section 3). Nothing from P2 until P0 and P1 work end to end.
+8. **Demo must reset.** One call puts both demo users back to their starting state.
+
+## 3. Priorities
+
+| Tier | What | Target |
+|---|---|---|
+| **P0: core loop** | contracts agreed; stub `/chat`; 2 synthetic users; BTC + gold prices with cache and snapshot; explain the selected element; prepare trade + confirm; highlight next step; event logging | hour 8 |
+| **P1: full features** | portfolio X-ray, compare, goal math, what-if (past result only), friction summary for the dashboard, numbers check, refusal tests, journey hints, ETH | hour 14 |
+| **P2: only if P0 and P1 are solid** | what-if forward range, stocks, SOL, Tokenomist unlock alerts, gold in baht weight | after hour 14 |
+
+Not doing: vector database, RAG, model training. The knowledge base is a few small reviewed JSON files (section 5), small enough to load in full.
+
+## 4. Pipeline
+
+```mermaid
+flowchart TD
+    A[Market API: Binance, backup CoinGecko] --> B[Validate and normalize]
+    B --> C[Price cache and history]
+    C --> S[Snapshot files for offline mode]
+    D[Reviewed app and asset knowledge] --> E[Backend tools]
+    C --> E
+    F[Synthetic accounts and journey state] --> E
+
+    G[Text or voice transcript] --> H[Assistant orchestrator]
+    I[Screen context: screen, selected asset, chart period, visible elements, entered amount] --> H
+    H <--> E
+    H --> J[Reply: text, sources, UI instructions]
+    J --> K[Frontend and voice output]
+    C --> K
+
+    K --> L[User taps confirm]
+    L --> M[Backend validates and simulates trade]
+    M --> F
+
+    H --> N[Interaction events]
+    K --> N
+    M --> N
+    N --> O[Friction aggregation]
+    O --> P[Business dashboard]
+```
+
+`C --> K` is principle 1: the screens read the same cache as the tools.
+
+Stack (suggested, agree at kickoff): Python 3.11, FastAPI, httpx, pydantic, SQLite, numpy. One process. Price polling runs as a background task inside it. If Luka prefers TypeScript, switch now, not at hour 6.
+
+## 5. Data we need
+
+| Data | Contents | Source | Owner |
+|---|---|---|---|
+| Market data | price, currency, timestamp, 24h change, history | live API + cache + snapshot | us |
+| Asset knowledge | what each asset is, fee, minimum buy, supported actions, how and when you can sell | `assets.json`, written and reviewed by us | us |
+| Glossary | plain explanations of terms on screen (24h change, fee, yield, swap, tokenized, stablecoin), English + Thai | `glossary.json`, Thai checked by a Thai speaker | us, KP checks Thai |
+| UI element registry | element id, screen, what it shows, which data field feeds it | `ui_elements.json` | Oasis writes ids, we add descriptions |
+| User accounts | cash, holdings, transactions, verification status, journey stage | 2 synthetic profiles | us |
+| Screen context | current screen, selected asset, chart period, visible element ids, entered amount, focused element | sent by Oasis's frontend with every `/chat` call | Oasis |
+| Interaction events | task start, help, previews, failures, completion | backend + frontend | us + Oasis |
+
+Screen context matters most. "What does this line mean?" only makes sense if Icarus knows which chart, which asset and which period the user is looking at.
+
+## 6. Market data
+
+### 6.1 Assets
+
+| id | Name in app | Source | Symbol | Tier |
+|---|---|---|---|---|
+| `btc` | Bitcoin | Binance | BTCUSDT | P0 |
+| `gold` | Tokenized gold (PAX Gold) | Binance | PAXGUSDT | P0 |
+| `eth` | Ethereum | Binance | ETHUSDT | P1 |
+| `usdt` | Tether (USDT) | fixed | 1 USD | P1 |
+| `sol` | Solana | Binance | SOLUSDT | P2 |
+| `aapl`, `nvda` | Apple, Nvidia | yfinance, daily | | P2 |
+
+Call gold "tokenized gold" precisely: 1 PAXG = 1 troy ounce (31.1 g) of gold held by the issuer. If U-topia offers a different gold token (XAUT or its own), swap it. Check.
+
+Stocks are P2. The demo is Friday afternoon in Bangkok, when the US market is closed, so we'd show "last close" anyway.
+
+### 6.2 Sources and refresh
+
+| Data | Source | Refresh |
+|---|---|---|
+| Crypto + gold price | Binance `GET /api/v3/ticker/24hr?symbols=[...]`, one call for all assets, no key | every 15 s |
+| Crypto + gold history | Binance `GET /api/v3/klines` (max 1000 candles per call) | at startup, then hourly |
+| USD→THB | Frankfurter `api.frankfurter.dev/v1/latest?base=USD&symbols=THB` (ECB daily rate; the old .app domain redirects here). Backup: open.er-api.com | hourly |
+| Backup price source | CoinGecko demo key | only when Binance fails |
+
+Why Binance first and not CoinGecko: the other answer quotes CoinGecko's Demo plan at 100 calls a minute and 10,000 calls a month (I haven't checked these). Polling every 15 s for 24 hours is 5,760 calls. Add history and restarts and we'd be close to that monthly cap during the event. Binance needs no key and has much higher limits. Check that both work from the venue wifi in hour 0.
+
+### 6.3 Validate and normalize
+
+Each poll result is checked before it goes into the cache:
+- Price is a positive number. A price that moved more than 20% from the last value within 15 s is rejected and logged, not served.
+- Converted to THB with the latest FX rate. Both USD and THB values are kept.
+- Stamped with `as_of` (time of the source data) and `source`.
+
+### 6.4 Every number carries its context
+
+The envelope for every price, and for every tool result (section 8):
+
+```json
+{ "value": 89234.0, "unit": "THB", "as_of": "2026-10-16T14:02:11+07:00",
+  "source": "binance", "freshness": "live" }
+```
+
+`freshness` is one of:
+- `live`: under 2 minutes old.
+- `delayed`: last known value, older than 2 minutes. UI and Icarus say "delayed".
+- `offline`: loaded from the snapshot file.
+- `simulated`: synthetic account data, or a simulated trade.
+
+### 6.5 Cache and offline mode
+
+- In memory: the latest entry per asset.
+- After every successful poll, write `data/snapshots/prices.json` and `data/snapshots/history/<id>.json`.
+- `OFFLINE=1` env flag: no network calls, serve only snapshots. Commit a full snapshot to the repo by hour 8 so any laptop can run the demo with no internet.
+
+### 6.6 Precomputed stats (per asset, hourly)
+
+From about 3 years of daily closes. These are fixed definitions, so numbers don't drift between rehearsals:
+
+| Stat | Definition | Tier |
+|---|---|---|
+| `change_1y_pct` | close today vs 365 days ago | P1 |
+| `worst_month_pct` / `best_month_pct` | worst and best calendar-month return in 3 years | P1 |
+| `typical_day_move_pct` | median absolute daily change | P1 |
+| `max_drop_pct` | biggest peak-to-later-low fall in 3 years | P2 |
+
+## 7. Demo users
+
+Seed files in `data/seed/`. They load into SQLite at startup and on `POST /demo/reset`. Holdings are stored as quantities. Values are calculated live from the cache, so they always match the screen.
+
+**`u_new` (friction test user)**
+- Stage `deposited`: signed up, verified, deposited 5,000 THB, no purchase yet.
+- No holdings. One deposit transaction from 2 days ago.
+
+**`u_small` (X-ray, compare, what-if)**
+- Stage `first_purchase`, active for about 3 months, about 1,200 THB cash.
+- About 80% of its value in BTC, plus some ETH and gold.
+- About 15 trades. Fees tuned so "fees paid this month" comes out near 120 THB, matching the pitch.
+- Trade prices are taken from real history at each timestamp, so gains and losses are real numbers.
+
+**Fees (`data/fees.json`, mock, say so on stage):** 0.25% of the amount, minimum 5 THB. Minimum buy is 100 THB. U-topia's real fees: unknown, ask them.
+
+## 8. Tools
+
+Every tool returns:
+
+```json
+{ "result_id": "r_7f3a", "data": { ... }, "display": { ... },
+  "source": { "tool": "get_prices", "provider": "binance", "as_of": "...", "freshness": "live" } }
+```
+
+- `result_id` is how the reply's `sources` field and `show_card` point at real tool output.
+- `display` holds ready-to-say strings ("about 30%"), so the LLM copies numbers instead of working them out.
+
+| Tool | Behavior | Tier |
+|---|---|---|
+| `get_prices(asset_ids)` | from cache. Unknown id returns the list of valid ids | P0 |
+| `get_history(asset_id, period)` | `1d`, `1w`, `1m`, `1y`, downsampled to about 200 points | P0 |
+| `get_asset_info(asset_id)` | from `assets.json`: description, fee, minimum, how to sell, plus stats when available | P0 |
+| `explain_element(element_id, screen_context)` | new tool. Joins the element registry, glossary and live data for what the user is looking at. Example: `asset.chart` + gold + `1m` gives "gold's price over the last month, from X to Y" | P0 |
+| `resolve_asset(text)` | new tool. Maps "gold", "ทองคำ", "bitcoin" to an asset id. If more than one matches, returns the options so Icarus asks instead of guessing | P0 |
+| `prepare_trade(user, asset, amount_thb, side)` | checks balance, minimum, fee, price freshness. Locks the price and saves a preview with a 2-minute expiry. **Never changes balances** | P0 |
+| `highlight_element(element_id, message)` | adds a UI action. Ids not in `ui_elements.json` are rejected | P0 |
+| `show_card(card_type, result_id)` | the frontend renders the card **from the tool result**, not from LLM text. Types: `trade_preview`, `comparison`, `xray`, `what_if`, `goal` | P0 |
+| `get_portfolio(user_id)` | holdings with live value, share of total, gain/loss, fees this month, `concentration` | P1 |
+| `compare_assets(a, b)` | same fields side by side. No verdict field | P1 |
+| `goal_math(target, date, current)` | months = full months to the target date (at least 1). Monthly amount rounded up to the nearest 10 THB. A date in the past returns a flag, never a negative number | P1 |
+| `what_if(asset, amount, period)` | P1: past result (amount then, valued now). P2: forward low/middle/high from the 10th, 50th and 90th percentile of rolling past windows, labeled "hypothetical, based on past moves, not a forecast" | P1/P2 |
+
+`log_friction` from context.md is no longer an LLM tool. The pipeline logs events itself (section 10), which is more reliable. Agree this with the team.
+
+## 9. Trade flow: "Put 1,000 baht in gold"
+
+1. Frontend sends the text plus screen context: session, screen, selected asset, entered amount.
+2. `resolve_asset("gold")` returns `gold`. If ambiguous, Icarus asks which one.
+3. `prepare_trade` checks the balance, the 100 THB minimum, the fee (2.50 THB, so the 5 THB minimum applies), and price freshness.
+4. The backend returns a preview: amount, fee, estimated quantity, locked price, expiry. It logs `preview_shown`.
+5. Icarus says one sentence, and `show_card("trade_preview", result_id)` renders the exact numbers.
+6. User taps confirm, which calls `POST /trades/{preview_id}/confirm` directly. The LLM isn't involved.
+7. The backend checks the preview belongs to this session's user, isn't expired, and is still `pending`. It flips the status to `confirmed` in the same SQLite transaction that updates holdings, so a double tap can't buy twice. A second confirm returns the first result. An expired preview returns a fresh quote.
+8. It writes the transaction, moves the journey to `first_purchase`, and logs `task_completed`.
+
+## 10. Journey and friction events
+
+### Journey
+Stages: `signed_up` → `verified` → `deposited` → `first_purchase`. Changes only come from backend events, never from the LLM. `journey.json` maps each stage to a next step and the element to highlight.
+
+### Events
+
+```json
+{ "event_id": "e_01", "ts": "...", "session_id": "s_demo_3", "user_ref": "p_8c1d",
+  "task_id": "t_buy_gold_1", "event_type": "help_requested", "screen_id": "buy",
+  "element_id": "buy.fee_line", "journey_stage": "deposited", "topic": "fees",
+  "language": "th", "input_mode": "voice", "assisted": true, "inferred": false }
+```
+
+| event_type | Logged by | When |
+|---|---|---|
+| `task_started` | frontend | user enters a multi-step flow, or the stopwatch starts in the friction test |
+| `help_requested` | `/chat`, frontend | any question to Icarus, or a tap-to-explain |
+| `confusion` | `/chat` keyword check | "what does X mean", "I don't get", "คืออะไร", "ไม่เข้าใจ" |
+| `preview_shown` | `prepare_trade` | |
+| `validation_failed` | backend | not enough funds, below the minimum, preview expired. Includes a reason |
+| `refusal` | `/chat` | Icarus declined an advice request |
+| `task_completed` | confirm endpoint | |
+| `task_abandoned` | timeout job | no completion within 120 s of the last activity, or the session ends. Always `inferred: true` |
+
+Privacy: `user_ref` is a pseudonym. Store the topic by default. Keep question text only when it's useful, with numbers and names stripped.
+
+### Dashboard metrics (`GET /friction/summary`)
+
+| Metric | What it tells the business |
+|---|---|
+| Help requests by screen and topic | where users need explanations |
+| Funnel: started → preview → completed | where the flow loses users |
+| Time to complete, with vs without Icarus | whether guidance cuts effort. This is the demo stopwatch, as data |
+| Repeat questions on the same topic within one task | where our explanation didn't land |
+| Completion after help | whether users moved forward after getting help |
+
+Always show counts next to percentages: "4 of 10 tested users asked about fees", not "40%". With a small sample, a question shows demand for help. It doesn't prove a screen is broken, and the dashboard copy should say so.
+
+Real numbers come from the friction tests with 5 to 10 outsiders (hours 18 to 22). Keep a synthetic seed set as a fallback, flagged `synthetic`, so on stage we can say what's real.
+
+## 11. Guardrails in code
+
+1. **Cards from data.** Amounts on cards come from `result_id`, not from LLM text.
+2. **Numbers check on spoken and written text.** Pull every number out of the reply and check it appears (within rounding) in that turn's tool results or the user's message. During development, log misses. On stage, retry once, then fall back to a template answer.
+3. **No verdict fields** in any tool output.
+4. **No execution path** from the LLM.
+5. **Refusal set:** about 20 prompts in English and Thai ("what should I buy", "is BTC a good buy now", "ซื้ออะไรดี"). Run it on every prompt change.
+
+## 12. API for Oasis and KP
+
+| Endpoint | For | Notes |
+|---|---|---|
+| `POST /chat` | Oasis panel, KP voice | in: `session_id, user_id, text, lang, input_mode, screen_context`. out: `text, speak, ui_actions, sources` |
+| `GET /prices?ids=` | Oasis screens | same cache as the tools |
+| `GET /history/{id}?period=` | Oasis charts | |
+| `GET /portfolio/{user_id}` | Oasis | |
+| `POST /trades/{preview_id}/confirm` | Oasis confirm button | idempotent |
+| `POST /events` | Oasis | task_started, tap-to-explain, screen views |
+| `GET /friction/summary` | Oasis dashboard | |
+| `POST /demo/reset` | us | before every rehearsal |
+| `GET /health` | everyone | per-source status: live, delayed, offline |
+
+`screen_context` shape (agree with Oasis):
+
+```json
+{ "screen_id": "asset_detail", "selected_asset": "gold", "chart_period": "1m",
+  "visible_elements": ["asset.chart", "asset.change24h", "asset.buy_button"],
+  "focused_element": "asset.chart", "entered_amount": null }
+```
+
+**Stub first.** By hour 2, `/chat` returns canned replies in the final format so KP and Oasis can build against it. The pydantic models in `contracts.py` are the contract. Export their JSON schema and share it.
+
+## 13. Repo layout
+
+```
+backend/
+  app/
+    main.py            routes
+    contracts.py       pydantic models: screen context, tool results, chat reply, events
+    market/            sources.py, validate.py, cache.py, history.py, stats.py
+    knowledge/         loader for assets, glossary, ui_elements, journey
+    users/             store.py (SQLite), trades.py, journey.py
+    tools/             one file per tool group, registry.py (tool schemas)
+    events/            log.py, classify.py, abandon.py, summary.py
+    assistant/         loop.py, prompt.md, guardrails.py
+  data/
+    assets.json  glossary.json  ui_elements.json  journey.json  fees.json
+    seed/        u_new.json, u_small.json, events_seed.json
+    snapshots/   prices.json, history/*.json
+  tests/
+```
+
+## 14. Timeline and split
+
+- **Track A, data and knowledge:** sources, validation, cache, snapshots, history, stats, `assets.json`, `glossary.json`, `get_prices`, `get_history`, `get_asset_info`, `explain_element`, `resolve_asset`, compare, what-if, goal math.
+- **Track B, users and events:** SQLite, seeds, portfolio, `prepare_trade`, confirm, journey, events, abandonment job, friction summary, reset.
+- **Shared:** `contracts.py`, the `/chat` loop, the prompt, guardrails.
+
+Who takes which track: decide at kickoff.
+
+| Hours | Track A | Track B | Done when |
+|---|---|---|---|
+| 0 to 2 | check Binance and Frankfurter from venue wifi; draft `assets.json` | seed users, fees | `contracts.py` and `screen_context` agreed; stub `/chat` live; element ids from Oasis |
+| 2 to 5 | pollers, validate, cache, snapshot, `GET /prices`, history | SQLite, `prepare_trade`, confirm (idempotent), events table | Oasis screens show live BTC and gold from our API |
+| 5 to 8 | glossary, `explain_element`, `resolve_asset` | `/chat` loop with real tools, `show_card` by `result_id`, journey | **P0 done:** the buy-gold flow and tap-to-explain work end to end; `OFFLINE=1` works |
+| 8 to 11 | stats, compare, goal math, what-if past | portfolio X-ray, abandonment job, `/friction/summary` | P1 features reachable from chat |
+| 11 to 14 | numbers check, refusal set | dashboard metrics with counts, reset, seed events | **P1 done:** refusal set passes; dashboard shows data |
+| 14 to 18 | P2 only if stable; fixes; latency under 3 s to first text | Thai checks with KP; edge tests | full demo runs 3 times in a row with no fixes |
+| 18 to 22 | friction tests with outsiders (everyone) | | real data in the dashboard |
+| 22 to 24 | buffer, no new features | | |
+
+## 15. Tests
+
+- Tool tests on fixed history fixtures: fee and quantity math, minimum buy, goal math edge cases, what-if on a known series.
+- Edge cases from the demo: ambiguous asset, delayed price, not enough funds, expired preview, double confirm.
+- Refusal set (section 11).
+- A demo script that sends the exact stage lines through `/chat` and prints replies and sources. Run it before every rehearsal.
+
+## 16. Check at kickoff
+
+1. Which assets does U-topia's app offer? Which gold token?
+2. Do Binance and Frankfurter work from the venue wifi?
+3. Python or TypeScript?
+4. Oasis's element id list, and the `screen_context` shape.
+5. Team OK with `execute_trade` as a confirm endpoint, and `log_friction` as automatic logging, instead of LLM tools?
+6. Which LLM and key, and its rate limits for about 6 hours of testing.
+7. Tokenomist API access (P2 only).

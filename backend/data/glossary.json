@@ -1,0 +1,180 @@
+{
+  "_note": "Plain explanations of terms on screen. No numbers that change (those come from tools). Thai needs a Thai speaker's check: set th_reviewed to true after.",
+  "terms": {
+    "change_24h": {
+      "en": "24h change", "th": "เปลี่ยนแปลง 24 ชม.",
+      "aliases": ["24h", "24 hours", "24 hour change", "24 ชม", "24 ชั่วโมง"],
+      "explain_en": "How much the price went up or down compared with exactly 24 hours ago, in percent.",
+      "explain_th": "ราคาขึ้นหรือลงไปกี่เปอร์เซ็นต์ เทียบกับเมื่อ 24 ชั่วโมงก่อนพอดี",
+      "th_reviewed": false
+    },
+    "price_chart": {
+      "en": "Price chart", "th": "กราฟราคา",
+      "aliases": ["chart", "line", "graph", "กราฟ", "เส้น"],
+      "explain_en": "A line showing the price over time. Left is older, right is now. Higher on the chart means a higher price.",
+      "explain_th": "เส้นที่แสดงราคาตามเวลา ด้านซ้ายคืออดีต ด้านขวาคือตอนนี้ ยิ่งเส้นสูง ราคายิ่งสูง",
+      "th_reviewed": false
+    },
+    "market_price": {
+      "en": "Market price", "th": "ราคาตลาด",
+      "aliases": ["price", "current price", "ราคา"],
+      "explain_en": "The price people are buying and selling at right now. It changes all the time.",
+      "explain_th": "ราคาที่คนกำลังซื้อขายกันอยู่ตอนนี้ เปลี่ยนแปลงตลอดเวลา",
+      "th_reviewed": false
+    },
+    "fee": {
+      "en": "Fee", "th": "ค่าธรรมเนียม",
+      "aliases": ["fee", "fees", "charge", "commission", "ค่าธรรมเนียม", "ค่าบริการ"],
+      "explain_en": "What the app charges for a buy or sell. It comes out of the amount you put in.",
+      "explain_th": "เงินที่แอปเก็บเมื่อคุณซื้อหรือขาย หักจากจำนวนเงินที่คุณใส่",
+      "th_reviewed": false
+    },
+    "minimum_buy": {
+      "en": "Minimum buy", "th": "ยอดซื้อขั้นต่ำ",
+      "aliases": ["minimum", "min", "ขั้นต่ำ"],
+      "explain_en": "The smallest amount you can buy at once.",
+      "explain_th": "จำนวนเงินน้อยที่สุดที่ซื้อได้ในแต่ละครั้ง",
+      "th_reviewed": false
+    },
+    "balance": {
+      "en": "Balance", "th": "ยอดเงินคงเหลือ",
+      "aliases": ["balance", "cash", "ยอดเงิน", "เงินคงเหลือ"],
+      "explain_en": "The baht in your account that you haven't used to buy anything yet.",
+      "explain_th": "เงินบาทในบัญชีที่คุณยังไม่ได้ใช้ซื้ออะไร",
+      "th_reviewed": false
+    },
+    "portfolio": {
+      "en": "Portfolio", "th": "พอร์ต",
+      "aliases": ["portfolio", "holdings", "พอร์ต", "พอร์ตการลงทุน"],
+      "explain_en": "Everything you hold in the app, and what it's worth right now.",
+      "explain_th": "ทุกอย่างที่คุณถืออยู่ในแอป และมูลค่าตอนนี้",
+      "th_reviewed": false
+    },
+    "allocation": {
+      "en": "Allocation", "th": "สัดส่วนพอร์ต",
+      "aliases": ["allocation", "split", "สัดส่วน"],
+      "explain_en": "How your money is split between assets, in percent. For example, most in Bitcoin and a little in gold.",
+      "explain_th": "เงินของคุณแบ่งอยู่ในสินทรัพย์แต่ละตัวกี่เปอร์เซ็นต์ เช่น ส่วนใหญ่อยู่ในบิตคอยน์ และมีทองคำนิดหน่อย",
+      "th_reviewed": false
+    },
+    "gain_loss": {
+      "en": "Gain or loss", "th": "กำไรหรือขาดทุน",
+      "aliases": ["gain", "loss", "profit", "p&l", "pnl", "กำไร", "ขาดทุน"],
+      "explain_en": "The difference between what you paid and what it's worth now. It only becomes real money when you sell.",
+      "explain_th": "ส่วนต่างระหว่างเงินที่คุณจ่ายไปกับมูลค่าตอนนี้ จะกลายเป็นเงินจริงก็ต่อเมื่อคุณขาย",
+      "th_reviewed": false
+    },
+    "deposit": {
+      "en": "Deposit", "th": "ฝากเงิน",
+      "aliases": ["deposit", "top up", "add money", "ฝาก", "เติมเงิน"],
+      "explain_en": "Moving money from your bank into the app.",
+      "explain_th": "การโอนเงินจากบัญชีธนาคารเข้ามาในแอป",
+      "th_reviewed": false
+    },
+    "withdraw": {
+      "en": "Withdraw", "th": "ถอนเงิน",
+      "aliases": ["withdraw", "cash out", "ถอน"],
+      "explain_en": "Moving money from the app back to your bank.",
+      "explain_th": "การโอนเงินจากแอปกลับไปที่บัญชีธนาคาร",
+      "th_reviewed": false
+    },
+    "order_preview": {
+      "en": "Order preview", "th": "ตรวจสอบคำสั่งซื้อ",
+      "aliases": ["preview", "summary", "confirm", "ตรวจสอบ", "ยืนยัน"],
+      "explain_en": "A summary before you buy: the asset, the amount, the fee, and what you'll get. Nothing happens until you tap confirm.",
+      "explain_th": "สรุปก่อนซื้อ ว่าซื้ออะไร เท่าไร ค่าธรรมเนียมเท่าไร และจะได้อะไร จะยังไม่มีอะไรเกิดขึ้นจนกว่าคุณจะกดยืนยัน",
+      "th_reviewed": false
+    },
+    "swap": {
+      "en": "Swap", "th": "สวอป",
+      "aliases": ["swap", "exchange", "convert", "สวอป", "แลก"],
+      "explain_en": "Trading one crypto asset straight for another, for example Bitcoin for Ethereum, without going through baht first.",
+      "explain_th": "การแลกคริปโตตัวหนึ่งเป็นอีกตัวโดยตรง เช่น บิตคอยน์เป็นอีเธอเรียม โดยไม่ต้องแปลงเป็นเงินบาทก่อน",
+      "th_reviewed": false
+    },
+    "crypto": {
+      "en": "Cryptocurrency", "th": "คริปโตเคอร์เรนซี",
+      "aliases": ["crypto", "cryptocurrency", "coin", "คริปโต", "เหรียญ"],
+      "explain_en": "Digital money that runs on a shared network instead of a bank. Prices can move a lot.",
+      "explain_th": "เงินดิจิทัลที่ทำงานบนเครือข่ายที่ใช้ร่วมกัน ไม่ได้ผ่านธนาคาร ราคาขึ้นลงได้มาก",
+      "th_reviewed": false
+    },
+    "token": {
+      "en": "Token", "th": "โทเคน",
+      "aliases": ["token", "โทเคน"],
+      "explain_en": "A digital unit on a blockchain. It can stand for a currency, gold, or something else.",
+      "explain_th": "หน่วยดิจิทัลบนบล็อกเชน ใช้แทนเงิน ทองคำ หรือสิ่งอื่นได้",
+      "th_reviewed": false
+    },
+    "tokenized_asset": {
+      "en": "Tokenized asset", "th": "สินทรัพย์โทเคน",
+      "aliases": ["tokenized", "tokenised", "tokenized asset", "สินทรัพย์โทเคน"],
+      "explain_en": "A token that stands for a real asset, like gold. Holding the token means holding a share of that asset.",
+      "explain_th": "โทเคนที่แทนสินทรัพย์จริง เช่น ทองคำ การถือโทเคนก็คือการถือส่วนหนึ่งของสินทรัพย์นั้น",
+      "th_reviewed": false
+    },
+    "stablecoin": {
+      "en": "Stablecoin", "th": "สเตเบิลคอยน์",
+      "aliases": ["stablecoin", "stable coin", "สเตเบิลคอยน์"],
+      "explain_en": "A crypto token designed to keep a steady value, usually 1 US dollar.",
+      "explain_th": "โทเคนคริปโตที่ออกแบบให้มูลค่าคงที่ ส่วนใหญ่คือ 1 ดอลลาร์สหรัฐ",
+      "th_reviewed": false
+    },
+    "blockchain": {
+      "en": "Blockchain", "th": "บล็อกเชน",
+      "aliases": ["blockchain", "chain", "บล็อกเชน"],
+      "explain_en": "A shared record of transactions that many computers keep together, so no single company controls it.",
+      "explain_th": "บันทึกธุรกรรมที่คอมพิวเตอร์จำนวนมากเก็บร่วมกัน จึงไม่มีบริษัทไหนควบคุมได้คนเดียว",
+      "th_reviewed": false
+    },
+    "wallet": {
+      "en": "Wallet", "th": "กระเป๋าเงินดิจิทัล",
+      "aliases": ["wallet", "วอลเล็ต", "กระเป๋า"],
+      "explain_en": "Where your crypto is kept. In this app, it's the crypto side of your balance.",
+      "explain_th": "ที่เก็บคริปโตของคุณ ในแอปนี้คือส่วนคริปโตในยอดเงินของคุณ",
+      "th_reviewed": false
+    },
+    "non_custodial": {
+      "en": "Non-custodial", "th": "นอนคัสโตเดียล (ถือกุญแจเอง)",
+      "aliases": ["non-custodial", "non custodial", "self custody", "นอนคัสโตเดียล"],
+      "explain_en": "You hold the keys to your crypto, not the company. If you lose the keys, nobody can get the money back for you.",
+      "explain_th": "คุณถือกุญแจคริปโตของคุณเอง ไม่ใช่บริษัท ถ้าทำกุญแจหาย จะไม่มีใครกู้เงินคืนให้ได้",
+      "th_reviewed": false
+    },
+    "yield": {
+      "en": "Yield", "th": "ผลตอบแทน (ยีลด์)",
+      "aliases": ["yield", "apy", "apr", "interest", "earn", "ยีลด์", "ดอกเบี้ย", "ผลตอบแทน"],
+      "explain_en": "Earning extra on what you hold, a bit like interest. The rate can change and isn't guaranteed.",
+      "explain_th": "รายได้เพิ่มจากสิ่งที่คุณถืออยู่ คล้ายดอกเบี้ย อัตราเปลี่ยนได้และไม่รับประกัน",
+      "th_reviewed": false
+    },
+    "volatility": {
+      "en": "Volatility", "th": "ความผันผวน",
+      "aliases": ["volatility", "volatile", "swings", "risk", "ผันผวน", "ความเสี่ยง"],
+      "explain_en": "How much and how fast a price moves up and down. High volatility means bigger swings, both ways.",
+      "explain_th": "ราคาขึ้นลงมากและเร็วแค่ไหน ความผันผวนสูงหมายถึงราคาแกว่งแรง ทั้งขึ้นและลง",
+      "th_reviewed": false
+    },
+    "troy_ounce": {
+      "en": "Troy ounce", "th": "ทรอยออนซ์",
+      "aliases": ["ounce", "oz", "troy ounce", "ออนซ์"],
+      "explain_en": "The unit used for gold prices worldwide. 1 troy ounce is about 31.1 grams.",
+      "explain_th": "หน่วยที่ใช้บอกราคาทองคำทั่วโลก 1 ทรอยออนซ์ประมาณ 31.1 กรัม",
+      "th_reviewed": false
+    },
+    "baht_weight": {
+      "en": "Baht weight (gold)", "th": "ทองหนักหนึ่งบาท",
+      "aliases": ["baht weight", "บาททอง", "ทองหนัก", "หนักบาท"],
+      "explain_en": "The Thai unit for gold weight. 1 baht weight is 15.244 grams, so 1 troy ounce is about 2 baht weight.",
+      "explain_th": "หน่วยน้ำหนักทองของไทย ทองหนัก 1 บาทเท่ากับ 15.244 กรัม ดังนั้น 1 ทรอยออนซ์ประมาณ 2 บาท",
+      "th_reviewed": false
+    },
+    "verification": {
+      "en": "Identity check (KYC)", "th": "ยืนยันตัวตน (KYC)",
+      "aliases": ["kyc", "verify", "verification", "id check", "ยืนยันตัวตน"],
+      "explain_en": "Checking your ID before you can deposit or trade. Finance apps have to do this.",
+      "explain_th": "การตรวจบัตรประชาชนก่อนฝากเงินหรือซื้อขาย แอปการเงินต้องทำขั้นตอนนี้",
+      "th_reviewed": false
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "fx": {
+    "rate": 33.575,
+    "as_of": "2026-10-14",
+    "source": "frankfurter",
+    "fetched_at": 1792055806.8486881
+  },
+  "prices": {
+    "btc": {
+      "asset_id": "btc",
+      "price_usd": 81310.01,
+      "price_thb": 2729983.59,
+      "change_24h_pct": -2.56,
+      "as_of": "2026-10-15T09:16:47+00:00",
+      "source": "binance",
+      "fetched_at": 1792055806.8486881
+    },
+    "eth": {
+      "asset_id": "eth",
+      "price_usd": 2373.04,
+      "price_thb": 79674.82,
+      "change_24h_pct": -5.31,
+      "as_of": "2026-10-15T09:16:47+00:00",
+      "source": "binance",
+      "fetched_at": 1792055806.8486881
+    },
+    "gold": {
+      "asset_id": "gold",
+      "price_usd": 4158.41,
+      "price_thb": 139618.62,
+      "change_24h_pct": 0.2,
+      "as_of": "2026-10-15T09:16:43+00:00",
+      "source": "binance",
+      "fetched_at": 1792055806.8486881
+    },
+    "usdt": {
+      "asset_id": "usdt",
+      "price_usd": 1.0,
+      "price_thb": 33.58,
+      "change_24h_pct": 0.0,
+      "as_of": "2026-10-14",
+      "source": "fixed",
+      "fetched_at": 1792055806.8486881
+    }
+  }
+}

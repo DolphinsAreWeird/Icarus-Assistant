@@ -1,0 +1,159 @@
+{
+  "user_id": "u_small",
+  "display_name": "Beam",
+  "synthetic": true,
+  "journey": {
+    "stage": "first_purchase",
+    "signed_up_at": "2026-07-11T05:00:00+00:00",
+    "verified_at": "2026-07-11T05:00:00+00:00",
+    "deposited_at": "2026-07-12T05:00:00+00:00",
+    "first_purchase_at": "2026-07-13T05:00:00+00:00"
+  },
+  "cash_thb": 1195.0,
+  "holdings": {
+    "btc": {
+      "qty": 0.01181067,
+      "cost_thb": 28000.0
+    },
+    "eth": {
+      "qty": 0.04150595,
+      "cost_thb": 2717.48
+    },
+    "gold": {
+      "qty": 0.02437177,
+      "cost_thb": 3500.0
+    }
+  },
+  "transactions": [
+    {
+      "id": "tx_u_small_001",
+      "ts": "2026-07-12T05:00:00+00:00",
+      "type": "deposit",
+      "asset_id": null,
+      "amount_thb": 30000.0,
+      "price_thb": null,
+      "qty": null,
+      "fee_thb": 0.0
+    },
+    {
+      "id": "tx_u_small_002",
+      "ts": "2026-07-13T05:00:00+00:00",
+      "type": "buy",
+      "asset_id": "btc",
+      "amount_thb": 8000.0,
+      "price_thb": 2081037.95,
+      "qty": 0.00383462,
+      "fee_thb": 20.0
+    },
+    {
+      "id": "tx_u_small_003",
+      "ts": "2026-07-27T05:00:00+00:00",
+      "type": "buy",
+      "asset_id": "btc",
+      "amount_thb": 5000.0,
+      "price_thb": 2140921.78,
+      "qty": 0.0023296,
+      "fee_thb": 12.5
+    },
+    {
+      "id": "tx_u_small_004",
+      "ts": "2026-08-04T05:00:00+00:00",
+      "type": "buy",
+      "asset_id": "eth",
+      "amount_thb": 3000.0,
+      "price_thb": 62328.12,
+      "qty": 0.04801204,
+      "fee_thb": 7.5
+    },
+    {
+      "id": "tx_u_small_005",
+      "ts": "2026-08-16T05:00:00+00:00",
+      "type": "buy",
+      "asset_id": "gold",
+      "amount_thb": 2500.0,
+      "price_thb": 144716.83,
+      "qty": 0.01723193,
+      "fee_thb": 6.25
+    },
+    {
+      "id": "tx_u_small_006",
+      "ts": "2026-08-24T05:00:00+00:00",
+      "type": "buy",
+      "asset_id": "btc",
+      "amount_thb": 4000.0,
+      "price_thb": 2581878.03,
+      "qty": 0.00154539,
+      "fee_thb": 10.0
+    },
+    {
+      "id": "tx_u_small_007",
+      "ts": "2026-08-31T05:00:00+00:00",
+      "type": "deposit",
+      "asset_id": null,
+      "amount_thb": 5200.0,
+      "price_thb": null,
+      "qty": null,
+      "fee_thb": 0.0
+    },
+    {
+      "id": "tx_u_small_008",
+      "ts": "2026-09-01T05:00:00+00:00",
+      "type": "buy",
+      "asset_id": "btc",
+      "amount_thb": 6000.0,
+      "price_thb": 2576008.33,
+      "qty": 0.00232336,
+      "fee_thb": 15.0
+    },
+    {
+      "id": "tx_u_small_009",
+      "ts": "2026-09-15T05:00:00+00:00",
+      "type": "sell",
+      "asset_id": "eth",
+      "amount_thb": 1000.0,
+      "price_thb": 79850.07,
+      "qty": 0.01252347,
+      "fee_thb": 5
+    },
+    {
+      "id": "tx_u_small_010",
+      "ts": "2026-09-25T05:00:00+00:00",
+      "type": "buy",
+      "asset_id": "btc",
+      "amount_thb": 3000.0,
+      "price_thb": 2804314.17,
+      "qty": 0.00106711,
+      "fee_thb": 7.5
+    },
+    {
+      "id": "tx_u_small_011",
+      "ts": "2026-10-03T05:00:00+00:00",
+      "type": "buy",
+      "asset_id": "gold",
+      "amount_thb": 1000.0,
+      "price_thb": 139358.78,
+      "qty": 0.00713984,
+      "fee_thb": 5
+    },
+    {
+      "id": "tx_u_small_012",
+      "ts": "2026-10-07T05:00:00+00:00",
+      "type": "buy",
+      "asset_id": "btc",
+      "amount_thb": 2000.0,
+      "price_thb": 2807528.39,
+      "qty": 0.00071059,
+      "fee_thb": 5.0
+    },
+    {
+      "id": "tx_u_small_013",
+      "ts": "2026-10-12T05:00:00+00:00",
+      "type": "buy",
+      "asset_id": "eth",
+      "amount_thb": 500.0,
+      "price_thb": 82261.62,
+      "qty": 0.00601739,
+      "fee_thb": 5
+    }
+  ]
+}
