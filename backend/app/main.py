@@ -76,7 +76,7 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True) -> FastAPI:
         return {a: cache.get(a) for a in wanted if cache.get(a)}
 
     @app.get("/history/{asset_id}")
-    def history(asset_id: str, period: str = "1m"):
+    def history(asset_id: str, period: str = "1M"):
         if asset_id not in knowledge.assets() or period not in PERIODS:
             fail(404, "unknown_asset")
         return {"asset_id": asset_id, "period": period, "rows": period_rows(asset_id, period)}

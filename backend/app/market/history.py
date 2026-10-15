@@ -66,8 +66,9 @@ def load_history(asset_id: str, interval: str, history_dir=HISTORY_DIR) -> list[
     return json.loads(path.read_text()) if path.exists() else []
 
 
-# Chart period -> (candle interval, number of candles)
-PERIODS = {"1d": ("1h", 24), "1w": ("1h", 168), "1m": ("1d", 30), "1y": ("1d", 365)}
+# Chart period (the app's names) -> (candle interval, number of candles)
+PERIODS = {"1D": ("1h", 24), "1W": ("1h", 168), "1M": ("1d", 30), "3M": ("1d", 90),
+           "1Y": ("1d", 365), "ALL": ("1d", 3 * 365)}  # ALL: all the history we keep
 
 
 def period_rows(asset_id: str, period: str, history_dir=HISTORY_DIR) -> list[dict]:

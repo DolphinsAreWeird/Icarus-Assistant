@@ -29,8 +29,13 @@ def glossary() -> dict:
 
 
 @cache
+def app_ui() -> dict:
+    """The app Icarus can navigate: a read-only mirror of Oasis's prototype."""
+    return _load("app_ui.json")
+
+
 def ui_elements() -> dict:
-    return _load("ui_elements.json")["elements"]
+    return app_ui()["elements"]
 
 
 @cache
@@ -70,7 +75,7 @@ def validate_knowledge(assets: dict, glossary: dict, ui_elements: dict, journey:
         step = journey["next_step"].get(stage)
         if step is None:
             problems.append(f"journey stage {stage}: no next_step")
-        elif step["highlight"] not in ui_elements:
+        elif step["highlight"] is not None and step["highlight"] not in ui_elements:
             problems.append(f"journey stage {stage}: unknown element '{step['highlight']}'")
 
     return problems

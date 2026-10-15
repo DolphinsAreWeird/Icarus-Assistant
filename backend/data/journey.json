@@ -1,9 +1,9 @@
 {
   "stages": ["signed_up", "verified", "deposited", "first_purchase"],
   "next_step": {
-    "signed_up":      {"en": "Verify your ID so you can add money.",  "th": "ยืนยันตัวตนก่อน แล้วจะเติมเงินได้",  "highlight": "home.verify_banner"},
-    "verified":       {"en": "Add baht from your bank to get started.", "th": "เติมเงินบาทจากบัญชีธนาคารเพื่อเริ่มต้น", "highlight": "home.deposit_button"},
-    "deposited":      {"en": "You're ready to make your first buy.",   "th": "พร้อมซื้อครั้งแรกแล้ว",                "highlight": "home.buy_button"},
-    "first_purchase": {"en": "See what you hold in your portfolio.",   "th": "ดูสิ่งที่คุณถืออยู่ในพอร์ต",            "highlight": "home.portfolio_tab"}
+    "signed_up":      {"en": "Verify your ID so you can add money.",  "th": "ยืนยันตัวตนก่อน แล้วจะเติมเงินได้",  "highlight": null},
+    "verified":       {"en": "Add baht from your bank to get started.", "th": "เติมเงินบาทจากบัญชีธนาคารเพื่อเริ่มต้น", "highlight": "home.balance"},
+    "deposited":      {"en": "You're ready to make your first buy. Any asset's page has a Buy button.", "th": "พร้อมซื้อครั้งแรกแล้ว หน้าของสินทรัพย์ทุกตัวมีปุ่มซื้อ", "highlight": null},
+    "first_purchase": {"en": "See what you hold in your portfolio.",   "th": "ดูสิ่งที่คุณถืออยู่ในพอร์ต",            "highlight": "portfolio.allocation"}
   }
 }

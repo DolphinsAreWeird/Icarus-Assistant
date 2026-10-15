@@ -66,3 +66,18 @@ def test_build_user_books_cash_fees_and_cost():
 def test_build_user_refuses_overspending():
     with pytest.raises(ValueError):
         build_user("u_t", "Test", [(14, "buy", "btc", 100)], date(2026, 10, 15), HISTORY, FEES)
+
+
+def test_env_file_fills_missing_settings_but_never_overrides(tmp_path, monkeypatch):
+    from app.config import load_env_file
+    env = tmp_path / ".env"
+    env.write_text('# comment\nICARUS_T_A="from file"\nICARUS_T_B=from file\nICARUS_T_EMPTY=\n')
+    monkeypatch.setenv("ICARUS_T_B", "real env")
+    monkeypatch.delenv("ICARUS_T_A", raising=False)
+    monkeypatch.delenv("ICARUS_T_EMPTY", raising=False)
+    load_env_file(env)
+    import os
+    assert os.environ["ICARUS_T_A"] == "from file"
+    assert os.environ["ICARUS_T_B"] == "real env"
+    assert "ICARUS_T_EMPTY" not in os.environ
+    monkeypatch.delenv("ICARUS_T_A")

@@ -3,6 +3,23 @@ import os
 from pathlib import Path
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
+ENV_FILE = BACKEND_DIR / ".env"  # secrets go here; git ignores it (root .gitignore)
+
+
+def load_env_file(path: Path = ENV_FILE) -> None:
+    """Read KEY=value lines from backend/.env. Real environment variables win."""
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            if value.strip():
+                os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
+
+
+load_env_file()
+
 DATA_DIR = BACKEND_DIR / "data"
 SEED_DIR = DATA_DIR / "seed"
 SNAPSHOT_DIR = DATA_DIR / "snapshots"

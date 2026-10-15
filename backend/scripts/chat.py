@@ -2,10 +2,10 @@
 
 Run from backend/:
   python -m scripts.chat --user u_new --screen asset_detail --asset gold --period 1m --focus asset.chart
-Type a message. "confirm" taps Confirm on the last preview card. "quit" exits.
+Type a message. Each reply prints the app actions Icarus would run, and the next
+message starts on the screen those actions ended on. "quit" exits.
 """
 import argparse
-import json
 
 from app import knowledge
 from app.assistant.llm import ChatModel
@@ -13,14 +13,13 @@ from app.assistant.loop import Assistant
 from app.contracts import ChatRequest, ScreenContext
 from app.market.cache import PriceCache
 from app.state import DemoState
-from app.trades import TradeError, confirm_trade
 
 
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--user", default="u_new")
     p.add_argument("--screen", default="home")
-    p.add_argument("--asset")
+    p.add_argument("--asset", help="app asset id: BTC ETH XAU AAPL TSLA")
     p.add_argument("--period")
     p.add_argument("--focus")
     p.add_argument("--lang", choices=["en", "th"])
@@ -34,25 +33,20 @@ def main() -> None:
     bot = Assistant(llm, state, cache)
     screen = ScreenContext(screen_id=args.screen, selected_asset=args.asset,
                            chart_period=args.period, focused_element=args.focus)
-    last_preview = None
 
     while True:
         text = input("\nyou> ").strip()
         if text in ("quit", "exit"):
             return
-        if text == "confirm":
-            try:
-                print(json.dumps(confirm_trade(state, args.user, last_preview), indent=2))
-            except TradeError as e:
-                print("confirm failed:", e.code)
-            continue
         reply = bot.chat(ChatRequest(session_id="cli", user_id=args.user, text=text,
                                      lang=args.lang, screen_context=screen))
         print(f"icarus> {reply.text}")
         for action in reply.ui_actions:
-            print("  ui:", action.model_dump(exclude_none=True))
-            if action.card_type == "trade_preview":
-                last_preview = action.data["preview_id"]
+            print("  ui:", action)
+        # pretend the app ran the actions: the next turn starts where they ended
+        screen = screen.model_copy(update={"screen_id": reply.debug["screen_after"],
+                                           "selected_asset": reply.debug["asset_after"],
+                                           "focused_element": None})
         print("  sources:", [f"{s.tool}({s.freshness})" for s in reply.sources])
         print("  debug:", reply.debug)
 

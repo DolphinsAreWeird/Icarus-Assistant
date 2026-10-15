@@ -1,0 +1,44 @@
+{
+  "_note": "Mirror of Oasis's prototype (frontend/prototype/Icarus Prototype.dc.html), read only. Every id and value here must match the prototype exactly. When the prototype changes, update this file, then run the tests.",
+  "screens": {
+    "home":      {"to": {"tab": "home"}},
+    "wallets":   {"to": {"tab": "wallets"}},
+    "invest":    {"to": {"tab": "invest", "view": "invest"}},
+    "portfolio": {"to": {"tab": "invest", "view": "portfolio"}},
+    "payments":  {"to": {"tab": "payments"}},
+    "card":      {"to": {"tab": "card"}}
+  },
+  "assets": {
+    "BTC":  {"name": "Bitcoin",  "data_id": "btc"},
+    "ETH":  {"name": "Ethereum", "data_id": "eth"},
+    "XAU":  {"name": "Gold",     "data_id": "gold"},
+    "AAPL": {"name": "Apple",    "data_id": null},
+    "TSLA": {"name": "Tesla",    "data_id": null}
+  },
+  "periods": ["1D", "1W", "1M", "3M", "1Y", "ALL"],
+  "filters": ["All", "Crypto", "Stocks", "Gold"],
+  "wallets": {"thb": "THB Wallet", "usd": "Spending Wallet"},
+  "min_buy_thb": 100,
+  "elements": {
+    "home.balance":           {"screen": "home",      "shows": "Total balance across the THB wallet and the spending wallet", "terms": ["balance", "wallet"], "screen_data": null},
+    "card.balance":           {"screen": "card",      "shows": "The spending wallet balance the card pays from", "terms": ["balance"], "screen_data": null},
+    "invest.portfolio_value": {"screen": "invest",    "shows": "Total value of everything the user has invested", "terms": ["portfolio"], "screen_data": "portfolio"},
+    "invest.chart":           {"screen": "invest",    "shows": "Line chart of the total value of the user's investments over the chosen period", "terms": ["portfolio", "price_chart"], "screen_data": "portfolio"},
+    "invest.asset.BTC":       {"screen": "invest",    "shows": "Bitcoin in the asset list", "terms": ["crypto"], "screen_data": null},
+    "invest.asset.ETH":       {"screen": "invest",    "shows": "Ethereum in the asset list", "terms": ["crypto"], "screen_data": null},
+    "invest.asset.XAU":       {"screen": "invest",    "shows": "Gold in the asset list", "terms": [], "screen_data": null},
+    "invest.asset.AAPL":      {"screen": "invest",    "shows": "Apple stock in the asset list", "terms": [], "screen_data": null},
+    "invest.asset.TSLA":      {"screen": "invest",    "shows": "Tesla stock in the asset list", "terms": [], "screen_data": null},
+    "asset.chart":            {"screen": "asset",     "shows": "Line chart of the selected asset's price over the chosen period", "terms": ["price_chart", "volatility"], "screen_data": "chart"},
+    "asset.change24h":        {"screen": "asset",     "shows": "How much the price moved in the last 24 hours, in percent", "terms": ["change_24h"], "screen_data": "asset"},
+    "asset.buy_button":       {"screen": "asset",     "shows": "Button that starts buying this asset", "terms": [], "screen_data": null},
+    "buy.amount_input":       {"screen": "buy",       "shows": "Box where the user types how many baht to spend", "terms": ["minimum_buy"], "screen_data": "buy"},
+    "buy.fee_line":           {"screen": "buy",       "shows": "The fee for this purchase", "terms": ["fee"], "screen_data": "buy"},
+    "buy.review_button":      {"screen": "buy",       "shows": "Button that opens the review screen", "terms": ["order_preview"], "screen_data": null},
+    "buy.confirm_button":     {"screen": "buy_review","shows": "Button that confirms the purchase. Only the user taps it", "terms": ["order_preview"], "screen_data": "buy"},
+    "portfolio.chart":        {"screen": "portfolio", "shows": "Line chart of the portfolio's value over the chosen period", "terms": ["portfolio", "price_chart"], "screen_data": "portfolio"},
+    "portfolio.allocation":   {"screen": "portfolio", "shows": "How the user's money is split between assets", "terms": ["allocation"], "screen_data": "portfolio"},
+    "swap.from_asset":        {"screen": "payments",  "shows": "The asset the user gives up in a swap", "terms": ["swap"], "screen_data": null},
+    "swap.to_asset":          {"screen": "payments",  "shows": "The asset the user gets in a swap", "terms": ["swap"], "screen_data": null}
+  }
+}

@@ -13,6 +13,8 @@ import time
 
 import httpx
 
+import app.config  # noqa: F401  loads backend/.env before we read keys
+
 PRESETS = {
     "groq": {"base_url": "https://api.groq.com/openai/v1", "key_env": "GROQ_API_KEY",
              "model": "openai/gpt-oss-120b", "extra": {"reasoning_effort": "low"}},
@@ -76,7 +78,8 @@ class ChatModel:
                                   "arguments": c["function"].get("arguments") or "{}"}}
                     for c in msg["tool_calls"]]
             else:
-                content, calls = tool_calls_in_text(clean["content"])
+                known = {t["function"]["name"] for t in tools}
+                content, calls = tool_calls_in_text(clean["content"], known)
                 if calls:
                     clean = {"role": "assistant", "content": content, "tool_calls": calls}
             return clean, choice.get("finish_reason") or "stop"
@@ -84,24 +87,61 @@ class ChatModel:
 
 
 TEXT_CALL_BLOCK = re.compile(r"<(tools|tool_call)>(.*?)</\1>", re.DOTALL)
+TAG_CALL = re.compile(r"<(\w+)((?:\s+\w+=\"[^\"]*\")*)\s*/>")                 # <show_asset asset_id="XAU"/>
+TAG_ATTR = re.compile(r"(\w+)=\"([^\"]*)\"")
+QWEN_CALL = re.compile(r"<function=(\w+)>(.*?)</function>", re.DOTALL)        # Qwen's own format
+QWEN_PARAM = re.compile(r"<parameter=(\w+)>\s*(.*?)\s*</parameter>", re.DOTALL)
 
 
-def tool_calls_in_text(content: str) -> tuple[str, list[dict]]:
-    """Some local models write tool calls as text: <tools>{"name": .., "arguments": {..}}</tools>.
-    Turn those into real tool calls. Returns (content without the blocks, calls)."""
+def _typed(value: str):
+    """Text from a tag attribute to the JSON type the tool expects."""
+    if value in ("true", "false"):
+        return value == "true"
+    try:
+        return json.loads(value) if value[:1] in "[{" else float(value) if "." in value else int(value)
+    except ValueError:
+        return value
+
+
+def _tag_calls(content: str, known: set[str]) -> list[dict]:
+    found = [(m.group(1), dict(TAG_ATTR.findall(m.group(2)))) for m in TAG_CALL.finditer(content)]
+    found += [(m.group(1), dict(QWEN_PARAM.findall(m.group(2)))) for m in QWEN_CALL.finditer(content)]
+    return [{"id": "", "type": "function",
+             "function": {"name": name, "arguments": json.dumps({k: _typed(v) for k, v in args.items()})}}
+            for name, args in found if name in known]
+
+
+def _json_calls(body: str, known: set[str]) -> list[dict]:
+    """Every {"name": <known tool>, "arguments": {...}} object inside some text."""
+    calls, pos, decoder = [], 0, json.JSONDecoder()
+    while (start := body.find("{", pos)) != -1:
+        try:
+            obj, pos = decoder.raw_decode(body, start)
+        except json.JSONDecodeError:
+            pos = start + 1
+            continue
+        if isinstance(obj, dict) and obj.get("name") in known:
+            calls.append({"id": f"text_call_{len(calls)}", "type": "function",
+                          "function": {"name": obj["name"],
+                                       "arguments": json.dumps(obj.get("arguments", {}))}})
+    return calls
+
+
+def tool_calls_in_text(content: str, known: set[str]) -> tuple[str, list[dict]]:
+    """Some local models write tool calls as text instead of making them:
+    <tools>{"name": .., "arguments": {..}}</tools>, or just the bare JSON.
+    Turn calls to tools we offered into real calls. Returns (leftover text, calls)."""
     calls = []
     for block in TEXT_CALL_BLOCK.finditer(content):
-        body, pos, decoder = block.group(2), 0, json.JSONDecoder()
-        while (start := body.find("{", pos)) != -1:
-            try:
-                obj, pos = decoder.raw_decode(body, start)
-            except json.JSONDecodeError:
-                break
-            if isinstance(obj, dict) and "name" in obj:
-                calls.append({"id": f"text_call_{len(calls)}", "type": "function",
-                              "function": {"name": obj["name"],
-                                           "arguments": json.dumps(obj.get("arguments", {}))}})
-    return TEXT_CALL_BLOCK.sub("", content).strip(), calls
+        calls += _json_calls(block.group(2), known)
+    content = TEXT_CALL_BLOCK.sub("", content)
+    if not calls:
+        calls = _json_calls(content, known) or _tag_calls(content, known)
+        if calls:  # the whole reply was the call; drop it so it isn't shown or spoken
+            content = ""
+    for i, call in enumerate(calls):
+        call["id"] = f"text_call_{i}"
+    return content.strip(), calls
 
 
 def parse_arguments(raw: str) -> dict:
