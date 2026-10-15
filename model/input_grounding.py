@@ -24,6 +24,46 @@ def monetary_mentions(text):
     return mentions
 
 
+def mentioned_assets(text):
+    return {asset for asset, pattern in {
+        "btc":r"\b(?:btc|bitcoin)\b|บิตคอยน์", "eth":r"\b(?:eth|ethereum)\b|อีเธอเรียม",
+        "gold":r"\b(?:gold|paxg)\b|ทอง"}.items() if re.search(pattern, text, re.I)}
+
+
+def natural_calculation(message):
+    """Conservative complete-input routes; mixed advice/unknown values stay with Qwen."""
+    text = message.lower()
+    if re.search(r"\b(?:should|recommend|suit|allocation|compare|current|today's price|risks?|wallets?|custody|staking|tax|gas|network|withdrawal)\b|ควร|เหมาะ|แนะนำ|สัดส่วน|เปรียบเทียบ|ราคาปัจจุบัน|เสี่ยง|กระเป๋า|รับฝาก|ภาษี|แก๊ส|เครือข่าย|ถอน", text):
+        return None
+    whatif = bool(re.search(r"what[ -]if|สมมติซื้อ", text))
+    savings = bool(re.search(r"\bcalculat\w*\b.*\b(?:savings|contributions?)\b|คำนวณ.*ออม", text))
+    fee = bool(re.search(r"\b(?:mock|simulated)\b.*\b(?:platform )?fee\b|\bplatform fee\b.*\b(?:mock|simulated)\b|ค่าธรรมเนียม.*จำลอง", text))
+    if not any((whatif, savings, fee)):
+        return None
+    if fee and not whatif and not savings:
+        clauses = re.split(r"\band\b|และ|พร้อมกับ|แล้ว", text)
+        if any(not re.search(r"\b(?:purchase amount|remaining|left|fee)\b|จำนวนที่เหลือ|เหลือซื้อ|ค่าธรรมเนียม", clause)
+               for clause in clauses[1:]):
+            return None
+    mentions = monetary_mentions(message)
+    dates = re.findall(r"\b[0-9]{4}-[0-9]{2}-[0-9]{2}\b", message)
+    if whatif:
+        assets = mentioned_assets(message)
+        if re.search(r"\bfees?\b|ค่าธรรมเนียม", text) and not re.search(r"\b(?:no|without|excluding) fees?\b|ไม่รวมค่าธรรมเนียม", text):
+            return None
+        if len(mentions) == 1 and mentions[0]["currency"] == "USDT" and len(dates) == 2 and len(assets) == 1:
+            return "what_if", {"asset_id":next(iter(assets)), "amount_usdt":str(mentions[0]["value"]),
+                               "start_date":dates[0], "end_date":dates[1]}
+    elif savings:
+        roles = {m["role"]:m for m in mentions if m["currency"] == "THB" and m["role"]}
+        if len(mentions) == 2 and set(roles) == {"target_thb", "current_thb"} and len(dates) == 1:
+            return "goal_math", {**{key:str(value["value"]) for key, value in roles.items()}, "target_date":dates[0]}
+    elif fee and len(mentions) == 1 and mentions[0]["currency"] == "THB" and not re.search(
+            r"\b(?:goal|gas|network|withdrawal|invest)\b|เป้าหมาย|แก๊ส|เครือข่าย|ถอน|ลงทุน", text):
+        return "calculate_fee", {"budget_thb":str(mentions[0]["value"])}
+    return None
+
+
 def amount_context(message, memory):
     current = monetary_mentions(message)
     if current:
@@ -66,14 +106,10 @@ def validate_monetary_arguments(name, args, message, memory, profile=None):
         if any(args.get(field) not in dates for field in date_fields):
             raise ValueError("TOOL_DATE_NOT_SUPPORTED_BY_USER_INPUT")
     if name == "what_if":
-        def assets(text):
-            return {asset for asset, pattern in {
-                "btc":r"\b(?:btc|bitcoin)\b|บิตคอยน์", "eth":r"\b(?:eth|ethereum)\b|อีเธอเรียม",
-                "gold":r"\b(?:gold|paxg)\b|ทอง"}.items() if re.search(pattern, text, re.I)}
-        known = assets(message)
+        known = mentioned_assets(message)
         if not known:
             for turn in reversed((memory or [])[-4:]):
-                known = assets(turn.get("user", ""))
+                known = mentioned_assets(turn.get("user", ""))
                 if known:
                     break
         if args.get("asset_id") not in known:

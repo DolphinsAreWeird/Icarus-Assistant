@@ -14,7 +14,7 @@ from icarus_core import (ROOT, fee_quote, fee_text, guidance_context, invoke, lo
 from orion_probe import request
 from profile_context import merge_profile
 from data_adapter import adapter_tools
-from input_grounding import monetary_mentions, validate_monetary_arguments
+from input_grounding import monetary_mentions, validate_monetary_arguments, natural_calculation
 
 
 def number_tokens(text):
@@ -298,6 +298,10 @@ def answer(message, *, language="en", profile_id="new", today="2026-10-15", mode
 
     try:
         command = parse_data_command(message)
+        command_route = "deterministic_data_tool"
+        if command is None:
+            command = natural_calculation(message)
+            command_route = "deterministic_natural_calculation"
     except ValueError as exc:
         return finish("Check the command arguments and explicit currency." if language=="en" else "โปรดตรวจสอบพารามิเตอร์และสกุลเงินในคำสั่ง",
                       [],"input_correction",status="invalid_input",limitations=[str(exc)])
@@ -310,7 +314,7 @@ def answer(message, *, language="en", profile_id="new", today="2026-10-15", mode
         status = "ok" if data.get("status") not in ("error","unavailable") else "data_unavailable"
         text = ("The sourced calculation is shown below." if language=="en" else "ผลการคำนวณพร้อมข้อมูลอ้างอิงแสดงด้านล่าง") if status=="ok" else (
             "The requested calculation is unavailable. Check the inputs and available history." if language=="en" else "ยังคำนวณรายการนี้ไม่ได้ โปรดตรวจสอบข้อมูลและช่วงประวัติที่มี")
-        return finish(text,[result_id],"deterministic_data_tool",status=status)
+        return finish(text,[result_id],command_route,status=status)
 
     context = guidance_context(profile)
     if offline:

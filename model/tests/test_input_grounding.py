@@ -5,7 +5,7 @@ from unittest.mock import patch
 import json
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from input_grounding import monetary_mentions, validate_monetary_arguments
+from input_grounding import monetary_mentions, validate_monetary_arguments, natural_calculation
 from assistant import answer, bound_amount_currencies
 
 
@@ -69,6 +69,26 @@ class InputGroundingTests(unittest.TestCase):
             result = answer("Explain fees on 5000 THB", model="fixture")
         self.assertEqual(next(iter(result["tool_results"].values()))["code"], "TOOL_AMOUNT_NOT_SUPPORTED_BY_USER_INPUT")
         self.assertNotIn("995.00", str(result["numerical_summaries"]))
+
+    def test_clear_bilingual_numeric_requests_bypass_model(self):
+        from icarus_core import ROOT, read_json
+        from evaluate_assistant import structural_checks
+        for case in read_json(ROOT/"evaluation"/"numeric_cases.json"):
+            with patch("assistant.completion", side_effect=AssertionError("Must not call model")):
+                result = answer(case["message"], language=case["lang"])
+            self.assertEqual(result["route"], "deterministic_natural_calculation", case["id"])
+            self.assertTrue(all(structural_checks(case, result, live=True).values()), case["id"])
+
+    def test_compound_or_incomplete_calculations_keep_model_planning(self):
+        for message in ("Explain the mock fee on 1000 THB and recommend an allocation",
+                        "Calculate a what-if for BTC and ETH with 1000 USDT from 2024-01-01 to 2026-09-30",
+                        "Calculate a what-if for ETH with 1000 USDT from 2024-01-01 to 2026-09-30 including fees",
+                        "Calculate monthly savings with 1000 THB until next June",
+                        "What is the actual platform fee on 1000 THB?",
+                        "Explain the mock platform fee on 1000 THB and explain wallets",
+                        "Explain the mock platform fee on 1000 THB and say hello",
+                        "ค่าธรรมเนียมจำลอง 1000 บาท แล้วควรลงทุนอะไร"):
+            self.assertIsNone(natural_calculation(message), message)
 
 
 if __name__ == "__main__":

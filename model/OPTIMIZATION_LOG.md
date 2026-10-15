@@ -39,3 +39,9 @@ python model/evaluate_regimes.py
 ```
 
 Full hashes, cutoffs and scoring metrics are in ignored `model/results/forecast_regimes.json`. The check does not overwrite forecasts used by the assistant.
+
+## Natural calculation latency
+
+Complete, focused requests for explicitly mock fees, labeled no-interest savings and exact-date USDT historical what-if calculations now use the same deterministic tools directly in Thai and English. Mixed advice, risk/app questions, unsupported currencies, incomplete dates and ambiguous multi-asset requests remain with Qwen. This routing does not execute trades or assert an actual fee schedule.
+
+The same six numeric scenarios that previously used Qwen now pass exact-tool-field checks with zero model calls. In the measured local run, median elapsed time was 0.0025 seconds and maximum was 0.006 seconds, compared with the earlier model-loop median of 15.9245 seconds. This measures different routes for these explicit cases, not model acceleration or general natural-language performance. All 79 automated tests pass.
