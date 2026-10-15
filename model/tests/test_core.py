@@ -135,7 +135,7 @@ class CoreTests(unittest.TestCase):
             return {"content":json.dumps({"text":"The fee calculation is below. What is your investment goal?",
                                           "source_ids":[tool_reply["result_id"]],"limitation_codes":["mock_account","missing_profile"]})}
         with patch("assistant.completion",side_effect=fake_completion):
-            result = answer("Explain the fee and help decide whether this suits my goal.",model="fixture")
+            result = answer("Explain the fee for 1000 THB and help decide whether this suits my goal.",model="fixture")
         self.assertEqual(count,2)
         self.assertEqual(result["status"],"ok")
         self.assertIn("goal",result["text"])

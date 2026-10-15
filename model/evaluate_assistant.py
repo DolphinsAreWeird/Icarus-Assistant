@@ -25,6 +25,11 @@ def structural_checks(case, result, *, live):
         checks["no_tools"] = not result["tool_results"] if live else None
     if case.get("no_model_calls"):
         checks["no_model_calls"] = not result["model_calls"] if live else None
+    if "expected_tool_data" in case:
+        checks["expected_tool_data"] = all(any(
+            source["data"].get("tool") == name and all(source["data"].get("data", {}).get(key) == value
+            for key, value in expected.items()) for source in result["sources"])
+            for name, expected in case["expected_tool_data"].items()) if live else None
     return checks
 
 
@@ -45,14 +50,15 @@ def main():
     parser.add_argument("--limit",type=int,default=4)
     parser.add_argument("--ids",nargs="*")
     parser.add_argument("--snapshot",help="Optional app snapshot for current-price/displayed-chart scenarios")
-    parser.add_argument("--suite", choices=["demo", "stress"], default="demo")
+    parser.add_argument("--suite", choices=["demo", "stress", "numeric"], default="demo")
     args = parser.parse_args()
     adapter,screen_context = None,None
     if args.snapshot:
         from data_adapter import SnapshotAdapter
         adapter = SnapshotAdapter.from_file(args.snapshot)
         screen_context = adapter.screen_context()
-    cases = read_json(ROOT / "evaluation" / ("cases.json" if args.suite == "demo" else "stress_cases.json"))
+    suites = {"demo":"cases.json", "stress":"stress_cases.json", "numeric":"numeric_cases.json"}
+    cases = read_json(ROOT / "evaluation" / suites[args.suite])
     if args.ids:
         unknown = set(args.ids)-{case["id"] for case in cases}
         if unknown:
@@ -74,7 +80,7 @@ def main():
         results.append(row)
         print(json.dumps({"id":case["id"],"checks":checks,"seconds":result["elapsed_seconds"],
                           "text":result["text"],"limitations":result["limitations"]},ensure_ascii=False),flush=True)
-    name = "assistant" if args.suite == "demo" else "assistant_stress"
+    name = "assistant" if args.suite == "demo" else "assistant_" + args.suite
     target = ROOT / "results" / (name + ("_live.json" if args.live else "_offline.json"))
     target.parent.mkdir(exist_ok=True)
     run_at = datetime.now(timezone.utc)

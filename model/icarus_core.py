@@ -7,6 +7,7 @@ import math
 from pathlib import Path
 import re
 import statistics
+from market_validation import validate_daily_series, validate_forecast
 
 ROOT = Path(__file__).resolve().parent
 ASSETS = {"btc":"Bitcoin", "eth":"Ethereum", "gold":"PAX Gold"}
@@ -150,10 +151,7 @@ def history(asset_id):
     path = ROOT / "data" / "market" / f"{asset_id}.json"
     if not path.exists():
         raise ValueError("HISTORY_UNAVAILABLE")
-    result = read_json(path)
-    if result.get("gaps"):
-        raise ValueError("HISTORY_HAS_GAPS")
-    return result
+    return validate_daily_series(read_json(path), expected_asset=asset_id)
 
 
 def history_summary(asset_id):
@@ -206,7 +204,7 @@ def risk_forecast(asset_id):
     path = ROOT / "data" / "forecasts" / f"{asset_id}.json"
     if not path.exists():
         return {"status":"unavailable", "reason":"Risk baseline has not been evaluated yet."}
-    return read_json(path)
+    return validate_forecast(read_json(path), asset_id)
 
 
 def invoke(name, args, profile, today):
@@ -298,6 +296,10 @@ def render_tool_data(name, data, language):
                          f"nominal coverage target {interval['nominal_coverage_pct']}%, "
                          f"observed test coverage {coverage}% across {test['observations']} days. "
                          "Actual returns can fall outside this range; it is not a maximum loss bound.")
+            reference = interval["test_metrics"].get("rolling_reference_uncalibrated")
+            if reference and test["mean_interval_score_log_return_pct"] >= reference["mean_interval_score_log_return_pct"]:
+                extra += (" แบบที่เลือกไม่ดีกว่าแบบอ้างอิงอย่างง่ายด้านคะแนนช่วงในการทดสอบนี้" if th else
+                          " The selected model did not beat the simple reference on interval score in this saved test.")
         if th:
             return f"{ASSETS[data['asset_id']]}: แบบทดลอง ณ {data['as_of']} สำหรับวันถัดไป ในหน่วยผลตอบแทน USDT: ความผันผวนรายวันจาก rolling {data['rolling_20_next_day_volatility_pct']}%; EWMA {data['ewma_094_next_day_volatility_pct']}% ไม่บอกทิศทาง ไม่ใช่การคาดการณ์ ณ วันนี้หรือขอบเขตขาดทุนที่รับประกัน" + extra
         return f"{ASSETS[data['asset_id']]}: experimental next-day risk at historical cutoff {data['as_of']}, using USDT returns: rolling daily volatility {data['rolling_20_next_day_volatility_pct']}%; EWMA {data['ewma_094_next_day_volatility_pct']}%. No direction prediction, current forecast, or guaranteed loss bound." + extra

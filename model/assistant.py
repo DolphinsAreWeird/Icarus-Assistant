@@ -14,6 +14,7 @@ from icarus_core import (ROOT, fee_quote, fee_text, guidance_context, invoke, lo
 from orion_probe import request
 from profile_context import merge_profile
 from data_adapter import adapter_tools
+from input_grounding import monetary_mentions, validate_monetary_arguments, natural_calculation
 
 
 def number_tokens(text):
@@ -71,10 +72,14 @@ def completion(model, messages, timings, *, tools=None):
     else:
         payload.update(tools=tools,tool_choice="auto")
     result, elapsed = request("/chat/completions",payload)
+    if not isinstance(result, dict) or not isinstance(result.get("choices"), list) or not result["choices"] or not isinstance(result["choices"][0], dict):
+        raise ValueError("INVALID_COMPLETION_ENVELOPE")
     choice = result["choices"][0]
     timings.append({"seconds":elapsed,"usage":result.get("usage"),"finish_reason":choice.get("finish_reason")})
     if choice.get("finish_reason") == "length":
         raise ValueError("MODEL_OUTPUT_TRUNCATED")
+    if not isinstance(choice.get("message"), dict):
+        raise ValueError("INVALID_COMPLETION_MESSAGE")
     return choice["message"]
 
 
@@ -136,13 +141,7 @@ def source_only_explanation(message):
 
 def bound_amount_currencies(text):
     """Only a currency adjacent to an amount is a monetary input, not a topic mention."""
-    labels = {"usdt":"USDT","usd":"USD","eur":"EUR","thb":"THB","baht":"THB", "บาท":"THB",
-              "dollar":"USD","dollars":"USD","ดอลลาร์":"USD","$":"USD"}
-    pattern = r"\d+(?:,\d{3})*(?:\.\d+)?\s*(USDT|USD|EUR|THB|baht|dollars?|บาท|ดอลลาร์)(?![a-z])"
-    found = [labels[match[1].lower()] for match in re.finditer(pattern,text,re.IGNORECASE)]
-    if re.search(r"\$\s*\d",text):
-        found.append("USD")
-    return set(found)
+    return {mention["currency"] for mention in monetary_mentions(text)}
 
 
 def parse_data_command(message):
@@ -249,6 +248,8 @@ def answer(message, *, language="en", profile_id="new", today="2026-10-15", mode
                     raise ValueError("INVALID_TOOL_ARGUMENTS")
                 return data_adapter.get_portfolio()
             return invoke(name,args,profile,today)
+        except OSError:
+            return {"status":"error", "code":"LOCAL_DATA_READ_FAILED", "no_action_executed":True}
         except (ValueError,TypeError,KeyError,ArithmeticError) as exc:
             return {"status":"error","code":str(exc),"no_action_executed":True}
 
@@ -297,6 +298,10 @@ def answer(message, *, language="en", profile_id="new", today="2026-10-15", mode
 
     try:
         command = parse_data_command(message)
+        command_route = "deterministic_data_tool"
+        if command is None:
+            command = natural_calculation(message)
+            command_route = "deterministic_natural_calculation"
     except ValueError as exc:
         return finish("Check the command arguments and explicit currency." if language=="en" else "โปรดตรวจสอบพารามิเตอร์และสกุลเงินในคำสั่ง",
                       [],"input_correction",status="invalid_input",limitations=[str(exc)])
@@ -309,7 +314,7 @@ def answer(message, *, language="en", profile_id="new", today="2026-10-15", mode
         status = "ok" if data.get("status") not in ("error","unavailable") else "data_unavailable"
         text = ("The sourced calculation is shown below." if language=="en" else "ผลการคำนวณพร้อมข้อมูลอ้างอิงแสดงด้านล่าง") if status=="ok" else (
             "The requested calculation is unavailable. Check the inputs and available history." if language=="en" else "ยังคำนวณรายการนี้ไม่ได้ โปรดตรวจสอบข้อมูลและช่วงประวัติที่มี")
-        return finish(text,[result_id],"deterministic_data_tool",status=status)
+        return finish(text,[result_id],command_route,status=status)
 
     context = guidance_context(profile)
     if offline:
@@ -379,6 +384,7 @@ def answer(message, *, language="en", profile_id="new", today="2026-10-15", mode
                 args = json.loads(call["function"]["arguments"])
                 try:
                     validate_tool_currency(name,message,memory)
+                    validate_monetary_arguments(name,args,message,memory,profile)
                     data = call_tool(name,args)
                 except ValueError as exc:
                     data = {"status":"error","code":str(exc),"no_action_executed":True}

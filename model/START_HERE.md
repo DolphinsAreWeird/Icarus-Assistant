@@ -6,6 +6,8 @@ The latest [modelling checkpoint](MODEL_CARD.md) documents daily-return interval
 
 The [harder bilingual evaluation](evaluation/STRESS_EVALUATION.md) adds everyday paraphrases, unsupported questions, injection attempts and multi-turn corrections. Run `python model/evaluate_retrieval.py --suite challenge` locally, or `python model/evaluate_assistant.py --live --suite stress --limit 12` against Orion. Structural passes and semantic review are recorded separately.
 
+See the [optimization checkpoints](OPTIMIZATION_LOG.md) for subsequent fixes. Model-selected financial tool inputs are checked against explicit user amounts/currencies/dates. Use labeled savings target/current amounts and an ISO deadline, or `/goal`. Run `python model/evaluate_assistant.py --live --suite numeric --limit 6` for the bilingual numeric scenarios.
+
 The new [integration contract](INTEGRATION.md) explains validated app snapshots, current/reference-price adapters, exact screen/chart versions, and caller-bound account data. Start with `fixtures/app_snapshot.json` without a backend, or run `fetch_public_snapshot.py` for an explicitly labeled real USDT reference snapshot.
 
 ## What exists
