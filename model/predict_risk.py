@@ -6,6 +6,7 @@ from pathlib import Path
 import statistics
 
 from icarus_core import ROOT, history
+from forecast_intervals import experiment as interval_experiment
 
 
 def experiment(asset):
@@ -35,10 +36,12 @@ def experiment(asset):
               "rolling_20_next_day_volatility_pct":round(math.sqrt(final_rolling)*100,4),
               "ewma_094_next_day_volatility_pct":round(math.sqrt(ewma)*100,4),
               "limits":["No prediction of direction, expected profit, or suitability.",
-                        "No confidence interval or coverage claim; model assumptions are unvalidated.",
+                        "Volatility is not a confidence interval; interval coverage is evaluated separately below.",
                         "Historical test comparison only; no tuning or model selection performed on the test set.",
                         "Squared daily return is a noisy variance proxy; this is not intraday realized volatility.",
                         "Saved cutoff may be old. No live forecast is implied."]}
+    report["return_interval"] = interval_experiment(data) if len(returns) >= 600 else {
+        "status":"unavailable", "reason":"At least 600 daily returns required for interval evaluation."}
     target = ROOT / "data" / "forecasts" / f"{asset}.json"
     target.parent.mkdir(exist_ok=True,parents=True)
     target.write_text(json.dumps(report,indent=2),encoding="utf-8")
@@ -47,6 +50,7 @@ def experiment(asset):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--asset",choices=["btc","eth","gold"],default="btc")
+    parser.add_argument("--asset",choices=["btc","eth","gold","all"],default="btc")
     args = parser.parse_args()
-    print(json.dumps(experiment(args.asset),indent=2))
+    reports = [experiment(asset) for asset in ("btc","eth","gold")] if args.asset == "all" else experiment(args.asset)
+    print(json.dumps(reports,indent=2))

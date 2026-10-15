@@ -254,9 +254,25 @@ def render_tool_data(name, data, language):
             f"ราคาปิดย้อนหลังล่าสุด {data['last_historical_close']} USDT เปลี่ยนแปลงทั้งช่วง {data['period_change_pct']}% ไม่ใช่ราคาปัจจุบัน" if th else
             f"last historical close {data['last_historical_close']} USDT; period change {data['period_change_pct']}%. Not a current quote.")
     if name == "get_risk_forecast":
+        interval = data.get("return_interval", {})
+        extra = ""
+        if "next_day_simple_return_interval_pct" in interval:
+            bounds = interval["next_day_simple_return_interval_pct"]
+            test = interval["test_metrics"]["selected_calibrated"]
+            coverage = round(test["empirical_coverage_pct"], 2)
+            if th:
+                extra = (f" ช่วงผลตอบแทนวันถัดไปแบบทดลอง {bounds['lower']}% ถึง {bounds['upper']}% "
+                         f"เป้าหมายความครอบคลุม {interval['nominal_coverage_pct']}%; "
+                         f"ครอบคลุมจริงในการทดสอบ {coverage}% จาก {test['observations']} วัน "
+                         "ผลจริงอาจอยู่นอกช่วงนี้ ไม่ใช่ขอบเขตขาดทุนสูงสุด")
+            else:
+                extra = (f" Experimental next-day return interval {bounds['lower']}% to {bounds['upper']}%; "
+                         f"nominal coverage target {interval['nominal_coverage_pct']}%, "
+                         f"observed test coverage {coverage}% across {test['observations']} days. "
+                         "Actual returns can fall outside this range; it is not a maximum loss bound.")
         if th:
-            return f"{ASSETS[data['asset_id']]}: แบบทดลอง ณ {data['as_of']} สำหรับวันถัดไป ในหน่วยผลตอบแทน USDT: ความผันผวนรายวันจาก rolling {data['rolling_20_next_day_volatility_pct']}%; EWMA {data['ewma_094_next_day_volatility_pct']}% ไม่บอกทิศทาง ไม่ใช่การคาดการณ์ ณ วันนี้หรือขอบเขตขาดทุนที่รับประกัน"
-        return f"{ASSETS[data['asset_id']]}: experimental next-day risk at historical cutoff {data['as_of']}, using USDT returns: rolling daily volatility {data['rolling_20_next_day_volatility_pct']}%; EWMA {data['ewma_094_next_day_volatility_pct']}%. No direction prediction, current forecast, or guaranteed loss bound."
+            return f"{ASSETS[data['asset_id']]}: แบบทดลอง ณ {data['as_of']} สำหรับวันถัดไป ในหน่วยผลตอบแทน USDT: ความผันผวนรายวันจาก rolling {data['rolling_20_next_day_volatility_pct']}%; EWMA {data['ewma_094_next_day_volatility_pct']}% ไม่บอกทิศทาง ไม่ใช่การคาดการณ์ ณ วันนี้หรือขอบเขตขาดทุนที่รับประกัน" + extra
+        return f"{ASSETS[data['asset_id']]}: experimental next-day risk at historical cutoff {data['as_of']}, using USDT returns: rolling daily volatility {data['rolling_20_next_day_volatility_pct']}%; EWMA {data['ewma_094_next_day_volatility_pct']}%. No direction prediction, current forecast, or guaranteed loss bound." + extra
     raise ValueError("NO_REVIEWED_NUMERICAL_RENDERER")
 
 

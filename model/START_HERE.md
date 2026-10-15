@@ -2,6 +2,8 @@
 
 This is the model/data-processing part of Icarus. It includes a local Python interface and CLI, not an app backend. Python's standard library is sufficient; no additional packages are required.
 
+The latest [modelling checkpoint](MODEL_CARD.md) documents daily-return intervals with separate model selection, calibration and testing, real-data results, bilingual retrieval coverage, and remaining modelling work. Regenerate all forecast artifacts with `python model/predict_risk.py --asset all`; `/risk` renders their historical cutoff, interval and measured test coverage in either language.
+
 The new [integration contract](INTEGRATION.md) explains validated app snapshots, current/reference-price adapters, exact screen/chart versions, and caller-bound account data. Start with `fixtures/app_snapshot.json` without a backend, or run `fetch_public_snapshot.py` for an explicitly labeled real USDT reference snapshot.
 
 ## What exists

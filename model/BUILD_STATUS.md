@@ -1,5 +1,9 @@
 # Prototype status, 15 October 2026
 
+Latest checkpoint, 16 October 2026: work continues on the renamed `assistant-model` branch. Added causal daily-return intervals with separate selection/calibration/test periods, input-provenance hashes and empirical coverage reporting, alongside the existing variance baselines. Added four primary-source-backed bilingual knowledge records and a 28-query retrieval development set. See `MODEL_CARD.md` for real-data results and reproduction commands. The simple rolling reference remains competitive; no trading advantage or guaranteed interval coverage is claimed. Earlier chronological notes below describe prior checkpoints.
+
+Checkpoint verification: 54 automated tests pass, including future-data leakage, frozen selection/calibration and invalid market metadata. Four new live English/Thai slippage/stablecoin scenarios pass structural checks; observed times range from about seven to nineteen seconds. Both `/risk` renderers expose the saved interval and empirical coverage without a model call. Luka/First review remains pending in parallel.
+
 ## Implemented
 
 - English/Thai source-backed retrieval and Qwen tool orchestration.

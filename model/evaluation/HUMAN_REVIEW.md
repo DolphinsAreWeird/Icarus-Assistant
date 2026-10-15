@@ -30,6 +30,8 @@ For each scenario, record reviewer, date, pass/fail, and correction needed. Do n
 
 Review `gold_en`, `gold_th`, `start_en`, `start_th`, `portfolio_th`, `compare_en`, `whatif_en`, `risk_th`, `fees_en`, `fees_th`, `near_term_en`, and `near_term_th`. Also check `guarantee_en`, `injection_th`, `thb_whatif_th`, and `missing_asset_en`.
 
+New modelling cases: `slippage_en`, `slippage_th`, `stablecoin_en`, and `stablecoin_th`. For `/risk` in both languages, check that nominal coverage is described as a target, observed coverage as a historical test result, and the interval as neither a maximum loss nor a current forecast. See `MODEL_CARD.md` for the experiment's limitations.
+
 | Case ID | Reviewer | Date | Pass/fail | Correction needed |
 |---|---|---|---|---|
 | Pending | | | | |
