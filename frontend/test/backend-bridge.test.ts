@@ -6,7 +6,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setMascotFallback } from '../src/assets';
-import { backendFromLocation, buyReadback, installBackend, SCREEN_ACTIONS, toChatRequest, toPrototypeAction, toPrototypeReply, type PrototypeLike, type PrototypeReply } from '../src/backend-bridge';
+import { backendFromLocation, buyOnAppScreens, buyReadback, installBackend, SCREEN_ACTIONS, toChatRequest, toPrototypeAction, toPrototypeReply, type PrototypeLike, type PrototypeReply } from '../src/backend-bridge';
 import { axisLabel, chartSvg, hideInfoCard, showStepsCard } from '../src/chat-cards';
 import { createDcApp, installHelmet } from '../src/dc-runtime';
 import { hideTradeCard, showTradeCard } from '../src/trade-card';
@@ -162,6 +162,39 @@ describe('the backend\'s cards and screen actions', () => {
   });
 });
 
+describe('showcase: a buy goes through the app\'s own screens, and the backend never dead-ends', () => {
+  it('turns a buy card into the app\'s own buy steps, read back from the screen\'s own numbers', () => {
+    const r = toPrototypeReply({ text: "Here's your preview.", ui_actions: [{ type: 'open_asset', asset: 'XAU' }, TRADE_CARD] }, 'en', undefined, fakeProto());
+    expect(r.trade).toBeNull();
+    expect(r.reply.ui_actions.map((a) => a.type)).toEqual(['open_asset', 'start_buy', 'type_amount', 'select_wallet', 'review']);
+    expect(r.reply.ui_actions[2]).toEqual({ type: 'type_amount', value: 1000 });
+    expect(r.reply.speech).toBe('one thousand baht into gold. Fee ten baht. Total one thousand ten baht. Tap Confirm purchase when you are ready.');
+  });
+
+  it('keeps the card for a sale, for an asset the app does not have, and without the app\'s calculator', () => {
+    expect(buyOnAppScreens({ ...TRADE_CARD.data, side: 'sell' }, fakeProto())).toBeNull();
+    expect(buyOnAppScreens({ ...TRADE_CARD.data, asset_id: 'usdt' }, fakeProto())).toBeNull();
+    expect(buyOnAppScreens(TRADE_CARD.data, null)).toBeNull();
+    expect(toPrototypeReply({ text: 't', ui_actions: [TRADE_CARD] }, 'en').trade).not.toBeNull();
+  });
+
+  it('uses the prototype\'s own demo answer, labelled, when the backend has no model, is down, or errors', async () => {
+    const demoRespond = vi.fn(async (q: string) => ({ text: `demo: ${q}`, speech: `demo: ${q}`, emotion: 'happy', speak: true, ui_actions: [], sources: ['Price feed'], suggestions: [], offer: null }));
+    const proto: PrototypeLike = { ...fakeProto(), demoRespond };
+    for (const fetchImpl of [
+      vi.fn(async () => jsonResponse(503, { detail: { code: 'no_model', message_en: "The assistant isn't set up yet.", message_th: 'x' } })),
+      vi.fn(async () => { throw new Error('ECONNREFUSED'); }),
+    ]) {
+      let backend: ((q: string, ctx: unknown) => Promise<PrototypeReply>) | null = null;
+      (window as unknown as { Icarus: unknown }).Icarus = { setBackend: (fn: typeof backend) => (backend = fn) };
+      installBackend({ url: 'http://be', userId: 'u_new', getInstance: () => proto, showTrade: vi.fn(), hideCards: () => undefined, fetchImpl: fetchImpl as unknown as typeof fetch });
+      const reply = await backend!('what is this red number?', { screen: 'home' });
+      expect(reply.text).toBe('demo: what is this red number?');
+      expect(reply.sources.at(-1)).toBe('Scripted demo answer');
+    }
+  });
+});
+
 describe('chart and steps cards', () => {
   afterEach(hideInfoCard);
 
@@ -249,6 +282,34 @@ describe("inside the REAL prototype: the backend's buy actions drive Oasis's own
     const shown = instance!.calc!('XAU', 1000, 'thb');
     expect(shown).toMatchObject({ amt: 1000, fee: 10, total: 1010, ok: true });
     expect(buyReadback(BUY_ACTIONS, undefined, instance, 'en')).toBe('one thousand baht into gold. Fee ten baht. Total one thousand ten baht. Tap Confirm purchase when you are ready.');
+  }, 20_000);
+});
+
+describe("inside the REAL prototype: the backend's buy card is done on Oasis's own screens", () => {
+  let root: Root;
+  let instance: (PrototypeLike & { state: Record<string, unknown> }) | null = null;
+  afterEach(async () => {
+    await act(async () => root.unmount());
+    setMascotFallback(false);
+  });
+
+  it('opens gold, types 1,000 and stops on Review purchase; no card covers the screen', async () => {
+    document.head.innerHTML = '';
+    document.body.innerHTML = '<div id="root"></div>';
+    setMascotFallback(true);
+    const app = createDcApp(HTML);
+    installHelmet(app.helmet);
+    root = createRoot(document.getElementById('root') as HTMLElement);
+    await act(async () => {
+      root.render(React.createElement(app.Root, { instanceRef: (c: unknown) => (instance = c as typeof instance) }));
+    });
+    const showTrade = vi.fn();
+    const fetchImpl = vi.fn(async () => jsonResponse(200, { text: "Here's your preview.", speak: false, ui_actions: [{ type: 'open_asset', asset: 'XAU' }, { type: 'card', card_type: 'trade_preview', data: { preview_id: 'pv', asset_id: 'gold', asset_name: 'Tokenized gold (PAX Gold)', side: 'buy', amount_thb: 1000, fee_thb: 5, you_pay_thb: 1000 } }], sources: [] })) as unknown as typeof fetch;
+    installBackend({ url: 'http://be', userId: 'u_new', getInstance: () => instance, showTrade, hideCards: () => undefined, fetchImpl });
+    await act(async () => (window as unknown as { Icarus: { send: (t: string) => void } }).Icarus.send('Put 1,000 baht in gold'));
+    await act(async () => sleep(6000));
+    expect(instance!.state).toMatchObject({ view: 'buy', buyStep: 'review', buyAmount: '1000', assetId: 'XAU' });
+    expect(showTrade).not.toHaveBeenCalled();
   }, 20_000);
 });
 

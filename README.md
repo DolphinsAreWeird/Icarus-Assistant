@@ -59,6 +59,20 @@ The parts connect through one reply format. The assistant returns `text`, `speak
 
 A volunteer who has never used a crypto app is asked to buy 1,000 baht of gold, once with the normal screens and once with Icarus, with a stopwatch on screen. Then they tap the chart and ask what it means, by voice. Last, the friction dashboard shows what people asked and where they got stuck.
 
+## Showcase: run everything with one command
+
+```bash
+./demo.sh
+```
+
+It builds the app, starts the voice server and the backend, and opens **http://localhost:8787/app/?backend=http://localhost:8001**. Needs `voice/.env` with the ElevenLabs key (see `voice/.env.example`).
+
+- **With a model** (Ollama with the `icarus` model, or `backend/.env` with `LLM_PROVIDER=groq` and `GROQ_API_KEY`): the real brain answers everything.
+- **Without one:** the backend runs its stand-in brain. Buys, charts and how-to steps come from the backend with live prices; any other question gets the prototype's own scripted answer. If the backend fails or is slow, the app also falls back to the scripted answer, so nothing dead-ends on stage.
+- `./demo.sh --app-only` runs the prototype's scripted answers only: the safest mode.
+- A buy ("Put 1,000 baht in gold") fills in the app's own buy screen and stops on Review purchase. Icarus reads back the numbers on that screen, and the volunteer taps Confirm purchase (the stopwatch stops there).
+- Voice needs a microphone the browser may use: open the app in Chrome or Brave and allow the mic.
+
 ## How the parts connect
 
 [`INTEGRATION.md`](INTEGRATION.md): the whole chain (microphone, app, U-Bot router, backend, speech), how to run all three parts together, what was checked end to end, and what the team still has to agree.

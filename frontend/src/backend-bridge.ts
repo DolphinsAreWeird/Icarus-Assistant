@@ -58,6 +58,32 @@ export type PrototypeCalc = (asset: string, amount: number, wallet: string) => {
 export interface PrototypeLike {
   state?: { asst?: string; assetId?: string; walletId?: string };
   calc?: PrototypeCalc;
+  /** The prototype's own scripted answers. Used when the backend does not answer, so the demo never dead-ends. */
+  demoRespond?: (q: string, ctx: unknown) => unknown;
+  /** The prototype's own "explain this" answer for a tapped element. */
+  rExplain?: (elementId: string, th: boolean) => unknown;
+}
+
+/** Our data ids to the prototype's asset ids (backend/data/app_ui.json). */
+const PROTOTYPE_ASSETS: Record<string, string> = { gold: 'XAU', btc: 'BTC', eth: 'ETH', xau: 'XAU' };
+
+/**
+ * A buy from the backend's trade card, done on the prototype's OWN buy screens: open the asset, start the buy,
+ * type the amount, pick the wallet, stop on the review screen. Then what is on screen, what Icarus says (the
+ * prototype's calc) and the demo's stopwatch (it stops on the app's own Confirm purchase) all agree.
+ * Null when the prototype cannot do it (a sale, an asset it does not have, no calculator).
+ */
+export function buyOnAppScreens(card: Record<string, unknown>, proto: PrototypeLike | null): Array<Record<string, unknown>> | null {
+  if (card.side !== 'buy' || typeof proto?.calc !== 'function') return null;
+  const asset = PROTOTYPE_ASSETS[String(card.asset_id ?? '').toLowerCase()];
+  const amount = Number(card.amount_thb);
+  if (!asset || !Number.isFinite(amount) || amount <= 0) return null;
+  return [
+    { type: 'start_buy', asset },
+    { type: 'type_amount', value: amount },
+    { type: 'select_wallet', wallet: 'thb' },
+    { type: 'review' },
+  ];
 }
 
 /** ?backend, ?backend=<url> and ?user=<id> from the page address. Null when the backend is not switched on. */
@@ -158,6 +184,12 @@ export function toPrototypeReply(r: BackendReply, lang: 'en' | 'th', ctx?: Proto
     const action = toPrototypeAction(a);
     if (action) actions.push(action);
   }
+  // A buy goes through the app's own screens when it can (see buyOnAppScreens); the card is then not shown.
+  const onScreens = cards.trade ? buyOnAppScreens(cards.trade, proto) : null;
+  if (onScreens) {
+    actions.push(...onScreens);
+    cards.trade = null;
+  }
   let speech = buyReadback(actions, ctx, proto, lang) ?? r.text;
   const preview = cards.trade ? parsePreview(cards.trade) : null;
   if (preview) speech = `${buildReadback(preview, lang, { prompt: false })} ${STRINGS[lang].lines.tapToConfirm}`;
@@ -199,6 +231,8 @@ export interface BackendBridgeOptions {
   fetchImpl?: typeof fetch;
   /** A card appears after the reply bubble. */
   cardDelayMs?: number;
+  /** Give up on the backend after this long and use the demo answer. Default 15 s. */
+  timeoutMs?: number;
 }
 
 /** Hand the prototype's questions to the backend. Returns false if the prototype has not mounted yet. */
@@ -214,22 +248,40 @@ export function installBackend(o: BackendBridgeOptions): boolean {
     const lang = langOf(text, ctx);
     const proto = o.getInstance();
     const voice = proto?.state?.asst === 'voice';
+    // When the backend cannot answer (down, no model, busy, too slow), use the prototype's own scripted answer, with
+    // a source that says so, instead of a dead end on stage. Without the prototype, say what went wrong.
+    const fallback = async (why: string, message: string): Promise<PrototypeReply> => {
+      if (typeof proto?.demoRespond === 'function') {
+        try {
+          // A tapped element ("explain this") gets the prototype's own explanation, as in its demo mode.
+          const demo = (await (ctx?.focus && typeof proto.rExplain === 'function' ? proto.rExplain(ctx.focus, lang === 'th') : proto.demoRespond(text, rawCtx))) as PrototypeReply | null;
+          if (demo && typeof demo.text === 'string') {
+            console.info(`[icarus] the backend did not answer (${why}); using the prototype's scripted answer`);
+            return { ...demo, sources: [...(demo.sources ?? []), 'Scripted demo answer'] };
+          }
+        } catch {
+          // fall through to the plain message
+        }
+      }
+      return plainReply(message, why);
+    };
     let res: Response;
     try {
       res = await fetchImpl(`${o.url}/chat`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(toChatRequest(text, ctx, { sessionId, userId: o.userId, voice })),
+        ...(typeof AbortSignal.timeout === 'function' ? { signal: AbortSignal.timeout(o.timeoutMs ?? 15_000) } : {}),
       });
     } catch {
-      return plainReply(COPY[lang].unreachable, `Backend not reachable at ${o.url}`);
+      return fallback(`backend not reachable at ${o.url}`, COPY[lang].unreachable);
     }
     const body = (await res.json().catch(() => null)) as Record<string, unknown> | null;
     if (!res.ok || !body || typeof body.text !== 'string') {
       // The backend's errors carry a message for the user in English and Thai.
       const detail = (body?.detail ?? null) as Record<string, unknown> | null;
       const message = detail && typeof detail[lang === 'th' ? 'message_th' : 'message_en'] === 'string' ? String(detail[lang === 'th' ? 'message_th' : 'message_en']) : COPY[lang].failed;
-      return plainReply(message, `Backend error ${res.status}${detail?.code ? ` (${String(detail.code)})` : ''}`);
+      return fallback(`backend error ${res.status}${detail?.code ? ` ${String(detail.code)}` : ''}`, message);
     }
     const { reply, trade, chart, steps } = toPrototypeReply(body as unknown as BackendReply, lang, ctx, proto);
     const later = (show: () => void) => window.setTimeout(show, o.cardDelayMs ?? 650);

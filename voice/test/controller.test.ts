@@ -317,6 +317,34 @@ describe('barge-in', () => {
     expect(s.log.speakingEnd[0]).toEqual({ reason: 'interrupted' });
   });
 
+  it('Thai: a quick short reply right after Icarus stops is the user, even if Icarus just said that word', async () => {
+    const s = await ready({ language: 'th' });
+    await userSays(s, 'ตัวเลขสีแดงคืออะไร');
+    expect(s.voice.state).toBe('speaking');
+    s.output.last.finishNaturally();
+    await flush();
+    s.mic.feed(s.timers, 0.001, 300); // a breath
+    s.mic.feed(s.timers, 0.2, 300); // the user says "ทอง" (Icarus's line had ทอง in it)
+    s.stt().partial('ทอง');
+    s.mic.feed(s.timers, 0.001, 200);
+    s.stt().final('ทอง', 0.95);
+    await flush();
+    expect(s.log.transcriptIgnored.filter((t) => t.reason === 'echo')).toHaveLength(0);
+    expect(s.api.asks.at(-1)?.text).toBe('ทอง');
+  });
+
+  it('Thai: Icarus\'s own words arriving late, with no one talking, are still echo', async () => {
+    const s = await ready({ language: 'th' });
+    await userSays(s, 'ตัวเลขสีแดงคืออะไร');
+    s.output.last.finishNaturally();
+    await flush();
+    s.mic.feed(s.timers, 0.001, 300); // quiet: nobody spoke
+    s.stt().final('ทองลดลง', 0.9);
+    await flush();
+    expect(s.log.transcriptIgnored.at(-1)).toMatchObject({ reason: 'echo' });
+    expect(s.api.asks).toHaveLength(1);
+  });
+
   it('drops a final that is only an echo of what Icarus said', async () => {
     const s = await speaking();
     s.stt().final("Gold is down two point three percent since yesterday", 0.9);

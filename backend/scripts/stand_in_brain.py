@@ -11,7 +11,9 @@ It understands four things, enough to see every kind of reply on screen:
   "show me bitcoin"                  show_asset
   "how did bitcoin do this year?"    show_chart (two or three assets named: a comparison in %)
   "how do I buy?"                    show_steps (topics in data/howto.json)
-Nothing else.
+Anything else is an error on purpose (the API answers 502), so the app's backend bridge falls back to the
+prototype's own scripted answers: a demo on a laptop with no model gets real data for these four and the
+prototype's polished answers for everything else.
 Added by the voice side (KP) for integration tests. Not for the demo.
 """
 import argparse
@@ -27,8 +29,13 @@ PERIODS = [("1D", r"today|วันนี้"), ("1W", r"week|สัปดาห
            ("ALL", r"all time|three years|3 years"), ("1Y", r"year|ปี")]
 TOPICS = [("freeze_card", r"freeze|lock"), ("hide_balance", r"hide"), ("read_chart", r"chart"), ("swap", r"swap"),
           ("check_portfolio", r"portfolio|what i own|holdings"), ("buy", r"buy|ซื้อ")]
-# Our data ids (backend/data/assets.json). The tools also take the app's ids (XAU, BTC, ETH).
+APP_IDS = {"gold": "XAU", "btc": "BTC", "eth": "ETH"}
+# Our data ids (backend/data/assets.json). prepare_trade and show_chart also take them; screen tools need APP_IDS.
 ASSETS = [("gold", r"gold|ทอง"), ("btc", r"bitcoin|btc|บิทคอยน์|บิตคอยน์"), ("eth", r"ethereum|eth\b|อีเธอเรียม")]
+
+
+class NotUnderstood(Exception):
+    """The stand-in only knows four requests. The API turns this into a 502 and the app uses its demo answer."""
 
 
 class StandInModel:
@@ -49,8 +56,8 @@ class StandInModel:
                 return {"role": "assistant", "content": f"It went {change}." if change else "Here it is."}, "stop"
             if data.get("ok"):
                 return {"role": "assistant", "content": data.get("done") or "Here it is."}, "stop"
-            reason = data.get("message") or data.get("reason") or "unknown reason"
-            return {"role": "assistant", "content": f"I couldn't do that: {reason}."}, "stop"
+            # A tool said no (below the minimum, not enough cash...): let the app's own answer handle it.
+            raise NotUnderstood(f"tool said no: {data.get('message') or data.get('reason')}")
         text = next(m for m in reversed(messages) if m["role"] == "user")["content"]
         amount = re.search(r"(\d[\d,]*)\s*(?:baht|บาท)", text, re.I)
         asset = next((a for a, pattern in ASSETS if re.search(pattern, text, re.I)), None)
@@ -65,9 +72,8 @@ class StandInModel:
             topic = next((t for t, pattern in TOPICS if re.search(pattern, text, re.I)), "buy")
             return self._call("show_steps", {"topic": topic})
         if asset and re.search(r"show|open|take me|ดู|เปิด", text, re.I):
-            return self._call("show_asset", {"asset_id": asset})
-        return {"role": "assistant", "content": "I'm the stand-in brain. I can only prepare a buy, like "
-                "\"put 1,000 baht in gold\", or open an asset, like \"show me gold\"."}, "stop"
+            return self._call("show_asset", {"asset_id": APP_IDS[asset]})  # the screen tools take the app's ids
+        raise NotUnderstood(text)
 
     @staticmethod
     def _call(name, args):

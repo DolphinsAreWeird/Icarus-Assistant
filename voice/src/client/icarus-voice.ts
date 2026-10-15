@@ -159,6 +159,9 @@ const BACKGROUND_TICK_MS = 5000;
 const PTT_FINAL_TIMEOUT_MS = 5000;
 const PTT_KEEP_OPEN_MS = 8000;
 
+/** How long Icarus's own voice can still ring in the room after playback stops. */
+const ECHO_TAIL_MS = 200;
+
 export class IcarusVoice extends Emitter<VoiceEvents> {
   private readonly cfg: VoiceDefaults;
   private readonly deps: IcarusVoiceDeps;
@@ -624,18 +627,19 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     if (this.stt !== stt) return;
     this.lastActivityAt = this.deps.timers.now();
     const language = this.resolveLanguage(f.text, f.languageCode);
-    const speechStartedAt = this.utterance.startedAt ?? this.utterance.firstPartialAt;
+    const loudStartAt = this.utterance.startedAt; // from the mic's own loudness, not from Scribe
+    const speechStartedAt = loudStartAt ?? this.utterance.firstPartialAt;
     this.utterance = { startedAt: null, firstPartialAt: null };
     const confidence = normalizeConfidence(f.confidence, this.cfg.confidenceReference[language]);
-    this.processFinal({ text: f.text, confidence, rawConfidence: f.confidence, language, source: 'voice', speechStartedAt }, true);
+    this.processFinal({ text: f.text, confidence, rawConfidence: f.confidence, language, source: 'voice', speechStartedAt }, true, loudStartAt);
   }
 
-  /** Filter, announce, log, then act. */
-  private processFinal(final: FinalTranscript, checkEcho: boolean): void {
+  /** Filter, announce, log, then act. `loudStartAt`: when the mic heard the user start, if it did. */
+  private processFinal(final: FinalTranscript, checkEcho: boolean, loudStartAt: number | null = null): void {
     const wasWaiting = this.pttWaiting;
     this.pttWaiting = false;
 
-    if (checkEcho && this.isEcho(final.text)) {
+    if (checkEcho && this.isEcho(final.text, loudStartAt)) {
       this.emit('transcriptIgnored', { text: final.text, reason: 'echo', confidence: final.confidence });
       if (wasWaiting) this.afterSpeech();
       return;
@@ -670,9 +674,12 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
   }
 
   /** Is this text just Icarus's own voice coming back through the mic? */
-  private isEcho(text: string): boolean {
+  private isEcho(text: string, loudStartAt: number | null = null): boolean {
     const speech = this.lastSpeech;
     if (!speech) return false;
+    // The mic heard the user start talking after Icarus fell silent (and its echo died away): not echo. Without this,
+    // a quick Thai "ยืนยัน" or "ได้" right after Icarus said the same word would be dropped by the loose Thai match.
+    if (loudStartAt !== null && speech.endedAt !== null && loudStartAt >= speech.endedAt + ECHO_TAIL_MS) return false;
     const recent = this.playback !== null || (speech.endedAt !== null && this.deps.timers.now() - speech.endedAt < 2000);
     return recent && isEchoOf(text, speech.text, this.cfg.bargeIn.echoMinChars);
   }

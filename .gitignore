@@ -27,3 +27,6 @@ voice/logs/
 
 # Voice auditions (WAV files made by npm run audition)
 voice/auditions/
+
+# Logs from ./demo.sh
+.demo-*.log
