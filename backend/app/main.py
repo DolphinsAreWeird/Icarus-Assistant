@@ -1,6 +1,5 @@
 """HTTP API. Run from backend/:  .venv/bin/uvicorn app.main:app --port 8000"""
 import threading
-import time
 import os
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -87,7 +86,7 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
                 thread.join(timeout=30)
 
     app = FastAPI(title="Icarus backend", lifespan=lifespan)
-    origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000")
+    origins = os.getenv("CORS_ORIGINS", "http://localhost:8787,http://127.0.0.1:8787,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000")
     app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in origins.split(",") if o.strip()],
                        allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
     app.state.cache, app.state.demo = cache, state

@@ -2,7 +2,7 @@
 from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 import os
 import threading
 import time
@@ -77,11 +77,16 @@ def reply_envelope(result, snapshot_id):
         data = record.get("data", {})
         provenance = [data["source"]] if isinstance(data.get("source"), dict) else []
         provenance += [p["source"] for p in data.get("prices", [])]
+        freshness = data.get("freshness", "n/a")
+        price_ages = [p.get("freshness", "n/a") for p in data.get("prices", [])]
+        if price_ages:
+            freshness = "delayed" if "delayed" in price_ages else price_ages[0]
+        if any(p["delivery"] == "snapshot" for p in provenance):
+            freshness = "snapshot"
         sources.append(SourceRef(result_id=row["id"], tool=record.get("tool", "knowledge"),
                                  provider="; ".join(dict.fromkeys(p["provider"] for p in provenance)) or "model knowledge",
                                  as_of=min((p["observed_at"] for p in provenance), default=None),
-                                 freshness="snapshot" if any(p["delivery"] == "snapshot" for p in provenance)
-                                 else data.get("freshness", "n/a")))
+                                 freshness=freshness))
     return ChatReply(text=text, speech=text, speak=True, ui_actions=[], sources=sources,
                      status=result.get("status", "ok"), limitations=limitations, disclaimer=disclaimer,
                      numerical_summaries=summaries, evidence=result.get("sources", []),
