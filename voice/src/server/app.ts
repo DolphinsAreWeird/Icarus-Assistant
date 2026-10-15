@@ -22,6 +22,7 @@ import type { FrictionSink } from './friction';
 import { planSpeech } from './speech-plan';
 import { TtsError, type TtsService } from './tts';
 import type { UsageTracker } from './usage';
+import { mountUbotMock, type UbotSessions } from './ubot-mock';
 import type { UtopiaService } from './utopia/service';
 
 export interface AppDeps {
@@ -34,6 +35,8 @@ export interface AppDeps {
   friction: FrictionSink;
   /** Answers about U-topia, and handoffs to U-Bot. */
   utopia: UtopiaService;
+  /** Sessions of the U-Bot mock. When given, its routes are served under /mock/ubot. */
+  ubotSessions?: UbotSessions;
   log?: (line: string) => void;
 }
 
@@ -79,6 +82,7 @@ export function createApp(deps: AppDeps): express.Express {
       ttsModels: { en: cfg.ttsModelsEn, th: cfg.ttsModelsTh },
       assistant: cfg.assistantMode,
       utopia: cfg.utopiaMode,
+      ubot: cfg.ubotMode,
       stt: { commitStrategy: cfg.stt.commitStrategy, vadSilenceSecs: cfg.stt.vadSilenceSecs },
     });
   });
@@ -240,6 +244,9 @@ export function createApp(deps: AppDeps): express.Express {
 
   // ---- the Icarus app (Oasis's prototype, built from ../frontend) at /app/ ----
   // Same origin as the voice API, so there is no CORS to set up and the mic works on localhost.
+  // A stand-in for U-Bot until U-topia shares an API (ubot-mock/index.ts).
+  if (deps.ubotSessions) mountUbotMock(app, deps.ubotSessions);
+
   app.use('/app', express.static(path.join(VOICE_ROOT, '..', 'frontend', 'dist')));
 
   // ---- test page and built browser module ----

@@ -10,7 +10,8 @@ microphone
   -> Oasis's prototype (frontend/, running in our React runtime)
   -> "Ask U-topia" / U-Bot router (voice server, POST /api/utopia/route)
         answer  -> glossary answer (mock)
-        handoff -> "U-Bot can help with this" card
+        handoff -> "U-Bot can help with this" card -> U-Bot MOCK page with the question
+                   (UBOT_MODE=mock, sample data, says MOCK; UBOT_MODE=link opens the real u.bot)
         none    -> on to the brain
   -> the brain: Luka and First's backend (backend/, POST /chat), tools + model
   -> reply { text, speak, ui_actions, sources }
@@ -45,6 +46,7 @@ With the real backend code and the stand-in model (no LLM was available on this 
 - A second tap on Confirm does not buy twice (the backend returns the first result).
 - An expired price, a busy model or a missing backend: Icarus says the backend's own message (English or Thai) instead of failing silently.
 - "Book me a ride to the airport" still hands off to U-Bot, "What is U-Coin?" still gets the glossary answer, with the backend switched on.
+- The handoff opens the U-Bot mock with the question carried over: sample rides to the airport, then a mock "Review & pay in U-topia Pay" step.
 - The voice server's read-back from a backend card: "nine hundred ninety-five baht into gold. Fee five baht. Total one thousand baht."
 - Not checked: a real model's answers (Ollama or Groq), and a real microphone through the whole chain (the browser pane I tested in blocks the mic).
 
@@ -88,3 +90,4 @@ These are real mismatches between the parts. Each one can make the demo look bro
 | `voice/src/server/assistant/http.ts` | The voice server's adapter for `POST /chat` (`ASSISTANT_MODE=http`) |
 | `voice/src/shared/backend-card.ts` | Makes the backend's trade card readable for the exact money read-back (used by both of the above) |
 | `backend/scripts/stand_in_brain.py` | The backend API with a rule-based stand-in for the model, for integration tests |
+| `voice/src/server/ubot-mock/`, `frontend/src/ubot-mock.ts` | The U-Bot mock: handoff sessions, sample replies, the mock page, and our proposed "Ask U-topia" API |

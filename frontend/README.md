@@ -50,6 +50,8 @@ http://localhost:8787/app/?backend=http://127.0.0.1:8010&user=u_small
 
 If the voice server is down, all of this is skipped. Advice is never handed off. Details and the plan for when U-Bot has an API: `../voice/README.md`.
 
+**The U-Bot mock.** With the voice server's default `UBOT_MODE=mock`, "Open U-Bot" opens `?page=ubot&session=...` (`src/ubot-mock.ts`): a U-Bot stand-in, marked MOCK, that continues the user's question with sample options and a mock "Review & pay in U-topia Pay" step. Nothing is booked and no money moves. `UBOT_MODE=link` opens the real U-Bot instead.
+
 ## Files
 
 ```
@@ -59,6 +61,7 @@ frontend/
   src/voice-bridge.ts                  attaches our TTS and Scribe speech-in to the prototype
   src/backend-bridge.ts                ?backend: questions go to the real backend (POST /chat)
   src/trade-card.ts                    the backend's trade preview, confirmed by a tap
+  src/ubot-mock.ts                     ?page=ubot: the U-Bot mock a handoff opens (sample data, says MOCK)
   src/utopia-bridge.ts                 Ask U-topia answers and handoffs, wrapped around the prototype's own answers
   src/handoff-card.ts                  the "U-Bot can help with this" card
   src/assets.ts                        draws placeholder mascots when the real images are missing

@@ -201,14 +201,18 @@ How it flows: `POST /api/utopia/route { text, language, fallback? }` answers `{ 
 
 `handoff` is **not in the context.md contract**. Agree it with Luka, First and Oasis. We also propose two agent tools: `ask_utopia(question, language)` and `handoff_to_ubot(reason, question, language)`. Both are covered by `UtopiaService.route()` in `src/server/utopia/service.ts`.
 
+**The U-Bot mock (`UBOT_MODE=mock`, the default).** The real U-Bot's front door needs a login and has no deep link, so on stage a handoff would end at a sign-in page. Instead, "Open U-Bot" opens our **U-Bot mock** (`/app/?page=ubot&session=...`), clearly marked MOCK, with the user's question carried over. It shows sample options (rides, flights, hotels, groceries, food) and a "Review & pay in U-topia Pay" step like U-Bot's own screens. Nothing is booked and no money moves, and the page says so. The link holds a session id, not the question: the user's words stay on the server (`src/server/ubot-mock/`, sessions expire after an hour). Sample data is in `src/config/ubot-mock.ts`. `UBOT_MODE=link` goes back to the real front door.
+
+The mock also serves the "Ask U-topia" API we propose (`POST /mock/ubot/ask`). Set `UTOPIA_MODE=http` and `UTOPIA_URL=http://localhost:8787/mock/ubot/ask` to run the whole HTTP path; answers from the mock are labelled mock, never "U-Bot". A test does exactly this.
+
 **When U-Bot has an API:** set `UTOPIA_MODE=http` and `UTOPIA_URL` (and `UTOPIA_API_KEY` if needed). The request we propose is in `src/server/utopia/knowledge.ts` (`HttpUtopiaKnowledge`). It is **our proposal, not their contract, and untested against a real U-Bot**. It mirrors what U-Bot's own app does: its "Ask U-Topia" mode puts `[Context: question is about U-Topia]` in front of the question. Whatever a real LLM answers is screened before Icarus says it (`src/server/utopia/safety.ts`): **no digits, currency signs or "percent"** (hard rule 3), **no advice or guarantees** (hard rule 1). An answer that fails is not shown, and the user is handed to U-Bot instead. A failing, slow or empty U-Bot also becomes a handoff.
 
 **Until then, the best upgrade is manual.** Ask U-Bot the glossary questions yourself, check its answers, paste them into `utopia-glossary.ts` and set `verified: true` with `checkedBy` and `checkedOn`. A test fails if an entry claims to be verified without those, or if any answer contains a number.
 
 Limits to know:
-- The **Open U-Bot** link goes to U-Bot's front door and the user must sign in. U-Bot has **no public deep link** (we looked), so the card also offers **Copy my question** to paste there.
+- With `UBOT_MODE=link`, the **Open U-Bot** link goes to U-Bot's front door and the user must sign in. U-Bot has **no public deep link** (we looked), so the card also offers **Copy my question** to paste there. The mock is what a deep link could look like: ask U-topia for one.
 - What we know about U-Bot comes from its public page and its static code, not from a logged-in session. We never called its private endpoints.
-- Say on stage that this is a mock plus a handoff (hard rule 5).
+- Say on stage that this is a mock plus a handoff (hard rule 5). The mock page says MOCK and "sample" on screen.
 - Ask Maya Nicks (U-topia's head of AI, who designed U-Bot): what counts as "using U-Bot", whether there is an API or test account, whether a deep link or prefilled question is possible, and whether we may build our glossary from its answers.
 
 ## Choosing the voices

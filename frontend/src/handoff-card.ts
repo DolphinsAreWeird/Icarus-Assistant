@@ -13,13 +13,22 @@ export interface HandoffInfo {
   url: string;
   question: string;
   reason: string;
+  /** The button opens our U-Bot MOCK (the question is carried over), not the real U-Bot. */
+  mock?: boolean;
 }
 
 const CARD_ID = 'icarus-handoff';
 
 const COPY = {
-  en: { title: 'U-Bot can help with this', copy: 'Copy my question', copied: 'Copied', dismiss: 'Not now', note: 'U-Bot opens in a new tab. You need to sign in there.' },
-  th: { title: 'U-Bot ช่วยเรื่องนี้ได้', copy: 'คัดลอกคำถามของฉัน', copied: 'คัดลอกแล้ว', dismiss: 'ไว้ก่อน', note: 'U-Bot เปิดในแท็บใหม่ ต้องเข้าสู่ระบบที่นั่น' },
+  en: {
+    title: 'U-Bot can help with this', copy: 'Copy my question', copied: 'Copied', dismiss: 'Not now', note: 'U-Bot opens in a new tab. You need to sign in there.',
+    noteMock: 'Opens the U-Bot mock in a new tab, with your question. U-topia has not shared an API yet, so it uses sample data.',
+  },
+  th: {
+    title: 'U-Bot ช่วยเรื่องนี้ได้', copy: 'คัดลอกคำถามของฉัน', copied: 'คัดลอกแล้ว', dismiss: 'ไว้ก่อน', note: 'U-Bot เปิดในแท็บใหม่ ต้องเข้าสู่ระบบที่นั่น',
+    // THAI REVIEW
+    noteMock: 'เปิด U-Bot จำลองในแท็บใหม่ พร้อมคำถามของคุณ ยูโทเปียยังไม่เปิด API จึงใช้ข้อมูลตัวอย่าง',
+  },
 } as const;
 
 let cleanup: (() => void) | null = null;
@@ -82,10 +91,12 @@ export function showHandoffCard(info: HandoffInfo, options: { th: boolean; getPh
   dismiss.onclick = hideHandoffCard;
 
   const note = document.createElement('div');
-  note.textContent = t.note;
+  note.textContent = info.mock ? t.noteMock : t.note;
   note.style.cssText = 'font-size:11px;color:#AE939B;margin-top:8px';
 
-  row.append(open, copy, dismiss);
+  // The mock gets the question with the handoff, so there is nothing to copy.
+  if (info.mock) row.append(open, dismiss);
+  else row.append(open, copy, dismiss);
   card.append(title, question, row, note);
   document.body.appendChild(card);
 

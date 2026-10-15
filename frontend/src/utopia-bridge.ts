@@ -36,7 +36,7 @@ interface RouteReply {
   answer?: string;
   source?: 'mock' | 'u-bot';
   verified?: boolean;
-  handoff?: { label: string; message: string; url: string; question: string; reason: string };
+  handoff?: { label: string; message: string; url: string; question: string; reason: string; mock?: boolean };
 }
 
 const THAI = /[฀-๿]/;

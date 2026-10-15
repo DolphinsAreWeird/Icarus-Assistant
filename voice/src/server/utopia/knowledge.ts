@@ -59,9 +59,11 @@ export class HttpUtopiaKnowledge implements UtopiaKnowledge {
         this.log(`[utopia] the knowledge service answered HTTP ${res.status}`);
         return null;
       }
-      const data = (await res.json()) as { answer?: unknown; verified?: unknown };
+      const data = (await res.json()) as { answer?: unknown; verified?: unknown; mock?: unknown };
       const answer = typeof data.answer === 'string' ? data.answer.trim() : '';
       if (!answer) return null;
+      // Our U-Bot mock (UBOT_MODE=mock) says mock: true. Then the app must not say "U-Bot" answered.
+      if (data.mock === true) return { answer, source: 'mock', verified: false, topic: 'u-bot-mock' };
       return { answer, source: 'u-bot', verified: data.verified === true, topic: 'u-bot' };
     } catch (err) {
       this.log(`[utopia] the knowledge service failed: ${(err as Error).name === 'TimeoutError' ? 'timed out' : 'could not be reached'}`);

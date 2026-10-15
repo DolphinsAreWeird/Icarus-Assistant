@@ -53,6 +53,8 @@ export interface Handoff {
   url: string;
   /** The user's own words, so they can paste them into U-Bot. */
   question: string;
+  /** true when the button opens our U-Bot MOCK (UBOT_MODE=mock), not the real U-Bot. */
+  mock?: boolean;
 }
 
 /** What the U-topia router decided for a request. */

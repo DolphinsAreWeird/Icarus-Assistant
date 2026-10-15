@@ -12,17 +12,25 @@ import type { UtopiaKnowledge } from './knowledge';
 import { classify, isAdviceRequest, looksLikeRequest } from './router';
 import { checkAnswerSafe } from './safety';
 
-export function buildHandoff(reason: HandoffReason, question: string, lang: Lang, url: string = DEFAULT_UBOT_URL): Handoff {
+export function buildHandoff(reason: HandoffReason, question: string, lang: Lang, url: string = DEFAULT_UBOT_URL, mock = false): Handoff {
   const copy = HANDOFF_COPY[lang];
-  return { target: 'u-bot', reason, label: copy.label, message: copy.messages[reason], url, question };
+  return { target: 'u-bot', reason, label: copy.label, message: copy.messages[reason], url, question, ...(mock ? { mock: true } : {}) };
 }
+
+/** Where "Open U-Bot" goes: a fixed address (the real U-Bot), or a fresh link per handoff (the U-Bot mock). */
+export type HandoffTarget = string | { urlFor: (question: string, reason: HandoffReason, lang: Lang) => string; mock: true };
 
 export class UtopiaService {
   constructor(
     private readonly knowledge: UtopiaKnowledge,
-    private readonly ubotUrl: string = DEFAULT_UBOT_URL,
+    private readonly target: HandoffTarget = DEFAULT_UBOT_URL,
     private readonly log: (line: string) => void = () => undefined,
   ) {}
+
+  private handoff(reason: HandoffReason, question: string, lang: Lang): Handoff {
+    if (typeof this.target === 'string') return buildHandoff(reason, question, lang, this.target);
+    return buildHandoff(reason, question, lang, this.target.urlFor(question, reason, lang), true);
+  }
 
   /**
    * @param fallback  true when Icarus itself did not understand the request. A long enough request then gets a
@@ -47,15 +55,15 @@ export class UtopiaService {
           }
           this.log(`[utopia] an answer was not used (${verdict.reason}). Handing the user to U-Bot.`);
         }
-        return { kind: 'handoff', handoff: buildHandoff('utopia_question', question, lang, this.ubotUrl), language: lang };
+        return { kind: 'handoff', handoff: this.handoff('utopia_question', question, lang), language: lang };
       }
       case 'commerce':
-        return { kind: 'handoff', handoff: buildHandoff('commerce', question, lang, this.ubotUrl), language: lang };
+        return { kind: 'handoff', handoff: this.handoff('commerce', question, lang), language: lang };
       case 'general':
-        return { kind: 'handoff', handoff: buildHandoff('general', question, lang, this.ubotUrl), language: lang };
+        return { kind: 'handoff', handoff: this.handoff('general', question, lang), language: lang };
       case 'none':
         if (opts.fallback && looksLikeRequest(question) && !isAdviceRequest(question)) {
-          return { kind: 'handoff', handoff: buildHandoff('general', question, lang, this.ubotUrl), language: lang };
+          return { kind: 'handoff', handoff: this.handoff('general', question, lang), language: lang };
         }
         return { kind: 'none' };
     }

@@ -7,6 +7,7 @@ import { backendFromLocation, installBackend } from './backend-bridge';
 import { createDcApp, installHelmet } from './dc-runtime';
 import { hideHandoffCard, showHandoffCard } from './handoff-card';
 import { hideTradeCard, showTradeCard } from './trade-card';
+import { renderUbotMock } from './ubot-mock';
 import { installUtopiaRouting, withUtopiaRouting, type PrototypeInstance } from './utopia-bridge';
 import { attachTts, installVoice } from './voice-bridge';
 
@@ -15,7 +16,10 @@ const PAGES: Record<string, string> = {
   'Icarus Prototype.dc.html': './',
   'Icarus Business Dashboard.dc.html': './?page=dashboard',
 };
-const IS_DASHBOARD = new URLSearchParams(location.search).get('page') === 'dashboard';
+const PARAMS = new URLSearchParams(location.search);
+const IS_DASHBOARD = PARAMS.get('page') === 'dashboard';
+// ?page=ubot&session=<id>: the U-Bot mock that a handoff opens (ubot-mock.ts).
+const IS_UBOT_MOCK = PARAMS.get('page') === 'ubot';
 const PAGE_URL = IS_DASHBOARD
   ? 'prototype/Icarus%20Business%20Dashboard.dc.html'
   : 'prototype/Icarus%20Prototype.dc.html';
@@ -64,6 +68,10 @@ async function describeServer(): Promise<string> {
 }
 
 async function main() {
+  if (IS_UBOT_MOCK) {
+    await renderUbotMock(document.getElementById('root') as HTMLElement, { sessionId: PARAMS.get('session') });
+    return;
+  }
   routePageLinks();
   const res = await fetch(PAGE_URL);
   if (!res.ok) throw new Error(`Could not load the page (${res.status}).`);
