@@ -43,3 +43,6 @@ venv/
 /model/data/public_price_snapshot.json
 /model/data/*.tmp
 Thumbs.db
+.worktrees/
+.test-tmp/
+.pytest_cache/
