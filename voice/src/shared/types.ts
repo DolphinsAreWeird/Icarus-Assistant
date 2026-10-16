@@ -55,6 +55,8 @@ export interface Handoff {
   question: string;
   /** true when the button opens our U-Bot MOCK (UBOT_MODE=mock), not the real U-Bot. */
   mock?: boolean;
+  /** A prompt for U-Bot written from the user's request and where they are in the app (shared/ubot-prompt.ts). */
+  prompt?: string;
 }
 
 /** What the U-topia router decided for a request. */

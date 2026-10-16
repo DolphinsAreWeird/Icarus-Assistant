@@ -37,10 +37,27 @@ interface RouteReply {
   answer?: string;
   source?: 'mock' | 'u-bot';
   verified?: boolean;
-  handoff?: { label: string; message: string; url: string; question: string; reason: string; mock?: boolean };
+  handoff?: { label: string; message: string; url: string; question: string; reason: string; mock?: boolean; prompt?: string };
 }
 
 const THAI = /[฀-๿]/;
+
+/**
+ * Where the user is, in words, for the prompt Icarus writes for U-Bot: the screen and the asset on it, from the
+ * prototype's own getContext(). Never balances or anything personal.
+ */
+export function scenarioOf(ctx: unknown, th: boolean): { screen?: string; asset?: string } {
+  const c = (ctx ?? {}) as { screen?: string; asset?: { name?: string } };
+  const asset = typeof c.asset?.name === 'string' ? c.asset.name : undefined;
+  // THAI REVIEW: the Thai screen names.
+  const en: Record<string, string> = { home: 'Home screen', wallets: 'Wallets screen', payments: 'Payments screen', card: 'Card screen', invest: 'Invest screen', portfolio: 'Portfolio screen' };
+  const thai: Record<string, string> = { home: 'หน้าหลัก', wallets: 'หน้ากระเป๋าเงิน', payments: 'หน้าการชำระเงิน', card: 'หน้าบัตร', invest: 'หน้าการลงทุน', portfolio: 'หน้าพอร์ต' };
+  let screen: string | undefined;
+  if (c.screen === 'asset' && asset) screen = th ? `หน้า ${asset}` : `${asset} page`;
+  else if (c.screen === 'buy' && asset) screen = th ? `หน้าซื้อ ${asset}` : `buy screen for ${asset}`;
+  else if (c.screen) screen = (th ? thai : en)[c.screen];
+  return { ...(screen ? { screen } : {}), ...(c.screen === 'asset' || c.screen === 'buy' ? (asset ? { asset } : {}) : {}) };
+}
 
 /** Markets and money: if the prototype cannot answer one of these, it is not U-Bot's job either. */
 const FINANCE = /s&p|\bsp ?500\b|nasdaq|dow jones|\bdow\b|\bindex\b|indices|stocks?\b|shares?\b|\betf|\bfunds?\b|bonds?\b|interest rate|inflation|forex|exchange rate|currency|\bmarket|\bprice|\bcrypto|\bcoin|\btoken|dividend|portfolio|invest|ราคา|หุ้น|ดัชนี|ตลาด|กองทุน|ดอกเบี้ย|ค่าเงิน|ลงทุน|พันธบัตร/i;
@@ -62,12 +79,12 @@ function makeRouter(options: UtopiaBridgeOptions, inst: PrototypeInstance) {
   const fetchImpl = options.fetchImpl ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
   const base = options.serverUrl ?? '';
 
-  const askServer = async (text: string, language: 'en' | 'th', fallback = false): Promise<RouteReply> => {
+  const askServer = async (text: string, language: 'en' | 'th', fallback = false, context: { screen?: string; asset?: string } = {}): Promise<RouteReply> => {
     try {
       const res = await fetchImpl(`${base}/api/utopia/route`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ text, language, ...(fallback ? { fallback: true } : {}) }),
+        body: JSON.stringify({ text, language, ...(fallback ? { fallback: true } : {}), ...(Object.keys(context).length ? { context } : {}) }),
         ...(typeof AbortSignal.timeout === 'function' ? { signal: AbortSignal.timeout(6000) } : {}),
       });
       return res.ok ? ((await res.json()) as RouteReply) : { kind: 'none' };
@@ -85,12 +102,13 @@ function makeRouter(options: UtopiaBridgeOptions, inst: PrototypeInstance) {
     return reply(h.message, { emo: 'curious', src: ['Handed off to U-Bot'] });
   };
 
-  return async (q: string, next: () => unknown): Promise<unknown> => {
+  return async (q: string, ctx: unknown, next: () => unknown): Promise<unknown> => {
     options.hideCard();
     const th = THAI.test(q) || inst.state?.lang === 'th';
     const language = th ? 'th' : 'en';
+    const context = scenarioOf(ctx, th);
 
-    const route = await askServer(q, language);
+    const route = await askServer(q, language, false, context);
     if (route.kind === 'answer' && route.answer) {
       const source = route.source === 'u-bot' ? 'U-Bot' : 'Mock answer, not checked by U-topia yet';
       return reply(route.answer, { emo: 'happy', src: [source] });
@@ -105,7 +123,7 @@ function makeRouter(options: UtopiaBridgeOptions, inst: PrototypeInstance) {
         inst.log?.('no_data', { question: q }); // the friction map shows what people wanted that the app lacks
         return reply(NO_DATA[th ? 'th' : 'en'], { emo: 'thinking', src: ["Not in this app's data"] });
       }
-      const fallback = await askServer(q, language, true);
+      const fallback = await askServer(q, language, true, context);
       if (fallback.kind === 'handoff' && fallback.handoff) return handoffReply(fallback.handoff, th);
     }
     return answer;
@@ -118,7 +136,7 @@ export function installUtopiaRouting(options: UtopiaBridgeOptions): boolean {
   if ((inst.demoRespond as { __utopia?: boolean }).__utopia) return true; // already installed
   const original = inst.demoRespond.bind(inst);
   const route = makeRouter(options, inst);
-  const wrapped = (q: string, ctx: unknown): Promise<unknown> => route(q, () => original(q, ctx));
+  const wrapped = (q: string, ctx: unknown): Promise<unknown> => route(q, ctx, () => original(q, ctx));
   (wrapped as unknown as { __utopia: boolean }).__utopia = true;
   inst.demoRespond = wrapped;
   return true;
@@ -129,5 +147,5 @@ export function withUtopiaRouting(options: UtopiaBridgeOptions, responder: Respo
   const inst = options.getInstance();
   if (!inst) return responder;
   const route = makeRouter(options, inst);
-  return (q, ctx) => route(q, () => responder(q, ctx));
+  return (q, ctx) => route(q, ctx, () => responder(q, ctx));
 }

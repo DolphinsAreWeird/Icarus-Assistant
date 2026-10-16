@@ -10,8 +10,8 @@ microphone
   -> Oasis's prototype (frontend/, running in our React runtime)
   -> "Ask U-topia" / U-Bot router (voice server, POST /api/utopia/route)
         answer  -> glossary answer (mock)
-        handoff -> "U-Bot can help with this" card -> U-Bot MOCK page with the question
-                   (UBOT_MODE=mock, sample data, says MOCK; UBOT_MODE=link opens the real u.bot)
+        handoff -> "U-Bot can help with this" card with a prompt Icarus wrote from the user's request and screen
+                   -> "Copy and open U-Bot" copies it and opens the real u.bot (UBOT_MODE=mock: our mock page instead)
         none    -> on to the brain
   -> the brain: Luka and First's backend (backend/, POST /chat), tools + model
        it gets the app's own getContext() as `snapshot`
@@ -50,7 +50,7 @@ With the real backend code and the stand-in model (no LLM was available on this 
 - "Compare bitcoin and gold over a year": a chart card with both lines in % from the start, and the backend's own words for each ("down about 24% over the past year").
 - "How do I buy?": a steps card from `backend/data/howto.json`; "Show me" on a step opens the right screen and points at the button.
 - A new question takes the old card down. A busy model or a missing backend: Icarus says the backend's own message (English or Thai).
-- "Book me a ride to the airport" still hands off to the U-Bot mock, "What is U-Coin?" still gets the glossary answer.
+- "Book me a ride to the airport tomorrow at 8" hands off to the real U-Bot with a ready prompt ("Book me a ride to the airport. Show me a few options with the price and pickup time, then let me review and pay in U-topia Pay." plus the user's own words). "What is U-Coin?" still gets the glossary answer. "How is the S&P 500 doing?" gets an honest "I don't have data for that in this app" instead of a dead end.
 - Tests: backend 83 (including First's checks that the bridge passes on every action and card he sends), voice 382, app 70.
 - Not checked: a real model's answers (Ollama or Groq), and a real microphone through the whole chain (the browser pane I tested in blocks the mic).
 

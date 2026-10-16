@@ -15,6 +15,8 @@ export interface HandoffInfo {
   reason: string;
   /** The button opens our U-Bot MOCK (the question is carried over), not the real U-Bot. */
   mock?: boolean;
+  /** A prompt for U-Bot written from the user's request and where they are (voice/src/shared/ubot-prompt.ts). */
+  prompt?: string;
 }
 
 const CARD_ID = 'icarus-handoff';
@@ -23,11 +25,15 @@ const COPY = {
   en: {
     title: 'U-Bot can help with this', copy: 'Copy my question', copied: 'Copied', dismiss: 'Not now', note: 'U-Bot opens in a new tab. You need to sign in there.',
     noteMock: 'Opens the U-Bot mock in a new tab, with your question. U-topia has not shared an API yet, so it uses sample data.',
+    promptLabel: 'Your request, written for U-Bot', copyOpen: 'Copy and open U-Bot',
+    notePrompt: 'U-Bot opens in a new tab. Sign in, then paste it in the chat.', pasted: 'Copied. Paste it in the U-Bot chat.',
   },
   th: {
     title: 'U-Bot ช่วยเรื่องนี้ได้', copy: 'คัดลอกคำถามของฉัน', copied: 'คัดลอกแล้ว', dismiss: 'ไว้ก่อน', note: 'U-Bot เปิดในแท็บใหม่ ต้องเข้าสู่ระบบที่นั่น',
     // THAI REVIEW
     noteMock: 'เปิด U-Bot จำลองในแท็บใหม่ พร้อมคำถามของคุณ ยูโทเปียยังไม่เปิด API จึงใช้ข้อมูลตัวอย่าง',
+    promptLabel: 'คำขอของคุณ เขียนไว้ให้ U-Bot แล้ว', copyOpen: 'คัดลอกแล้วเปิด U-Bot',
+    notePrompt: 'U-Bot เปิดในแท็บใหม่ เข้าสู่ระบบ แล้ววางในช่องแชท', pasted: 'คัดลอกแล้ว วางในแชทของ U-Bot ได้เลย',
   },
 } as const;
 
@@ -57,9 +63,25 @@ export function showHandoffCard(info: HandoffInfo, options: { th: boolean; getPh
   title.textContent = t.title;
   title.style.cssText = 'font-weight:600;font-size:15px;color:#C94F72;margin-bottom:4px';
 
+  const usePrompt = Boolean(info.prompt) && !info.mock;
   const question = document.createElement('div');
-  question.textContent = `“${info.question}”`;
-  question.style.cssText = 'color:#8A6B75;margin-bottom:10px;max-height:2.8em;overflow:hidden';
+  if (usePrompt) {
+    // The prompt, ready to paste: a small chat bubble the user can read (and select) before copying.
+    const label = document.createElement('div');
+    label.textContent = t.promptLabel;
+    label.style.cssText = 'font-size:11.5px;color:#8A6B75;margin-bottom:4px';
+    const bubble = document.createElement('div');
+    bubble.textContent = info.prompt as string;
+    bubble.setAttribute('data-testid', 'ubot-prompt');
+    bubble.style.cssText =
+      'white-space:pre-wrap;user-select:text;background:#fff;border:1px solid #F2DCE2;border-radius:14px 14px 14px 4px;' +
+      'padding:8px 10px;color:#4A2E36;max-height:9em;overflow:auto;font-size:12.5px;line-height:1.45';
+    question.append(label, bubble);
+    question.style.cssText = 'margin-bottom:10px';
+  } else {
+    question.textContent = `“${info.question}”`;
+    question.style.cssText = 'color:#8A6B75;margin-bottom:10px;max-height:2.8em;overflow:hidden';
+  }
 
   const row = document.createElement('div');
   row.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap';
@@ -68,7 +90,7 @@ export function showHandoffCard(info: HandoffInfo, options: { th: boolean; getPh
   open.href = info.url;
   open.target = '_blank';
   open.rel = 'noopener noreferrer';
-  open.textContent = info.label;
+  open.textContent = usePrompt ? t.copyOpen : info.label;
   open.style.cssText = 'background:#C94F72;color:#fff;border-radius:18px;padding:9px 16px;text-decoration:none;font-weight:600';
 
   const button = (text: string) => {
@@ -91,11 +113,21 @@ export function showHandoffCard(info: HandoffInfo, options: { th: boolean; getPh
   dismiss.onclick = hideHandoffCard;
 
   const note = document.createElement('div');
-  note.textContent = info.mock ? t.noteMock : t.note;
+  note.textContent = info.mock ? t.noteMock : usePrompt ? t.notePrompt : t.note;
   note.style.cssText = 'font-size:11px;color:#AE939B;margin-top:8px';
 
-  // The mock gets the question with the handoff, so there is nothing to copy.
-  if (info.mock) row.append(open, dismiss);
+  if (usePrompt) {
+    // One tap copies the prompt and opens U-Bot (a real link, so no popup blocker; copying needs this same tap).
+    open.addEventListener('click', () => {
+      void navigator.clipboard?.writeText(info.prompt as string).then(
+        () => (note.textContent = t.pasted),
+        () => undefined, // no clipboard: the prompt is on the card to select by hand
+      );
+    });
+  }
+
+  // The mock gets the question with the handoff, and a prompt is copied by the main button: nothing else to copy.
+  if (info.mock || usePrompt) row.append(open, dismiss);
   else row.append(open, copy, dismiss);
   card.append(title, question, row, note);
   document.body.appendChild(card);

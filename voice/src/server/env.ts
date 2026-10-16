@@ -51,7 +51,7 @@ export interface ServerConfig {
   utopiaTimeoutMs: number;
   /** Where the "Open U-Bot" button goes. */
   ubotUrl: string;
-  /** mock: "Open U-Bot" opens our U-Bot mock with the question. link: the real U-Bot's front door. */
+  /** link (default): "Open U-Bot" opens the real U-Bot, with a prompt to paste. mock: our U-Bot mock page. */
   ubotMode: 'mock' | 'link';
 
   assistantMode: 'mock' | 'http';
@@ -94,7 +94,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   const utopiaMode = (env.UTOPIA_MODE?.trim() || 'mock') as ServerConfig['utopiaMode'];
   if (!['mock', 'http'].includes(utopiaMode)) throw new Error(`UTOPIA_MODE must be mock or http, got "${utopiaMode}"`);
 
-  const ubotMode = (env.UBOT_MODE?.trim() || 'mock') as ServerConfig['ubotMode'];
+  const ubotMode = (env.UBOT_MODE?.trim() || 'link') as ServerConfig['ubotMode'];
   if (!['mock', 'link'].includes(ubotMode)) throw new Error(`UBOT_MODE must be mock or link, got "${ubotMode}"`);
 
   const { kept, dropped } = sanitizeKeyterms(KEYTERMS);

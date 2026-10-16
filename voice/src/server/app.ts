@@ -147,7 +147,13 @@ export function createApp(deps: AppDeps): express.Express {
     if (!text || text.length > 1000) return fail(res, 400, 'bad_request', 'text is required (up to 1000 characters).');
     const language: LangSetting = ['en', 'th', 'auto'].includes(body.language as string) ? (body.language as LangSetting) : 'auto';
     try {
-      res.json(await utopia.route(text, language, { fallback: body.fallback === true }));
+      // Where the user is, for the U-Bot prompt: two short strings, nothing personal.
+      const ctx = isObject(body.context) ? body.context : {};
+      const context = {
+        ...(typeof ctx.screen === 'string' && ctx.screen.trim() ? { screen: ctx.screen.trim().slice(0, 60) } : {}),
+        ...(typeof ctx.asset === 'string' && ctx.asset.trim() ? { asset: ctx.asset.trim().slice(0, 40) } : {}),
+      };
+      res.json(await utopia.route(text, language, { fallback: body.fallback === true, context }));
     } catch (err) {
       log(`[utopia] route failed: ${redact((err as Error).message)}`);
       res.json({ kind: 'none' }); // never block the conversation because this helper broke

@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setMascotFallback } from '../src/assets';
 import { createDcApp, installHelmet } from '../src/dc-runtime';
 import { hideHandoffCard, showHandoffCard } from '../src/handoff-card';
-import { installUtopiaRouting, type PrototypeInstance } from '../src/utopia-bridge';
+import { installUtopiaRouting, scenarioOf, type PrototypeInstance } from '../src/utopia-bridge';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -95,7 +95,8 @@ describe('Ask U-topia, inside the real prototype', () => {
     expect(text).toContain('U-Coin is the native token of the U-topia ecosystem.');
     expect(text).toContain('Mock answer, not checked by U-topia yet');
     expect(card()).toBeNull(); // an answer needs no handoff
-    expect(f.calls[0]).toEqual({ text: 'What is U-Coin?', language: 'en' });
+    // where the user is goes along, for the prompt Icarus writes for U-Bot (the prototype starts on Home)
+    expect(f.calls[0]).toEqual({ text: 'What is U-Coin?', language: 'en', context: { screen: 'Home screen' } });
   });
 
   it('answers in Thai when the question is Thai', async () => {
@@ -156,8 +157,8 @@ describe('handoff to U-Bot, inside the real prototype', () => {
     install(f.fn);
     await ask('can you check the train times to Hua Hin');
     expect(f.calls).toEqual([
-      { text: 'can you check the train times to Hua Hin', language: 'en' },
-      { text: 'can you check the train times to Hua Hin', language: 'en', fallback: true },
+      { text: 'can you check the train times to Hua Hin', language: 'en', context: { screen: 'Home screen' } },
+      { text: 'can you check the train times to Hua Hin', language: 'en', fallback: true, context: { screen: 'Home screen' } },
     ]);
     expect(document.body.textContent).toContain('U-Bot is a general assistant');
     expect(card()).toBeTruthy();
@@ -237,5 +238,33 @@ describe('the handoff card on its own', () => {
     const c = showHandoffCard(info, { th: false, getPhone: () => phone });
     expect(c.style.left).toBe('116px');
     expect(c.style.width).toBe('361px');
+  });
+});
+
+describe('the prompt Icarus writes for the real U-Bot', () => {
+  it('describes where the user is in words, and nothing personal', () => {
+    expect(scenarioOf({ screen: 'asset', asset: { id: 'XAU', name: 'Gold', price_usd: 2358.7 }, portfolio: { value_usd: 28399 } }, false)).toEqual({ screen: 'Gold page', asset: 'Gold' });
+    expect(scenarioOf({ screen: 'buy', asset: { name: 'Bitcoin' } }, false)).toEqual({ screen: 'buy screen for Bitcoin', asset: 'Bitcoin' });
+    expect(scenarioOf({ screen: 'card', asset: { name: 'Gold' } }, false)).toEqual({ screen: 'Card screen' });
+    expect(scenarioOf({ screen: 'home' }, true)).toEqual({ screen: 'หน้าหลัก' });
+    expect(scenarioOf(undefined, false)).toEqual({});
+  });
+
+  it('the card shows the prompt, and one tap copies it and opens the real U-Bot', async () => {
+    const writeText = vi.fn(async () => undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    const prompt = 'Book me a ride to the airport. Show me a few options with the price and pickup time, then let me review and pay in U-topia Pay.\nMy request: “book me a ride to the airport”';
+    const c = showHandoffCard({ label: 'Open U-Bot', message: 'm', url: 'https://u.bot/', question: 'book me a ride to the airport', reason: 'commerce', prompt }, { th: false, getPhone: () => null });
+    expect(c.querySelector('[data-testid="ubot-prompt"]')?.textContent).toBe(prompt);
+    const link = c.querySelector('a') as HTMLAnchorElement;
+    expect(link.textContent).toBe('Copy and open U-Bot');
+    expect(link.href).toBe('https://u.bot/');
+    expect(link.target).toBe('_blank');
+    link.addEventListener('click', (e) => e.preventDefault()); // jsdom cannot open a tab
+    link.click();
+    await sleep(0);
+    expect(writeText).toHaveBeenCalledWith(prompt);
+    expect(c.textContent).toContain('Copied. Paste it in the U-Bot chat.');
+    expect(c.textContent).not.toContain('Copy my question');
   });
 });

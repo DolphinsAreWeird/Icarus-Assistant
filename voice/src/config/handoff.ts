@@ -19,17 +19,18 @@ export const HANDOFF_COPY: Record<'en' | 'th', { label: string; messages: Record
   en: {
     label: 'Open U-Bot',
     messages: {
-      utopia_question: "I don't have the details on that one. U-Bot can answer questions about U-topia.",
-      commerce: "That's outside what I can do in this app. U-Bot can help with travel, rides and grocery orders, and you review and pay in U-topia Pay.",
-      general: "I can't help with that here. U-Bot is a general assistant, so it may be able to.",
+      utopia_question: "I don't have the details on that one. U-Bot can answer questions about U-topia. I've written the question for you.",
+      commerce: "That's outside what I can do in this app. U-Bot can help with travel, rides and grocery orders, and you review and pay in U-topia Pay. I've written the request for you.",
+      general: "I can't help with that here. U-Bot is a general assistant, so it may be able to. I've written the request for you.",
     },
   },
   th: {
     label: 'เปิด U-Bot',
     messages: {
-      utopia_question: 'เรื่องนี้ฉันยังไม่มีรายละเอียด U-Bot ตอบคำถามเกี่ยวกับยูโทเปียได้',
-      commerce: 'เรื่องนี้เกินกว่าที่ฉันทำได้ในแอปนี้ U-Bot ช่วยเรื่องเดินทาง เรียกรถ และสั่งของได้ แล้วคุณตรวจสอบและจ่ายใน U-topia Pay',
-      general: 'เรื่องนี้ฉันช่วยในแอปนี้ไม่ได้ U-Bot เป็นผู้ช่วยทั่วไป อาจช่วยได้',
+      // THAI REVIEW: "I've written the question/request for you" at the end.
+      utopia_question: 'เรื่องนี้ฉันยังไม่มีรายละเอียด U-Bot ตอบคำถามเกี่ยวกับยูโทเปียได้ ฉันเขียนคำถามไว้ให้แล้ว',
+      commerce: 'เรื่องนี้เกินกว่าที่ฉันทำได้ในแอปนี้ U-Bot ช่วยเรื่องเดินทาง เรียกรถ และสั่งของได้ แล้วคุณตรวจสอบและจ่ายใน U-topia Pay ฉันเขียนคำขอไว้ให้แล้ว',
+      general: 'เรื่องนี้ฉันช่วยในแอปนี้ไม่ได้ U-Bot เป็นผู้ช่วยทั่วไป อาจช่วยได้ ฉันเขียนคำขอไว้ให้แล้ว',
     },
   },
 };

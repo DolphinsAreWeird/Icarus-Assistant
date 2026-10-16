@@ -50,7 +50,7 @@ http://localhost:8787/app/?backend=http://127.0.0.1:8010&user=u_small
 
 If the voice server is down, all of this is skipped. Advice is never handed off. Details and the plan for when U-Bot has an API: `../voice/README.md`.
 
-**The U-Bot mock.** With the voice server's default `UBOT_MODE=mock`, "Open U-Bot" opens `?page=ubot&session=...` (`src/ubot-mock.ts`): a U-Bot stand-in, marked MOCK, that continues the user's question with sample options and a mock "Review & pay in U-topia Pay" step. Nothing is booked and no money moves. `UBOT_MODE=link` opens the real U-Bot instead.
+**The prompt for U-Bot.** A handoff card shows a prompt Icarus wrote from the user's request and the screen they are on (`scenarioOf` in `src/utopia-bridge.ts`, the prompt itself in `voice/src/shared/ubot-prompt.ts`). **Copy and open U-Bot** copies it and opens the real https://u.bot/. With the voice server's `UBOT_MODE=mock`, the button opens our U-Bot mock page (`src/ubot-mock.ts`) instead, marked MOCK, with sample options.
 
 ## Files
 
