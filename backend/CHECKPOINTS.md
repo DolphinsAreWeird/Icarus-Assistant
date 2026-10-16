@@ -1,4 +1,4 @@
-> **Historical note (as of 16 Oct 2026, the hackathon).** This file records the first backend integration phase. It records the state at that time: worktree and branch names, commit hashes and test counts below are old (the backend suite on `main` now has 316 tests). For the current state, read [`README.md`](../README.md), [`PLAN.md`](../PLAN.md) and [`SUMMARY.md`](../SUMMARY.md). The integrated code is on `main`.
+> **Historical note (as of 16 Oct 2026, the hackathon).** This file records the first backend integration phase. It records the state at that time: worktree and branch names, commit hashes and test counts below are old (the backend suite on `main` now has 316 tests). For the current state, read [`README.md`](../README.md), [`PLAN.md`](../docs/team-notes/remediation-plan.md) and [`SUMMARY.md`](../docs/team-notes/project-review.md). The integrated code is on `main`.
 
 
 # Backend checkpoints — 2026-10-16

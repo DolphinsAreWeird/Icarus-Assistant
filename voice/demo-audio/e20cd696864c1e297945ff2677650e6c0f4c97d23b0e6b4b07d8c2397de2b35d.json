@@ -1,10 +1,10 @@
 {
-  "voiceId": "mYcpTKg1oj1H5CtzUZNO",
+  "voiceId": "XiPS9cXxAVbaIWtGDHDh",
   "model": "eleven_flash_v2_5",
   "speed": 1,
   "text": "That red number is today's change. Gold is down two point three percent since yesterday.",
   "outputFormat": "pcm_24000",
   "sampleRate": 24000,
-  "bytes": 202850,
-  "createdAt": "2026-10-16T06:07:21.470Z"
+  "bytes": 249660,
+  "createdAt": "2026-10-16T06:47:03.603Z"
 }
