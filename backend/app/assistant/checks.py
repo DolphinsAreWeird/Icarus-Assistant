@@ -34,6 +34,69 @@ def first_sentences(text: str, n: int = 2) -> str:
     return _cap(" ".join(parts[:n]) if len(parts) > n else text.strip(), REPLY_TEXT_MAX)
 
 
+# What some models say before the answer. Dropped when an answer follows.
+FILLER = re.compile(r"^(?:(?:hi|hello|hey|welcome)\b|(?:sure|of course|certainly|absolutely|great|okay|ok|no worries|"
+                    r"no problem)\b\W*$|i(?:'m|’m| am) (?:here to help|glad you asked|happy to help)|"
+                    r"(?:great|good) question|let me (?:explain|share|help|show)|i (?:can|will) (?:share|explain) what|"
+                    r"here(?:'s| is) what|i see (?:you|that))", re.IGNORECASE)
+BRIEF_WORDS = 40      # one or two short sentences and a short question
+THAI_TEXT_MAX = 180   # Thai has no full stops: cut by length, at a space
+THAI_QUESTION = re.compile(r"(?:\?|ไหม|หรือเปล่า|หรือยัง)$")
+THAI_QUESTION_END = re.compile(r"(?:\?|ไหม|หรือเปล่า|หรือยัง)(?= |$)")
+DANGLING = re.compile(r"(?:\d|ประมาณ|about|:)$")  # never end a cut on "ประมาณ 2.8" without its unit, or on "...:"
+
+
+def _cut_thai(text: str, limit: int) -> str:
+    """At most limit characters, cut at a space, and not after a number or a word that needs one."""
+    cut = text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0]
+    while " " in cut and DANGLING.search(cut):
+        cut = cut.rsplit(" ", 1)[0]
+    return cut.rstrip(" ,:")
+
+
+# Names that keep their capital in the middle of a sentence ("gold" doesn't: the app says "gold" mid-sentence).
+NAMES = {"bitcoin", "ethereum", "tether", "paxos", "pax", "u-topia", "utopia", "icarus", "apple", "tesla", "home",
+         "invest", "portfolio", "wallets", "payments", "card", "buy", "confirm", "review", "swap", "send", "receive",
+         "freeze", "top", "thai", "english"}
+
+
+def _join(first: str, second: str) -> str:
+    """Two sentences as one: "You're on Home. It shows..." -> "You're on Home; it shows..."."""
+    word = re.sub(r"[^\w'’-].*", "", second.split(" ", 1)[0])
+    if not (word.isupper() or word in ("I",) or word.startswith(("I'", "I’")) or word.lower() in NAMES):
+        second = second[:1].lower() + second[1:]
+    return f"{first[:-1]}; {second}"
+
+
+def brief(text: str, lang: str = "en") -> str:
+    """The answer first, then the closing question if there is one ("Want me to explain the chart?"): two
+    sentences at most (the app speaks them), about 40 words. A model's filler before the answer ("I'm here
+    to help!") goes; a fact in a second sentence is joined to the first rather than lost, and anything
+    after that goes, but the question. Thai, which has no full stops, is cut by length instead, keeping
+    its closing question."""
+    text = text.strip()
+    if lang == "th" and len(text) > THAI_TEXT_MAX:
+        asks = [m.end() for m in THAI_QUESTION_END.finditer(text, 0, THAI_TEXT_MAX)]
+        if asks and asks[-1] >= THAI_TEXT_MAX // 3:  # end on the last whole question that fits
+            return text[: asks[-1]]
+        tail = text.rsplit(" ", 1)[-1] if " " in text else ""
+        if THAI_QUESTION.search(tail) and 8 <= len(tail) < THAI_TEXT_MAX // 3:  # else keep a short closing one
+            return f"{_cut_thai(text[: -len(tail)].rstrip(), THAI_TEXT_MAX - len(tail) - 1)} {tail}"
+        return _cut_thai(text, THAI_TEXT_MAX)
+    parts = [p for p in SENTENCE_END.split(text) if p]
+    while len(parts) > 1 and FILLER.search(parts[0]):
+        parts.pop(0)
+    if len(parts) > 2:
+        ask = parts[-1] if parts[-1].endswith("?") else None
+        if not ask:
+            parts = parts[:2]
+        elif parts[0].endswith(".") and len(f"{parts[0]} {parts[1]} {ask}".split()) <= BRIEF_WORDS:
+            parts = [_join(parts[0], parts[1]), ask]
+        else:
+            parts = [parts[0], ask]
+    return _cap(" ".join(parts), REPLY_TEXT_MAX)
+
+
 def detect_language(text: str, fallback: str = "en") -> str:
     return "th" if THAI.search(text) else fallback
 
@@ -104,6 +167,30 @@ ADVICE = re.compile("|".join(ADVICE_PATTERNS), re.IGNORECASE)
 def asks_for_advice(text: str) -> bool:
     """Plain-code check for "what should I buy" style questions, in English and Thai."""
     return ADVICE.search(text) is not None
+
+
+# A question about safety or trust, and a reply that talks about protection, insurance, licences or
+# regulation: the model may have made a claim we can't back, so the approved line is said instead.
+SAFETY_TOPIC = re.compile(r"\b(?:safe\w*|secur\w*|trust\w*|protect\w*|insur\w*|guarantee\w*|regulat\w*|licen[cs]\w*|"
+                          r"legit\w*|scam\w*|hack\w*|fraud\w*)\b|ปลอดภัย|ไว้ใจ|เชื่อถือ|คุ้มครอง|ประกัน|โกง|หลอก|แฮก",
+                          re.IGNORECASE)
+SECURITY_CLAIM = re.compile(r"\b(?:insur\w*|guarantee\w*|regulat\w*|licen[cs]\w*|protect\w*|secur\w*|encrypt\w*)\b|"
+                            r"คุ้มครอง|ประกัน|กำกับ|ใบอนุญาต|เข้ารหัส|ความปลอดภัย|มาตรการ", re.IGNORECASE)
+
+
+def security_claim(question: str, reply: str) -> bool:
+    return SAFETY_TOPIC.search(question) is not None and SECURITY_CLAIM.search(reply) is not None
+
+
+# The app's Thai leaves out gender particles (voice/src/config/strings.ts); some models add them anyway.
+THAI_PARTICLE = re.compile(r"\s*(?:ครับผม|ครับ|ค่ะ|คะ)(?=[\s?!.,:;]|$)")
+LIST_BREAK = re.compile(r"\s*\n+\s*(?:[-*•]\s+|\d+[.)]\s+)?")
+
+
+def plain_reply(text: str, lang: str) -> str:
+    """One line of plain text: no list markers or bold, and in Thai no ครับ or ค่ะ."""
+    text = LIST_BREAK.sub(" ", text.replace("**", "")).strip()
+    return THAI_PARTICLE.sub("", text) if lang == "th" else text
 
 
 def unbacked_numbers(reply: str, tool_results: list, user_text: str) -> list[float]:

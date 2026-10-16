@@ -3,14 +3,16 @@ import json
 
 import pytest
 
-from app.assistant.checks import SENTENCE_END, THAI
+from app.assistant.checks import SENTENCE_END, THAI, brief, plain_reply
 from app.assistant.fastpath import parse
 from app.assistant.loop import Assistant, NoModel
-from app.assistant.memo import AnswerCache, QuestionLog
+from app.assistant.memo import AnswerCache, QuestionLog, standalone
 from app.assistant.normalize import normalize
 from app.assistant.prepared import default as prepared_answers, sample_questions
+from app.assistant.prompt import SAFETY_REPLY, SYSTEM_PROMPT
 from app.contracts import ChatRequest
 from app.facts import FactPacks
+from app.trades import confirm_trade, prepare_trade
 from tests.test_brain import SNAPSHOT, FakeLLM, cache, calls, state, text, types  # noqa: F401  (fixtures)
 
 HOME = {"screen": "home", "label": "Home screen"}
@@ -209,6 +211,129 @@ def test_prepared_answers_match_exactly_nearly_and_never_on_a_near_miss():
         assert near(miss) is None, miss
 
 
+# ---------- vague questions: the model, with the screen ----------
+
+VAGUE = ["help", "help me", "can you help me", "please help", "is it safe?", "is this safe?", "safe?", "what is it?",
+         "what is this?", "what's this?", "explain this", "what am I looking at", "who?", "what?", "tell me more",
+         "is this good?", "what's the risk?", "what's the balance?", "explain the balance", "I'm confused", "hmm",
+         "ปลอดภัยไหม", "ช่วยหน่อย", "อันนี้คืออะไร", "งงมาก", "ทำยังไงดี"]
+
+
+@pytest.mark.parametrize("question", VAGUE)
+def test_vague_questions_get_no_prepared_answer_and_no_shortcut(question):
+    # caught live: "help" and "is it safe?" got the same canned line whatever the screen showed
+    p, norm = prepared_answers(), normalize(question)
+    assert p.match_exact(norm) is None and p.match_near(question, norm) is None and parse(question) is None
+
+
+def test_clear_safety_questions_keep_the_safety_answer():
+    p = prepared_answers()
+    for question in ["is my money safe", "Is my money safe here?", "is this app safe", "can I trust this app",
+                     "is it safe here", "เงินของฉันปลอดภัยไหม", "แอปนี้ปลอดภัยไหม"]:
+        norm = normalize(question)
+        assert (p.match_exact(norm) or p.match_near(question, norm))["id"] == "is_my_money_safe", question
+    assert p.entries["is_my_money_safe"]["say"] == SAFETY_REPLY  # what the model's guard says instead
+
+
+def test_definitions_answer_the_word_not_the_one_on_screen():
+    p = prepared_answers()
+    near = lambda question: (p.match_near(question, normalize(question)) or {}).get("id")  # noqa: E731
+    assert p.match_exact(normalize("What is volatility?"))["id"] == "what_is_volatility"
+    assert near("volatility, what is it") == "what_is_volatility"     # the word, in another order
+    assert near("what's the volatility") is None                      # the one on screen: the model answers
+    assert near("what's the balance") is None and near("explain the balance") is None
+
+
+def test_a_vague_question_goes_to_the_model_with_the_screen(cache, state):
+    fake = FakeLLM([text("You're on gold's page: it's down about 3% over the past month. Want me to explain the chart?")])
+    reply = ask(Assistant(fake, state, cache), "help", snapshot=GOLD_PAGE)
+    assert reply.debug["route"] == "model" and len(fake.calls) == 1
+    system = fake.calls[0]["messages"][0]["content"]
+    assert system.startswith(SYSTEM_PROMPT + "\n\nContext for this turn:\n")  # the rules stay byte-identical
+    assert "On screen: gold's page (the app's label: Gold · 1M chart)." in system
+    assert "Things you can do here: explain the chart;" in system and '"This" or "here" means that page.' in system
+    assert '"chart on screen":"down about 3% over the past month, from about' in system
+    assert "Their message is short" in system and '"their money":{"cash":"5,000 baht","invested":"nothing yet"}' in system
+    assert reply.text == "You're on gold's page: it's down about 3% over the past month. Want me to explain the chart?"
+    assert {s.tool for s in reply.sources} == {"get_history"} and reply.debug["unbacked_numbers"] == []
+
+
+def test_the_model_is_told_only_what_the_screen_shows(cache, state):
+    fake = FakeLLM([text("This is your Home screen.")] * 3)
+    bot = Assistant(fake, state, cache)
+    context = lambda i: fake.calls[i]["messages"][0]["content"].split("Context for this turn:\n")[1]  # noqa: E731
+    ask(bot, "what is this?", snapshot={**GOLD_PAGE, "screen": "home", "label": "Home"})  # the app still names gold
+    assert "On screen: the Home screen" in context(0)
+    assert "gold's page" not in context(0) and "chart on screen" not in context(0)
+    ask(bot, "what does this mean?", snapshot={**GOLD_PAGE, "focus": "asset.change24h"}, session="s2")
+    assert "They tapped this: How much the price moved in the last 24 hours, in percent." in context(1)
+    bot.chat(ChatRequest(session_id="s3", user_id="u_new", text="what is this?"))  # no screen sent: nothing said
+    assert "On screen" not in context(2)
+
+
+def test_a_follow_up_gets_the_facts_of_the_last_exchange(cache, state):
+    fake = FakeLLM([text("Over the past year it's up a little.")])
+    bot = Assistant(fake, state, cache)
+    ask(bot, "How is gold doing?")  # prepared: no model
+    ask(bot, "tell me more")
+    assert '"gold":{"price":"about 134,000 baht","today":"up about 0.5% today","1W":' in fake.calls[0]["messages"][0]["content"]
+
+
+def test_a_security_claim_from_the_model_is_never_said(cache, state):
+    fake = FakeLLM([text("Yes, your money is protected by bank-grade security and fully insured."),
+                    text("Gold's price can fall as well as rise: it's down about 3% over the past month."),
+                    text("แอปจริงมีมาตรการคุ้มครองเงินของคุณ")])
+    bot = Assistant(fake, state, cache)
+    reply = ask(bot, "is it safe?")
+    assert reply.debug["route"] == "model" and reply.text == SAFETY_REPLY["en"] and reply.debug["guard"] == "security_claim"
+    assert ask(bot, "is gold safe?", session="s2").text.startswith("Gold's price can fall")  # about the asset: kept
+    assert ask(bot, "ปลอดภัยไหม", session="s3").text == SAFETY_REPLY["th"]
+
+
+def test_advice_is_about_the_asset_on_screen(cache, state):
+    assert parse("should I buy?", "XAU").args == {"asset_id": "XAU"}
+    bot = Assistant(MustNotCall(), state, cache)
+    assert "gold" in ask(bot, "What should I buy?", snapshot=GOLD_PAGE).text
+    assert "gold" not in ask(bot, "What should I buy?", session="s2").text  # on Home there is no asset to name
+
+
+def test_replies_are_brief_and_plain():
+    # two sentences at most (the app speaks them): the filler goes, a second fact joins the first, the offer stays
+    assert brief("I'm here to help! Your balance is 5,000 baht. You haven't bought anything yet. "
+                 "Want me to show you how buying works?") == \
+        "Your balance is 5,000 baht; you haven't bought anything yet. Want me to show you how buying works?"
+    assert brief("I can't pick for you. Bitcoin is down about 24% over the past year. It's up today. Want its chart?") \
+        == "I can't pick for you; Bitcoin is down about 24% over the past year. Want its chart?"
+    long = ("You're on the Home screen, which shows your total balance across both of your wallets. "
+            "There are buttons to receive, swap and send money, and a list of your recent transactions. "
+            "Want me to explain your balance or show you how buying works?")
+    assert brief(long) == ("You're on the Home screen, which shows your total balance across both of your wallets. "
+                           "Want me to explain your balance or show you how buying works?")
+    assert plain_reply("ไม่เป็นไรครับ ช่วยได้นะคะ มูลค่า 5,000 บาท", "th") == "ไม่เป็นไร ช่วยได้นะ มูลค่า 5,000 บาท"
+    assert plain_reply("You can:\n- see prices\n- **buy**", "en") == "You can: see prices buy"
+    thai = "บิตคอยน์ขึ้นลงแรง " * 9 + "ราคาประมาณ 2.8 ล้านบาท ลงประมาณ 24% ในปีที่ผ่านมา อยากดูกราฟไหม"
+    cut = brief(thai, "th")
+    assert len(cut) <= 180 and not cut.endswith(("2.8", "ประมาณ")) and cut.endswith("อยากดูกราฟไหม")
+
+
+def test_conversational_follow_ups_and_other_screens_are_not_reused(cache, state):
+    assert not standalone(normalize("what do you mean")) and not standalone(normalize("and then?"))
+    fake = FakeLLM([text("That's how much gold moved since yesterday."), text("That's gold over the past month.")])
+    bot = Assistant(fake, state, cache)
+    ask(bot, "what does this mean?", snapshot={**GOLD_PAGE, "focus": "asset.change24h"})
+    reply = ask(bot, "what does this mean?", snapshot={**GOLD_PAGE, "focus": "asset.chart"}, session="s2")
+    assert reply.debug["route"] == "model" and reply.text == "That's gold over the past month."  # another element
+
+
+def test_model_answers_are_kept_per_user_until_their_money_changes(cache, state):
+    fake = FakeLLM([text("You have 5,000 baht."), text("You have 4,000 baht in cash.")])
+    bot = Assistant(fake, state, cache)
+    ask(bot, "what's going on with my money")
+    assert ask(bot, "what's going on with my money", session="s2").debug["route"] == "cache"
+    confirm_trade(state, "u_new", prepare_trade(state, cache, "u_new", "gold", "buy", 1000)["preview_id"])
+    assert ask(bot, "what's going on with my money", session="s3").text == "You have 4,000 baht in cash."
+
+
 def test_every_prepared_answer_is_complete():
     p = prepared_answers()
     kinds = {"show", "show_price", "trade", "period", "freeze", "hide", "back", "cancel", "steps", "guide", "compare",
@@ -271,10 +396,15 @@ def test_the_model_gets_the_facts_in_its_context_and_cites_them(cache, state):
 def test_when_the_model_says_nothing_its_tools_speak(cache, state, monkeypatch):
     monkeypatch.setenv("FASTPATH", "0")
     fake = FakeLLM([calls(("show_asset", {"asset_id": "ETH"})), text(""),
-                    calls(("get_asset_info", {"asset_id": "BTC"})), text("<think>done</think>")])
+                    calls(("get_asset_info", {"asset_id": "BTC"})), text("<think>done</think>"),
+                    calls(("get_history", {"asset_id": "BTC", "period": "1Y"})), text(""),
+                    calls(("get_prices", {"asset_ids": ["XAU"]})), text("")])
     bot = Assistant(fake, state, cache)
     assert ask(bot, "Show me Ethereum").text == "Opened the Ethereum page."
     assert ask(bot, "What is Bitcoin?", session="s2").text.startswith("Bitcoin is the first and biggest cryptocurrency.")
+    risky = ask(bot, "is bitcoin risky?", session="s3").text  # caught live: silent after a data tool
+    assert risky.startswith("Bitcoin is ") and risky.endswith(" over the past year.")
+    assert ask(bot, "anything new with gold?", session="s4").text == "Gold is about 134,000 baht, up about 0.5% today."
 
 
 def test_long_model_answers_are_cut_to_two_sentences_without_em_dashes(cache, state):
