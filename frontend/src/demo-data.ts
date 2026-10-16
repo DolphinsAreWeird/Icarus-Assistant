@@ -214,6 +214,7 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
       const d = dayChange(a.id);
       return { ...a, price: money(bundle!.assets[a.id]!.price_thb), change: d === null ? (freshness(bundle!.assets[a.id]).state === 'live' ? 'Live' : 'Delayed') : `${signedPct(d)} 1D`, color: d === null || d >= 0 ? GREEN : RED };
     });
+    tradable.sort((a: any, b: any) => a.name.localeCompare(b.name)); // alphabetical, in every tab
     view.assetRows = tradable.map((a: any, i: number) => ({ ...a, border: i ? '1px solid #F8E8EC' : '1px solid transparent' }));
     const d24 = dayChange(proto.state.assetId);
     const fr = freshness(current), live = fr.state === 'live';

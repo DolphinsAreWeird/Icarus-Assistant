@@ -31,11 +31,11 @@ beforeEach(async () => {
 });
 afterEach(async () => { await act(async () => root.unmount()); delete (window as any).Icarus; setMascotFallback(false); });
 
-it('lists every asset with gold last, and the Stocks tab has the stocks', async () => {
+it('lists every asset alphabetically, and the Stocks tab has the stocks', async () => {
   const all = proto.renderVals().assetRows.map((a: any) => a.id);
-  expect(all).toEqual(['BTC', 'ETH', 'AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'BRK', 'TSLA', 'QQQ', 'XAU']);
+  expect(all).toEqual(['GOOGL', 'AMZN', 'AAPL', 'BRK', 'BTC', 'ETH', 'XAU', 'META', 'MSFT', 'QQQ', 'NVDA', 'TSLA']); // Alphabet, Amazon, Apple, Berkshire, Bitcoin, Ethereum, Gold, Meta, Microsoft, Nasdaq 100, Nvidia, Tesla
   await act(async () => proto.setState({ filter: 'Stocks' }));
-  expect(proto.renderVals().assetRows.map((a: any) => a.id)).toEqual(all.slice(2, 11));
+  expect(proto.renderVals().assetRows.map((a: any) => a.id)).toEqual(all.filter((id: string) => !['BTC', 'ETH', 'XAU'].includes(id)));
   await act(async () => proto.setState({ filter: 'Crypto' }));
   expect(proto.renderVals().assetRows.map((a: any) => a.id)).toEqual(['BTC', 'ETH']);
 });

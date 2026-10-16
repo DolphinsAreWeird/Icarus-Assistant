@@ -177,7 +177,7 @@ it('does not review a late manual preview after the amount changed', async () =>
   expect(fetcher.mock.calls.some(([u]) => String(u).endsWith('/confirm'))).toBe(false);
 });
 
-it('lists stocks between crypto and gold with gold last, each on its own page, from the backend bundle', async () => {
+it('lists every asset alphabetically, each on its own page, from the backend bundle', async () => {
   const more = { ...data, holdings: { BTC: 0, ETH: 0, NVDA: 0, XAU: 1 }, assets: Object.fromEntries(['BTC', 'ETH', 'NVDA', 'XAU'].map(id => [id, data.assets[id === 'NVDA' ? 'BTC' : id]!])) };
   const fetcher = vi.fn(async () => Response.json(more));
   const demo = installDemoData(proto, 'http://be', 'u_new', vi.fn(), fetcher);
