@@ -2,13 +2,16 @@
 //
 //   It listens: when a question comes in, it flies up beside it.
 //   It shows: it flies (in a curve, leaving sparkles) to whatever it talks about, and points at it: the screen dims
-//   around it, a big arrow bounces at it, ripples tap on it, and a dotted trail runs back to the mascot.
+//   around it, a glowing ring and a big arrow sit on it, ripples tap on it, and a dotted trail runs back to the mascot.
 //   It talks in a bubble, in step with the voice; hearts when something good happens; a different little trick
 //   (hop, spin, wiggle) each time it lands; it switches sides of the phone so it moves across the screen.
 //   At the end it loops back into the Icarus button, where it lives.
 //
+// Everything eases: a flight follows its target if the screen moves under it (it never restarts in a new
+// direction), the tilt, the turn, the arrow, the trail and the bubble all glide, and poses cross-fade.
+//
 // It mirrors the app's own state (the voice window's line and the element the app highlights), so the tour script
-// doesn't change. The app's voice window is hidden while the guide is out.
+// doesn't change. The app's voice window and its own highlight box are hidden while the guide is out.
 
 export interface GuideVoice {
   phase?: string;
@@ -35,39 +38,41 @@ const FONT = 'Fredoka,Mali,system-ui,sans-serif';
 const POSES = ['curious', 'excited', 'flying', 'happy', 'hero', 'star', 'working'] as const;
 const img = (pose: string) => `mascot/bow/${pose}.png`;
 const MOOD: Record<string, string> = { happy: 'happy', excited: 'excited', curious: 'curious', thinking: 'working' };
-const TRICKS = ['hop', 'spin', 'wiggle', 'hop', 'flip'] as const;
+const TRICKS = ['hop', 'wiggle', 'spin', 'hop', 'bounce'] as const;
 
 const CSS = `
-@keyframes icBob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+@keyframes icBob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-7px) } }
 @keyframes icHeart { 0% { transform: translate(0,0) scale(.5); opacity: 0 } 15% { opacity: 1 } 100% { transform: translate(var(--dx), -150px) scale(1.2); opacity: 0 } }
 @keyframes icDash { to { stroke-dashoffset: -26 } }
 @keyframes icDots { 0%,80%,100% { opacity: .25 } 40% { opacity: 1 } }
-@keyframes icPoke { 0%,100% { transform: translateX(-16px) } 50% { transform: translateX(0) } }
-@keyframes icRipple { from { transform: translate(-50%,-50%) scale(.3); opacity: .75 } to { transform: translate(-50%,-50%) scale(1.9); opacity: 0 } }
-@keyframes icRing { 0%,100% { stroke-width: 4; opacity: 1 } 50% { stroke-width: 7; opacity: .55 } }
-@keyframes icSpark { from { transform: translate(-50%,-50%) scale(1) rotate(0); opacity: 1 } to { transform: translate(-50%,-50%) scale(.2) rotate(120deg); opacity: 0 } }
-@keyframes icHop { 0%,100% { transform: translateY(0) } 40% { transform: translateY(-34px) } 70% { transform: translateY(4px) } }
+@keyframes icPoke { 0%,100% { transform: translateX(-14px) } 50% { transform: translateX(0) } }
+@keyframes icRipple { from { transform: translate(-50%,-50%) scale(.3); opacity: .7 } to { transform: translate(-50%,-50%) scale(1.9); opacity: 0 } }
+@keyframes icRing { 0%,100% { stroke-width: 4; opacity: 1 } 50% { stroke-width: 6.5; opacity: .6 } }
+@keyframes icSpark { from { transform: translate(-50%,-50%) scale(1) rotate(0); opacity: .95 } to { transform: translate(-50%,-50%) scale(.2) rotate(120deg); opacity: 0 } }
+@keyframes icHop { 0%,100% { transform: translateY(0) } 35% { transform: translateY(-30px) } 65% { transform: translateY(3px) } }
 @keyframes icSpin { from { transform: rotate(0) } to { transform: rotate(360deg) } }
-@keyframes icWiggle { 0%,100% { transform: rotate(0) } 20% { transform: rotate(-12deg) } 40% { transform: rotate(10deg) } 60% { transform: rotate(-8deg) } 80% { transform: rotate(6deg) } }
-@keyframes icFlip { 0%,100% { transform: scaleX(1) } 50% { transform: scaleX(-1) } }
-@keyframes icPop { 0% { transform: scale(.6); opacity: 0 } 100% { transform: scale(1); opacity: 1 } }
+@keyframes icWiggle { 0%,100% { transform: rotate(0) } 20% { transform: rotate(-10deg) } 45% { transform: rotate(8deg) } 70% { transform: rotate(-5deg) } }
+@keyframes icBounce { 0%,100% { transform: scale(1,1) } 30% { transform: scale(1.12,.88) } 60% { transform: scale(.94,1.07) } }
 body.ic-touring [data-ui-id="icarus.voice_dock"] { opacity: 0 !important; pointer-events: none !important; }
+body.ic-touring [data-screen-label="Phone"] div[style*="z-index: 36"][style*="pointer-events: none"] { opacity: 0 !important; }
 .ic-g { position: fixed; left: 0; top: 0; pointer-events: none; }
 .ic-g-mascot { z-index: 9450; will-change: transform; }
-.ic-g-bob { animation: icBob 1.7s ease-in-out infinite; width: 100%; height: 100%; }
-.ic-g-img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 10px 16px rgba(150,60,85,.3)); }
-.ic-g-hop { animation: icHop .6s ease-out; } .ic-g-spin { animation: icSpin .7s ease-in-out; }
-.ic-g-wiggle { animation: icWiggle .8s ease-in-out; } .ic-g-flip { animation: icFlip .6s ease-in-out; }
+.ic-g-bob { animation: icBob 1.9s ease-in-out infinite; width: 100%; height: 100%; position: relative; }
+.ic-g-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity .22s ease;
+  filter: drop-shadow(0 10px 16px rgba(150,60,85,.3)); }
+.ic-g-hop { animation: icHop .65s cubic-bezier(.3,.7,.4,1); } .ic-g-spin { animation: icSpin .8s cubic-bezier(.45,0,.3,1); }
+.ic-g-wiggle { animation: icWiggle .8s ease-in-out; } .ic-g-bounce { animation: icBounce .55s ease-out; }
 .ic-g-bubble { z-index: 9460; box-sizing: border-box; background: #FFF7F9; border: 2.5px solid ${SOFT}; border-radius: 22px;
-  padding: 10px 15px; color: ${INK}; font: 500 15.5px/1.4 ${FONT}; box-shadow: 0 12px 30px rgba(150,60,85,.25); transition: opacity .25s; }
+  padding: 10px 15px; color: ${INK}; font: 500 15.5px/1.4 ${FONT}; box-shadow: 0 12px 30px rgba(150,60,85,.25);
+  transition: opacity .3s ease; will-change: transform; }
 .ic-g-ask { z-index: 9460; box-sizing: border-box; display: flex; gap: 8px; align-items: center; background: #fff;
   border: 2.5px solid ${SOFT}; border-radius: 999px; padding: 7px 15px 7px 8px; color: ${INK}; font: 600 14.5px/1.3 ${FONT};
-  box-shadow: 0 8px 20px rgba(150,60,85,.22); transition: opacity .25s; }
-.ic-g-pointer { z-index: 9455; width: 64px; height: 64px; transition: opacity .2s; }
-.ic-g-poke { width: 100%; height: 100%; animation: icPoke .75s ease-in-out infinite; }
-.ic-g-ripple { z-index: 9445; width: 70px; height: 70px; border-radius: 50%; border: 4px solid ${PINK}; animation: icRipple 1.1s ease-out forwards; }
-.ic-g-heart { z-index: 9470; width: 24px; height: 24px; animation: icHeart 1.4s ease-out forwards; }
-.ic-g-spark { z-index: 9440; width: 18px; height: 18px; animation: icSpark .7s ease-out forwards; }
+  box-shadow: 0 8px 20px rgba(150,60,85,.22); transition: opacity .3s ease; }
+.ic-g-pointer { z-index: 9455; width: 64px; height: 64px; transition: opacity .3s ease; will-change: transform; }
+.ic-g-poke { width: 100%; height: 100%; animation: icPoke .9s ease-in-out infinite; }
+.ic-g-ripple { z-index: 9445; width: 70px; height: 70px; border-radius: 50%; border: 4px solid ${PINK}; animation: icRipple 1.2s ease-out forwards; }
+.ic-g-heart { z-index: 9470; width: 24px; height: 24px; animation: icHeart 1.5s ease-out forwards; }
+.ic-g-spark { z-index: 9440; width: 16px; height: 16px; animation: icSpark .8s ease-out forwards; }
 .ic-g-dot { display: inline-block; width: 7px; height: 7px; margin: 0 2px; border-radius: 50%; background: ${PINK}; animation: icDots 1s infinite; }
 `;
 
@@ -80,6 +85,14 @@ const ARROW = `<svg viewBox="0 0 64 64" width="64" height="64"><path d="M6 24h28
 const NS = 'http://www.w3.org/2000/svg';
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi < lo ? lo : hi, v));
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const dist = (a: Pt, b: Pt) => Math.hypot(a.x - b.x, a.y - b.y);
+/** Move `cur` toward `to` by a fraction that doesn't depend on the frame rate (k is per 1/60 s). */
+const approach = (cur: number, to: number, k: number, dt: number) => cur + (to - cur) * (1 - Math.pow(1 - k, dt / 16.7));
+/** The same for angles, the short way round. */
+const approachAngle = (cur: number, to: number, k: number, dt: number) => {
+  const d = Math.atan2(Math.sin(to - cur), Math.cos(to - cur));
+  return cur + d * (1 - Math.pow(1 - k, dt / 16.7));
+};
 
 function div(className: string, css = ''): HTMLDivElement {
   const e = document.createElement('div');
@@ -95,7 +108,7 @@ function svgEl<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<strin
 }
 
 function roundRect(b: Box, r: number): string {
-  const rr = Math.min(r, b.w / 2, b.h / 2);
+  const rr = Math.max(0, Math.min(r, b.w / 2, b.h / 2));
   return `M${b.x + rr},${b.y}H${b.x + b.w - rr}A${rr},${rr} 0 0 1 ${b.x + b.w},${b.y + rr}V${b.y + b.h - rr}` +
     `A${rr},${rr} 0 0 1 ${b.x + b.w - rr},${b.y + b.h}H${b.x + rr}A${rr},${rr} 0 0 1 ${b.x},${b.y + b.h - rr}V${b.y + rr}A${rr},${rr} 0 0 1 ${b.x + rr},${b.y}Z`;
 }
@@ -113,6 +126,8 @@ export interface Guide {
   goHome: () => Promise<void>;
 }
 
+interface Flight { from: Pt; to: Pt; bend: number; t0: number; dur: number; spin: boolean; long: boolean }
+
 export function createGuide(getPhone: () => Element | null): Guide {
   if (!document.getElementById('ic-guide-css')) {
     const style = document.createElement('style');
@@ -126,10 +141,14 @@ export function createGuide(getPhone: () => Element | null): Guide {
   const mascot = div('ic-g ic-g-mascot');
   const trick = div('', 'width:100%;height:100%');
   const bob = div('ic-g-bob');
-  const pose = document.createElement('img');
-  pose.className = 'ic-g-img';
-  pose.alt = '';
-  bob.append(pose);
+  // Two layers, so a new pose fades in over the old one.
+  const layers = [document.createElement('img'), document.createElement('img')];
+  for (const l of layers) {
+    l.className = 'ic-g-img';
+    l.alt = '';
+    l.style.opacity = '0';
+    bob.append(l);
+  }
   trick.append(bob);
   mascot.append(trick);
 
@@ -155,33 +174,47 @@ export function createGuide(getPhone: () => Element | null): Guide {
 
   // The spotlight (dims everything but the target), its glowing ring, and the dotted trail.
   const svg = svgEl('svg', { style: 'position:fixed;inset:0;width:100vw;height:100vh;z-index:9430;pointer-events:none;overflow:visible' });
-  const shade = svgEl('path', { fill: 'rgba(74,46,54,.34)', 'fill-rule': 'evenodd', style: 'transition:opacity .35s' });
-  const ring = svgEl('path', { fill: 'none', stroke: PINK, 'stroke-width': '4', style: 'animation:icRing 1.1s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(233,122,154,.9))' });
-  const trail = svgEl('path', { fill: 'none', stroke: '#F48FB1', 'stroke-width': '5', 'stroke-linecap': 'round', 'stroke-dasharray': '1 12', style: 'animation:icDash .55s linear infinite' });
+  const shade = svgEl('path', { fill: 'rgba(74,46,54,.32)', 'fill-rule': 'evenodd' });
+  const ring = svgEl('path', { fill: 'none', stroke: PINK, 'stroke-width': '4', style: 'animation:icRing 1.2s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(233,122,154,.9))' });
+  const trail = svgEl('path', { fill: 'none', stroke: '#F48FB1', 'stroke-width': '5', 'stroke-linecap': 'round', 'stroke-dasharray': '1 12', style: 'animation:icDash .6s linear infinite' });
   svg.append(shade, ring, trail);
 
   // ---- state ----
   let host: GuideHost | null = null;
   let raf = 0;
+  let lastNow = 0;
   let size = 112;
   let pos: Pt = { x: -200, y: 40 };
-  let flight: { from: Pt; ctrl: Pt; to: Pt; t0: number; dur: number; spin: boolean } | null = null;
+  let prev: Pt = { ...pos };
   let goal: Pt | null = null;
+  let flight: Flight | null = null;
   let wander: Pt = { x: 0, y: 0 };
   let wanderGoal: Pt = { x: 0, y: 0 };
   let nextWander = 0;
+  let tilt = 0;
   let face = 1;
+  let faceGoal = 1;
   let explicit: Target = null;
   let target: Target = null;
   let lastFlash: string | null = null;
   let side: 'left' | 'right' = 'left';
   let hole: Box & { a: number } = { x: 0, y: 0, w: 0, h: 0, a: 0 };
+  let ptr = { x: 0, y: 0, angle: 0, shown: false };
   let lastSpark = 0;
   let nextRipple = 0;
   let trickIndex = 0;
   let celebratedLine = '';
   let lastPhase = '';
-  let arcSign = 1;
+  let bendSign = 1;
+  let front = 0;
+  let poseName = '';
+  let poseAt = 0;
+  let bubbleAt: Pt | null = null;
+  let bubbleH = 80;
+  let bubbleKey = '';
+  let bubbleMeasured = 0;
+  let askW = 220;
+  let askKey = '';
 
   const resolve = (t: Target): Element | null => {
     if (!t) return null;
@@ -189,9 +222,17 @@ export function createGuide(getPhone: () => Element | null): Guide {
     return document.querySelector(`[data-ui-id="${cssEscape(t)}"]`);
   };
 
-  function setPose(name: string) {
-    const src = img(name);
-    if (!pose.src.endsWith(src)) pose.src = src;
+  /** Change pose with a quick cross-fade, and not more often than every 260 ms (no flicker). */
+  function setPose(name: string, now: number, force = false) {
+    if (name === poseName || (!force && now - poseAt < 260)) return;
+    poseName = name;
+    poseAt = now;
+    const next = layers[1 - front]!;
+    const cur = layers[front]!;
+    next.src = img(name);
+    next.style.opacity = '1';
+    cur.style.opacity = '0';
+    front = 1 - front;
   }
 
   function doTrick(kind?: (typeof TRICKS)[number]) {
@@ -207,7 +248,7 @@ export function createGuide(getPhone: () => Element | null): Guide {
     s.style.left = `${x}px`;
     s.style.top = `${y}px`;
     document.body.append(s);
-    window.setTimeout(() => s.remove(), 750);
+    window.setTimeout(() => s.remove(), 850);
   }
 
   function ripple(x: number, y: number) {
@@ -215,7 +256,7 @@ export function createGuide(getPhone: () => Element | null): Guide {
     r.style.left = `${x}px`;
     r.style.top = `${y}px`;
     document.body.append(r);
-    window.setTimeout(() => r.remove(), 1150);
+    window.setTimeout(() => r.remove(), 1250);
   }
 
   function hearts() {
@@ -225,24 +266,33 @@ export function createGuide(getPhone: () => Element | null): Guide {
       h.style.left = `${pos.x + size / 2 - 12 + (Math.random() - 0.5) * size * 0.7}px`;
       h.style.top = `${pos.y + size * 0.3}px`;
       h.style.setProperty('--dx', `${Math.round((Math.random() - 0.5) * 140)}px`);
-      h.style.animationDelay = `${i * 65}ms`;
+      h.style.animationDelay = `${i * 70}ms`;
       document.body.append(h);
-      window.setTimeout(() => h.remove(), 1700 + i * 65);
+      window.setTimeout(() => h.remove(), 1800 + i * 70);
     }
   }
 
-  function flyTo(to: Pt, spin = false) {
-    const from = { x: pos.x, y: pos.y };
-    const d = Math.hypot(to.x - from.x, to.y - from.y);
-    if (d < 4) return;
-    arcSign = -arcSign; // curve one way, then the other
-    const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
-    const nx = -(to.y - from.y) / (d || 1);
-    const ny = (to.x - from.x) / (d || 1);
-    const bend = Math.min(220, d * 0.45) * arcSign;
-    const ctrl = { x: mid.x + nx * bend, y: Math.min(mid.y + ny * bend, Math.min(from.y, to.y) + 30) };
-    flight = { from, ctrl, to, t0: performance.now(), dur: clamp(450 + d * 0.9, 600, 1300), spin: spin || d > 420 };
-    goal = to;
+  function flightPoint(f: Flight, e: number): Pt {
+    const d = dist(f.from, f.to) || 1;
+    const nx = -(f.to.y - f.from.y) / d;
+    const ny = (f.to.x - f.from.x) / d;
+    const mid = { x: (f.from.x + f.to.x) / 2, y: (f.from.y + f.to.y) / 2 };
+    const ctrl = { x: mid.x + nx * f.bend, y: Math.min(mid.y + ny * f.bend, Math.min(f.from.y, f.to.y) + 30) };
+    const a = 1 - e;
+    return {
+      x: a * a * f.from.x + 2 * a * e * ctrl.x + e * e * f.to.x,
+      y: a * a * f.from.y + 2 * a * e * ctrl.y + e * e * f.to.y,
+    };
+  }
+
+  function startFlight(to: Pt, now: number, spin: boolean) {
+    const d = dist(pos, to);
+    bendSign = -bendSign; // curve one way, then the other
+    flight = {
+      from: { ...pos }, to: { ...to }, bend: Math.min(200, d * 0.4) * bendSign, t0: now,
+      dur: clamp(520 + d * 0.85, 700, 1350), spin: spin || d > 520, long: d > 200,
+    };
+    faceGoal = to.x >= pos.x ? 1 : -1;
   }
 
   /** Where the mascot stands to show `t`, on the current side of the phone (or inside it, on a phone). */
@@ -270,9 +320,14 @@ export function createGuide(getPhone: () => Element | null): Guide {
   function frame(now: number) {
     raf = requestAnimationFrame(frame);
     if (!host) return;
+    const dt = clamp(now - (lastNow || now), 1, 50);
+    lastNow = now;
     const phone = getPhone()?.getBoundingClientRect() ?? new DOMRect(0, 0, innerWidth, innerHeight);
-    size = phone.width < 360 || innerWidth < 600 ? 88 : 116;
-    mascot.style.width = mascot.style.height = `${size}px`;
+    const newSize = phone.width < 360 || innerWidth < 600 ? 88 : 116;
+    if (newSize !== size) {
+      size = newSize;
+      mascot.style.width = mascot.style.height = `${size}px`;
+    }
     const outside = phone.left >= size + 80 && innerWidth - phone.right >= size + 60;
 
     const v = host.state.voice ?? {};
@@ -289,25 +344,26 @@ export function createGuide(getPhone: () => Element | null): Guide {
 
     // ---- the question pill, at the top of the phone ----
     const q = phase === 'hearing' ? v.transcript ?? '' : v.you ?? '';
-    askText.textContent = q;
+    if (q !== askKey) {
+      askKey = q;
+      askText.textContent = q;
+      askW = q ? ask.offsetWidth || askW : askW;
+    }
     ask.style.opacity = q ? '1' : '0';
-    const askW = Math.min(phone.width - 36, 360);
-    ask.style.maxWidth = `${askW}px`;
-    const askBox = { x: phone.left + (phone.width - Math.min(askW, ask.offsetWidth || askW)) / 2, y: phone.top + 54 };
-    ask.style.left = `${askBox.x}px`;
-    ask.style.top = `${askBox.y}px`;
+    const maxAsk = Math.min(phone.width - 36, 360);
+    ask.style.maxWidth = `${maxAsk}px`;
+    const askBox = { x: phone.left + (phone.width - Math.min(maxAsk, askW)) / 2, y: phone.top + 54 };
+    ask.style.transform = `translate(${askBox.x.toFixed(1)}px, ${askBox.y.toFixed(1)}px)`;
 
-    // ---- where to go ----
+    // ---- where to be ----
     const newQuestion = phase === 'hearing' && lastPhase !== 'hearing';
     if (newQuestion) side = side === 'left' ? 'right' : 'left'; // a new question: cross the phone
     let want: Pt;
     let point: { tip: Pt; dir: number } | null = null;
     if (phase === 'hearing' || (phase === 'thinking' && !tOk)) {
-      // Fly up beside the question and listen.
-      const w = ask.offsetWidth || 220;
       want = outside
         ? { x: side === 'left' ? phone.left - size - 30 : phone.right + 30, y: askBox.y - size / 3 }
-        : { x: side === 'left' ? askBox.x - 6 : askBox.x + w - size + 6, y: askBox.y + 46 };
+        : { x: side === 'left' ? askBox.x - 6 : askBox.x + askW - size + 6, y: askBox.y + 46 };
     } else if (tOk) {
       const s = standFor(tOk, phone, outside);
       want = s.at;
@@ -317,121 +373,145 @@ export function createGuide(getPhone: () => Element | null): Guide {
         ? { x: side === 'left' ? phone.left - size - 30 : phone.right + 30, y: phone.top + phone.height * 0.38 }
         : { x: side === 'left' ? phone.left + 12 : phone.right - size - 12, y: phone.top + phone.height * 0.45 };
     }
-    if (!goal || Math.hypot(want.x - goal.x, want.y - goal.y) > 24) flyTo(want, newQuestion && outside);
+    goal = want;
 
-    // ---- move ----
-    let tilt = 0;
-    let spinDeg = 0;
+    // ---- move: fly far, glide near; a flight follows its goal instead of starting over ----
+    prev = { ...pos };
     if (flight) {
+      flight.to = { x: approach(flight.to.x, goal.x, 0.2, dt), y: approach(flight.to.y, goal.y, 0.2, dt) };
       const k = clamp((now - flight.t0) / flight.dur, 0, 1);
-      const e = ease(k);
-      const a = 1 - e;
-      const p = {
-        x: a * a * flight.from.x + 2 * a * e * flight.ctrl.x + e * e * flight.to.x,
-        y: a * a * flight.from.y + 2 * a * e * flight.ctrl.y + e * e * flight.to.y,
-      };
-      const dx = p.x - pos.x;
-      tilt = clamp(dx * 1.6, -24, 24);
-      if (Math.abs(dx) > 0.5) face = dx > 0 ? 1 : -1;
-      if (flight.spin) spinDeg = e * 360;
-      pos = p;
-      setPose('flying');
-      if (now - lastSpark > 55) {
+      pos = flightPoint(flight, ease(k));
+      if (flight.long && now - lastSpark > 70) {
         lastSpark = now;
-        spark(p.x + size / 2 - face * size * 0.35, p.y + size * 0.62);
+        spark(pos.x + size / 2 - faceGoal * size * 0.35, pos.y + size * 0.62);
       }
       if (k >= 1) {
+        const landed = flight;
         flight = null;
-        doTrick();
+        if (landed.long) doTrick();
+      }
+    } else if (dist(pos, goal) > 150 || (newQuestion && dist(pos, goal) > 40)) {
+      startFlight(goal, now, newQuestion && outside);
+    } else {
+      pos = { x: approach(pos.x, goal.x, 0.1, dt), y: approach(pos.y, goal.y, 0.1, dt) };
+    }
+
+    // ---- tilt into the motion, turn to face where it's going or pointing ----
+    const vx = (pos.x - prev.x) / (dt / 16.7);
+    tilt = approach(tilt, flight ? clamp(vx * 1.3, -18, 18) : 0, 0.15, dt);
+    if (flight) faceGoal = flight.to.x >= flight.from.x ? 1 : -1;
+    else if (point) faceGoal = Math.cos(point.dir) >= 0 ? 1 : -1;
+    face = approach(face, faceGoal, 0.2, dt);
+    const spinDeg = flight?.spin ? ease(clamp((now - flight.t0) / flight.dur, 0, 1)) * 360 : 0;
+
+    // Drift a little when resting and not pointing, so it never stands frozen.
+    if (!flight && !point) {
+      if (now > nextWander) {
+        nextWander = now + 1600 + Math.random() * 1400;
+        wanderGoal = { x: (Math.random() - 0.5) * 20, y: (Math.random() - 0.5) * 14 };
       }
     } else {
-      // Drift a little around the spot, so it never stands frozen.
-      if (now > nextWander) {
-        nextWander = now + 1400 + Math.random() * 1200;
-        wanderGoal = { x: (Math.random() - 0.5) * 26, y: (Math.random() - 0.5) * 18 };
-      }
-      wander = { x: wander.x + (wanderGoal.x - wander.x) * 0.04, y: wander.y + (wanderGoal.y - wander.y) * 0.04 };
-      if (point) face = Math.cos(point.dir) >= 0 ? 1 : -1;
-      if (phase === 'hearing') setPose('curious');
-      else if (phase === 'thinking') setPose('working');
-      else setPose(MOOD[v.emotion ?? ''] ?? 'happy');
+      wanderGoal = { x: 0, y: 0 };
     }
-    const shown = { x: pos.x + (flight ? 0 : wander.x), y: pos.y + (flight ? 0 : wander.y) };
-    mascot.style.transform = `translate(${shown.x.toFixed(1)}px, ${shown.y.toFixed(1)}px) rotate(${(tilt + spinDeg).toFixed(1)}deg) scaleX(${face})`;
+    wander = { x: approach(wander.x, wanderGoal.x, 0.03, dt), y: approach(wander.y, wanderGoal.y, 0.03, dt) };
+
+    // ---- pose ----
+    if (flight) setPose('flying', now);
+    else if (phase === 'hearing') setPose('curious', now);
+    else if (phase === 'thinking') setPose('working', now);
+    else setPose(MOOD[v.emotion ?? ''] ?? 'happy', now);
+
+    const shown = { x: pos.x + wander.x, y: pos.y + wander.y };
+    const flipX = Math.sign(face || 1) * Math.max(0.12, Math.abs(face));
+    mascot.style.transform = `translate(${shown.x.toFixed(1)}px, ${shown.y.toFixed(1)}px) rotate(${(tilt + spinDeg).toFixed(1)}deg) scaleX(${flipX.toFixed(3)})`;
 
     // ---- point: spotlight, ring, arrow, trail, ripples ----
     const pointing = Boolean(point && tOk && !flight);
     const pad = 10;
-    const goalHole = tOk ? { x: tOk.left - pad, y: tOk.top - pad, w: tOk.width + pad * 2, h: tOk.height + pad * 2 } : hole;
-    const k = hole.w === 0 ? 1 : 0.18;
-    hole = {
-      x: hole.x + (goalHole.x - hole.x) * k,
-      y: hole.y + (goalHole.y - hole.y) * k,
-      w: hole.w + (goalHole.w - hole.w) * k,
-      h: hole.h + (goalHole.h - hole.h) * k,
-      a: hole.a + ((pointing && phase === 'speaking' ? 1 : 0) - hole.a) * 0.12,
-    };
+    if (tOk) {
+      const goalHole = { x: tOk.left - pad, y: tOk.top - pad, w: tOk.width + pad * 2, h: tOk.height + pad * 2 };
+      const first = hole.w === 0;
+      hole = {
+        x: first ? goalHole.x : approach(hole.x, goalHole.x, 0.16, dt),
+        y: first ? goalHole.y : approach(hole.y, goalHole.y, 0.16, dt),
+        w: first ? goalHole.w : approach(hole.w, goalHole.w, 0.16, dt),
+        h: first ? goalHole.h : approach(hole.h, goalHole.h, 0.16, dt),
+        a: hole.a,
+      };
+    }
+    hole.a = approach(hole.a, pointing && phase === 'speaking' ? 1 : 0, 0.08, dt);
     if (hole.w > 0) {
       const inner = roundRect(hole, 20);
       shade.setAttribute('d', `M0,0H${innerWidth}V${innerHeight}H0Z ${inner}`);
-      shade.style.opacity = String(hole.a);
+      shade.setAttribute('opacity', hole.a.toFixed(3));
       ring.setAttribute('d', inner);
-      ring.style.opacity = String(Math.min(1, hole.a * 1.4));
+      ring.setAttribute('opacity', Math.min(1, hole.a * 1.4).toFixed(3));
     }
-    if (pointing && point) {
-      const { tip, dir } = point;
+    if (point && tOk) {
       const len = 60;
-      pointer.style.opacity = '1';
-      pointer.style.transform = `translate(${(tip.x - Math.cos(dir) * len - 32).toFixed(1)}px, ${(tip.y - Math.sin(dir) * len - 32).toFixed(1)}px) rotate(${dir}rad)`;
-      const from = { x: shown.x + size / 2 + Math.cos(dir) * size * 0.4, y: shown.y + size * 0.55 + Math.sin(dir) * size * 0.3 };
-      const tail = { x: tip.x - Math.cos(dir) * (len + 30), y: tip.y - Math.sin(dir) * (len + 30) };
-      const cx = (from.x + tail.x) / 2;
-      const cyc = Math.min(from.y, tail.y) - 40;
-      trail.setAttribute('d', `M${from.x.toFixed(1)},${from.y.toFixed(1)} Q${cx.toFixed(1)},${cyc.toFixed(1)} ${tail.x.toFixed(1)},${tail.y.toFixed(1)}`);
-      trail.style.opacity = '1';
-      if (now > nextRipple && phase === 'speaking') {
-        nextRipple = now + 1300;
-        ripple(tip.x, tip.y);
-      }
-    } else {
-      pointer.style.opacity = '0';
-      trail.style.opacity = '0';
+      const want = { x: point.tip.x - Math.cos(point.dir) * len, y: point.tip.y - Math.sin(point.dir) * len };
+      if (!ptr.shown) ptr = { x: want.x, y: want.y, angle: point.dir, shown: true };
+      ptr.x = approach(ptr.x, want.x, 0.22, dt);
+      ptr.y = approach(ptr.y, want.y, 0.22, dt);
+      ptr.angle = approachAngle(ptr.angle, point.dir, 0.22, dt);
     }
+    pointer.style.opacity = pointing ? '1' : '0';
+    if (ptr.shown) pointer.style.transform = `translate(${(ptr.x - 32).toFixed(1)}px, ${(ptr.y - 32).toFixed(1)}px) rotate(${ptr.angle.toFixed(3)}rad)`;
+    if (pointing && point) {
+      const from = { x: shown.x + size / 2 + Math.cos(ptr.angle) * size * 0.4, y: shown.y + size * 0.55 + Math.sin(ptr.angle) * size * 0.3 };
+      const tail = { x: ptr.x - Math.cos(ptr.angle) * 30, y: ptr.y - Math.sin(ptr.angle) * 30 };
+      const cx = (from.x + tail.x) / 2;
+      const cyc = Math.min(from.y, tail.y) - 36;
+      trail.setAttribute('d', `M${from.x.toFixed(1)},${from.y.toFixed(1)} Q${cx.toFixed(1)},${cyc.toFixed(1)} ${tail.x.toFixed(1)},${tail.y.toFixed(1)}`);
+      if (now > nextRipple && phase === 'speaking') {
+        nextRipple = now + 1500;
+        ripple(point.tip.x, point.tip.y);
+      }
+    }
+    trail.setAttribute('opacity', pointing ? '1' : '0');
+    if (!point) ptr.shown = false;
 
     // ---- the bubble, in step with the voice, next to the mascot ----
     const line = v.line ?? '';
     const said = clamp(v.said ?? 0, 0, line.length);
+    let visible = false;
     if (phase === 'thinking') {
       spoken.textContent = '';
       rest.textContent = '';
       dots.style.display = 'inline';
-      bubble.style.opacity = '1';
+      visible = true;
     } else if ((phase === 'speaking' || phase === 'listening') && line) {
       dots.style.display = 'none';
       spoken.textContent = line.slice(0, said);
       rest.textContent = line.slice(said);
-      bubble.style.opacity = '1';
+      visible = true;
       if (v.emotion === 'excited' && phase === 'speaking' && celebratedLine !== line) {
         celebratedLine = line;
         hearts();
         doTrick('spin');
       }
-    } else {
-      bubble.style.opacity = '0';
     }
+    bubble.style.opacity = visible ? '1' : '0';
     const bw = outside ? 290 : Math.min(phone.width - 28, 330);
     bubble.style.width = `${bw}px`;
-    const bh = bubble.offsetHeight || 80;
+    const key = `${phase}|${line}|${bw}`;
+    if (key !== bubbleKey && now - bubbleMeasured > 120) {
+      bubbleKey = key;
+      bubbleMeasured = now;
+      bubbleH = bubble.offsetHeight || bubbleH;
+    }
     let bx: number;
     let by: number;
     if (outside) {
       bx = clamp(shown.x + size / 2 - bw / 2, 10, innerWidth - bw - 10);
-      by = shown.y - bh - 12 < 56 ? shown.y + size + 10 : shown.y - bh - 12;
+      by = shown.y - bubbleH - 12 < 56 ? shown.y + size + 10 : shown.y - bubbleH - 12;
     } else {
       bx = phone.left + (phone.width - bw) / 2;
-      by = shown.y < phone.top + phone.height * 0.5 ? phone.bottom - bh - 96 : phone.top + 104;
+      by = shown.y < phone.top + phone.height * 0.5 ? phone.bottom - bubbleH - 96 : phone.top + 104;
     }
-    bubble.style.transform = `translate(${bx.toFixed(1)}px, ${by.toFixed(1)}px)`;
+    if (!bubbleAt || !visible) bubbleAt = { x: bx, y: by };
+    bubbleAt = { x: approach(bubbleAt.x, bx, 0.2, dt), y: approach(bubbleAt.y, by, 0.2, dt) };
+    bubble.style.transform = `translate(${bubbleAt.x.toFixed(1)}px, ${bubbleAt.y.toFixed(1)}px)`;
 
     lastPhase = phase;
   }
@@ -444,12 +524,18 @@ export function createGuide(getPhone: () => Element | null): Guide {
       lastFlash = null;
       side = 'left';
       goal = null;
+      flight = null;
       hole = { x: 0, y: 0, w: 0, h: 0, a: 0 };
-      // Fly in from off screen, top left, with a spin.
+      ptr = { x: 0, y: 0, angle: 0, shown: false };
+      bubbleAt = null;
+      lastNow = 0;
+      poseName = '';
+      // Fly in from off screen, top left.
       pos = { x: -180, y: 30 };
+      mascot.style.width = mascot.style.height = `${size}px`;
       document.body.classList.add('ic-touring');
       document.body.append(svg, pointer, mascot, bubble, ask);
-      setPose('flying');
+      setPose('flying', performance.now(), true);
       raf = requestAnimationFrame(frame);
     },
     stop() {
@@ -477,23 +563,23 @@ export function createGuide(getPhone: () => Element | null): Guide {
       bubble.style.opacity = '0';
       ask.style.opacity = '0';
       pointer.style.opacity = '0';
-      trail.style.opacity = '0';
-      shade.style.opacity = '0';
-      ring.style.opacity = '0';
+      trail.setAttribute('opacity', '0');
+      shade.setAttribute('opacity', '0');
+      ring.setAttribute('opacity', '0');
       const from = { ...pos };
-      const ctrl = { x: (from.x + home.x) / 2, y: Math.min(from.y, home.y) - 260 };
+      const ctrl = { x: (from.x + home.x) / 2, y: Math.min(from.y, home.y) - 240 };
       const t0 = performance.now();
-      setPose('flying');
+      setPose('flying', t0, true);
       await new Promise<void>((done) => {
         const step = (now: number) => {
-          const k = clamp((now - t0) / 1300, 0, 1);
+          const k = clamp((now - t0) / 1400, 0, 1);
           const e = ease(k);
           const a = 1 - e;
           pos = { x: a * a * from.x + 2 * a * e * ctrl.x + e * e * home.x, y: a * a * from.y + 2 * a * e * ctrl.y + e * e * home.y };
           const scale = 1 - e * 0.6;
-          mascot.style.transform = `translate(${pos.x}px, ${pos.y}px) rotate(${e * 720}deg) scale(${scale})`;
+          mascot.style.transform = `translate(${pos.x.toFixed(1)}px, ${pos.y.toFixed(1)}px) rotate(${(e * 720).toFixed(1)}deg) scale(${scale.toFixed(3)})`;
           mascot.style.opacity = String(k < 0.85 ? 1 : (1 - k) / 0.15);
-          if (now - lastSpark > 45) {
+          if (now - lastSpark > 50) {
             lastSpark = now;
             spark(pos.x + size / 2, pos.y + size / 2);
           }
