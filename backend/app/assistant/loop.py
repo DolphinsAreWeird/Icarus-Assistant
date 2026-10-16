@@ -24,6 +24,7 @@ from app.assistant.memo import AnswerCache, QuestionLog, reusable, standalone
 from app.assistant.normalize import normalize
 from app.assistant.prepared import PreparedAnswers, default as prepared_answers, sample_questions
 from app.assistant.prompt import FALLBACK_REPLY, REFUSAL_REPLY, SYSTEM_PROMPT, turn_context
+from app.assistant.trade_grounding import check as trade_check
 from app.contracts import ChatReply, ChatRequest, SourceRef
 from app.facts import FactPacks
 from app.market.cache import PriceCache
@@ -167,6 +168,8 @@ class Assistant:
                   + turn_context(user, lang, req.screen_context, turn["assets_mentioned"], turn["asks_for_advice"],
                                  req.snapshot, given)}
         start_len = len(history)
+        previous = next((m["content"] for m in reversed(history) if m["role"] == "user"
+                         and isinstance(m.get("content"), str)), None)
         history.append({"role": "user", "content": req.text})
 
         text, calls, finish, used, results = None, 0, None, [], []
@@ -186,7 +189,9 @@ class Assistant:
                     used.append(call["function"]["name"])
                     try:
                         args = parse_arguments(call["function"]["arguments"])
-                        content = run_tool(ctx, call["function"]["name"], args)
+                        refused = (trade_check(args, req.text, previous, here)
+                                   if call["function"]["name"] == "prepare_trade" else None)
+                        content = json.dumps(refused) if refused else run_tool(ctx, call["function"]["name"], args)
                     except Exception as e:  # a broken tool call must not break the turn
                         content = json.dumps({"error": f"{type(e).__name__}: {e}"})
                     history.append({"role": "tool", "tool_call_id": call["id"], "content": content})

@@ -16,7 +16,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 
 - [x] **I01: Preserve decimal purchase amounts.** Keep requested, spoken, displayed and executed amounts equal; regress 1000.49/1000.50 and boundaries.
 - [x] **I02: Suppress unsupported generated financial figures.** Reject unsafe text before display, speech, history and caching; retain grounded tool output.
-- [ ] **I03: Ground legacy trade arguments.** Require the user's purchase intent, asset, side and amount before producing an actionable preview.
+- [x] **I03: Ground legacy trade arguments.** Require the user's purchase intent, asset, side and amount before producing an actionable preview.
 - [ ] **I04: Isolate cached contextual answers.** Prevent reuse across users, sessions or different relevant conversation histories.
 - [x] **I05: Preserve reviewed server preview terms.** Carry preview identity/terms into native review; never silently create and execute an unseen replacement.
 - [x] **I06: Protect public administrative reset.** Public visitors cannot globally reset other accounts or previews.
@@ -52,6 +52,8 @@ The issue's commit subject identifies its checkpoint. Hashes will be collected a
 | I13 | `fix: refresh dashboard after event ring rollover`: 128 frontend tests (6 rollover/label/malformed/clear/unmount), typecheck and build passed; rollover tests fail on old HTML | Opus 5.5 High approved after fixes (junk entries, truthful footer, "Clear local events") |
 
 | I11 | `fix: settle failed fallback speech`: 9 settle regressions (double TTS/fallback failure, interrupted and failed read-back stay unapproved, mid-stream provider drop handed to fallback), 168 focused controller/confirm/barge-in tests, voice typecheck passed | Opus 5.5 High approved after fixes (stale-handle result ignored, speakingEnd on fallback error) |
+
+| I03 | `fix: ground legacy trade previews in the user request`: 306 full backend tests passed (OFFLINE pinned env); refusals for invented asset/amount/side, quantities as baht, past tense, question follow-ups; EN/TH/decimal/Thai-digit positives | Opus 5.5 High approved after fixes (quantity units, past tense, question follow-ups, restored unbacked_numbers assertion) |
 
 ## Execution notes
 
