@@ -15,6 +15,7 @@ import { installUtopiaRouting, withUtopiaRouting, type PrototypeInstance } from 
 import { attachTts, installVoice } from './voice-bridge';
 import { installCardGuard } from './card-guard';
 import { installMockVoice } from './mock-voice';
+import { installQrCode } from './qr-code';
 import { installDemoData } from './demo-data';
 import { createCardChips } from './card-chips';
 import { backendNudge, installIdleNudge } from './idle-nudge';
@@ -148,6 +149,7 @@ async function main() {
   }
 
   const status = createStatusPill();
+  installQrCode(); // scan to open the demo on a phone (top right)
 
   let instance: (PrototypeInstance & { goBack?: () => void }) | null = null;
   const voice = installVoice({

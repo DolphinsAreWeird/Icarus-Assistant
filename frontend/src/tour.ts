@@ -177,7 +177,7 @@ export function installTour(deps: TourDeps, opts: { offer: 'auto' | 'always' | '
   // ---- "Tour" pill, top right ----
   const pill = button('▶  Tour', true);
   pill.setAttribute('aria-label', 'Play the one-minute tour');
-  pill.style.cssText += ';position:fixed;top:14px;right:14px;z-index:9500;padding:9px 16px;font-size:14px';
+  pill.style.cssText += ';position:fixed;top:14px;right:128px;z-index:9500;padding:9px 16px;font-size:14px';
   pill.onclick = () => void play();
 
   // ---- the bar while it plays ----

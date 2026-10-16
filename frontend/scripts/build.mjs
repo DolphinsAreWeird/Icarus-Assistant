@@ -29,6 +29,8 @@ async function copyStatic() {
   await cp(path.join(root, 'prototype'), path.join(dist, 'prototype'), { recursive: true });
   // Real mascot images, if the team has added them.
   const mascots = path.join(root, 'public/mascot');
+  // The QR code in the top right corner (src/qr-code.ts).
+  if (await stat(path.join(root, 'public/qr.png')).then(() => true, () => false)) await cp(path.join(root, 'public/qr.png'), path.join(dist, 'qr.png'));
   if (await stat(mascots).then(() => true, () => false)) await cp(mascots, path.join(dist, 'mascot'), { recursive: true });
 }
 
