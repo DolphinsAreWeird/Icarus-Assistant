@@ -9,6 +9,23 @@
 const REPO = 'https://github.com/DolphinsAreWeird/Icarus-Assistant';
 const INK = 'color:#4A2E36;font-weight:500';
 
+
+/** Stocks and funds added to the design's asset table (with a backend; the design file has only Apple and Tesla). The
+ *  numbers here are placeholders: demo-data.ts shows the backend's baht prices and charts. */
+export const EXTRA_ASSETS: Record<string, { name: string; th: string; mono: string; bg: string; type: string; desc: string }> = {
+  MSFT: { name: 'Microsoft', th: 'ไมโครซอฟท์', mono: 'M', bg: '#2F6FDB', type: 'Stocks', desc: 'Microsoft makes Windows, Office and the Azure cloud. Buying its stock means owning a small part of the company. You can buy fractions of a share.' },
+  NVDA: { name: 'Nvidia', th: 'เอ็นวิเดีย', mono: 'N', bg: '#4C9A2A', type: 'Stocks', desc: 'Nvidia designs the chips used for graphics and AI. Its share price can move a lot, both up and down. You can buy fractions of a share.' },
+  GOOGL: { name: 'Alphabet', th: 'แอลฟาเบ็ต', mono: 'G', bg: '#E8710A', type: 'Stocks', desc: 'Alphabet is the company behind Google Search, YouTube and Android. Buying its stock means owning a small part of the company.' },
+  AMZN: { name: 'Amazon', th: 'อเมซอน', mono: 'a', bg: '#232F3E', type: 'Stocks', desc: 'Amazon runs the online store and the AWS cloud. Buying its stock means owning a small part of the company.' },
+  META: { name: 'Meta', th: 'เมตา', mono: 'M', bg: '#0866FF', type: 'Stocks', desc: 'Meta owns Facebook, Instagram and WhatsApp. Buying its stock means owning a small part of the company.' },
+  BRK: { name: 'Berkshire Hathaway', th: 'เบิร์กเชียร์ แฮทธาเวย์', mono: 'B', bg: '#7A5C99', type: 'Stocks', desc: 'Berkshire Hathaway is a large US company led by Warren Buffett, with insurance, railways and many other businesses (class B shares).' },
+  QQQ: { name: 'Nasdaq 100', th: 'แนสแด็ก 100', mono: 'Q', bg: '#1F7A8C', type: 'Stocks', desc: 'QQQ is a fund that follows the 100 biggest companies on the Nasdaq, many of them in technology. One share moves with the whole group.' },
+};
+const entry = (id: string, a: (typeof EXTRA_ASSETS)[string]) =>
+  ` ${id}:{id:'${id}',name:'${a.name}',th:'${a.th}',ticker:'${id}',type:'${a.type}',price:100,vol:.02,mono:'${a.mono}',bg:'${a.bg}',unit:'shares',dec:4,` +
+  `ch:{'1D':0,'1W':0,'1M':0,'3M':0,'1Y':0,'ALL':0},desc:${JSON.stringify(a.desc)},info:[['Exchange','US market']]}`;
+const STOCK_IDS = ['AAPL', ...Object.keys(EXTRA_ASSETS).slice(0, -1), 'TSLA'].filter((v, i, all) => all.indexOf(v) === i);
+
 export const JUDGE_COPY: ReadonlyArray<readonly [string, string]> = [
   // one letter per row (the export repeats B and D), before the rows' words change below
   ["{k:'B',title:'Say", "{k:'C',title:'Say"],
@@ -71,7 +88,7 @@ export const JUDGE_COPY: ReadonlyArray<readonly [string, string]> = [
     '<div style="display:flex;flex-direction:column;margin-top:4px">\n<sc-for list="{{ scenarios }}"'],
   ['@keyframes icIn{', '@keyframes icPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,79,114,.5)}50%{box-shadow:0 0 0 10px rgba(201,79,114,0)}}@keyframes icIn{'],
   ['<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">\n<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:16px;font-weight:500">Stopwatch</div>',
-    '<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 0 0 2px #E67895,0 10px 28px rgba(201,79,114,.22)">\n<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:16px;font-weight:500">Stopwatch</div>'],
+    '<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 0 0 5px #E67895,0 10px 28px rgba(201,79,114,.22)">\n<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:16px;font-weight:500">Stopwatch</div>'],
 ];
 
 const CONTACTLESS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M8.5 7.5a6 6 0 0 1 0 9M12 5a9.5 9.5 0 0 1 0 14M15.5 2.5a13 13 0 0 1 0 19"/></svg>';
@@ -103,6 +120,12 @@ export const PRODUCT_POLISH: ReadonlyArray<readonly [string, string]> = [
 ];
 
 export const LIVE_DATA_COPY: ReadonlyArray<readonly [string, string]> = [
+  // More to invest in: the design's table gets the new stocks and the Nasdaq 100 fund, and gold moves to the end of the list.
+  ["['Market cap','$775B'],['Exchange','NASDAQ']]}\n};\nconst ORDER=['BTC','ETH','XAU','AAPL','TSLA'];\nconst INIT_HOLD={BTC:3860.40/67420.15,ETH:482.55/3512.40,XAU:289.50/2358.70,AAPL:193.05/228.35,TSLA:0};",
+    "['Market cap','$775B'],['Exchange','NASDAQ']]},\n" + Object.entries(EXTRA_ASSETS).map(([id, a]) => entry(id, a)).join(',\n') + "\n};\n" +
+    `const ORDER=['BTC','ETH',${[...STOCK_IDS, 'QQQ'].map((i) => `'${i}'`).join(',')},'XAU'];\n` +
+    "const INIT_HOLD={BTC:3860.40/67420.15,ETH:482.55/3512.40,XAU:289.50/2358.70,AAPL:193.05/228.35,TSLA:0};"],
+  ["Stocks:['AAPL','TSLA']", `Stocks:[${[...STOCK_IDS, 'QQQ'].map((i) => `'${i}'`).join(',')}]`],
   ['Demo prices · not live', '{{ pricesHeader }}'],
   ['Prices shown are demo data, not live market prices.', '{{ pricesNote }}'],
   // the asset page's change pill: the backend's change is over the 1D chart the app shows, so say 1D, not 24h

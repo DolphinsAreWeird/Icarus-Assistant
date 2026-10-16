@@ -108,9 +108,13 @@ def test_numbers_in_answers_are_the_data(client):
     assert ev["amount_thb"] == 1000 and ev["value_now_thb"] == pytest.approx(1000 * (1 + ev["change_pct"] / 100), abs=0.2)  # the % is rounded to 2 places
 
 
-def test_a_view_only_asset_cannot_be_bought_and_says_so(client):
-    r = say(client, "buy 500 baht of tesla")
-    assert r["status"] == "data_unavailable" and "only buys gold, Bitcoin and Ethereum" in r["text"] and r["ui_actions"] == []
+def test_a_stock_can_be_bought_like_gold(client):
+    cache = client.app.state.cache
+    cache.prices["tsla"] = {"asset_id": "tsla", "price_usd": 250.0, "price_thb": 8000.0, "change_24h_pct": 1.0, "as_of": "2026-10-15T20:00:00+00:00",
+                            "source": "yahoo", "fetched_at": 0, "from_snapshot": True}
+    r = say(client, "buy 1000 baht of tesla")
+    card = next(a for a in r["ui_actions"] if a["type"] == "card")["data"]
+    assert r["status"] == "ok" and card["asset_id"] == "tsla" and card["amount_thb"] == 1000 and card["unit"] == "shares"
 
 
 def test_bad_goals_are_explained_not_crashed(client):
@@ -158,7 +162,7 @@ def test_confusion_refusals_and_unanswered_are_counted(client):
     s = client.get("/friction/summary").json()
     assert s["by_type"]["confusion"] == 2
     assert s["confusing"][0]["text"].endswith("asked about " + s["confusing"][0]["topic"]) and s["confusing"][0]["of_users"] == 1
-    say(client, "buy 500 baht of tesla")                          # a request we can't do
+    say(client, "buy 50 baht of gold")                            # a request we can't do (below the minimum)
     assert client.get("/friction/summary").json()["unanswered"] == 1
 
 
@@ -203,8 +207,7 @@ def test_logging_can_never_break_anything(tmp_path):
     assert '"topic": "fee"' in (tmp_path / "f.jsonl").read_text() and "u1" not in (tmp_path / "f.jsonl").read_text()
 
 
-def test_the_demo_bundle_lists_stocks_to_look_at(client):
+def test_the_demo_bundle_has_a_page_for_every_asset_with_gold_last(client):
     bundle = client.get("/demo/state/u_new").json()
-    watch = bundle.get("watchlist", {})
-    assert not watch or all(w["price_thb"] > 0 and len(w["spark"]) >= 2 and w["ticker"] for w in watch.values())
-    assert set(bundle["assets"]) == {"BTC", "ETH", "XAU"} and not set(watch) & {"BTC", "ETH", "XAU"}  # buyable assets stay apart from view-only ones
+    assert list(bundle["assets"])[-1] == "XAU" and {"BTC", "ETH", "AAPL", "NVDA", "QQQ", "XAU"} <= set(bundle["assets"])
+    assert all(a["price_thb"] > 0 and a["charts"] for a in bundle["assets"].values()) and set(bundle["holdings"]) == set(bundle["assets"])
