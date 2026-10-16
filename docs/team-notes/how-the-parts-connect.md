@@ -1,4 +1,4 @@
-> **Historical note (as of 16 Oct 2026, the hackathon).** This file was written on the night of 15 Oct. It records the state at that time: worktree and branch names, commit hashes and test counts below are old, and some run steps have changed (for example, `./demo.sh` and `scripts/run-demo.ps1` now check `/health` and choose the engine explicitly). For the current state, read [`README.md`](README.md), [`PLAN.md`](PLAN.md) and [`SUMMARY.md`](SUMMARY.md). The integrated code is on `main`.
+> **Historical note (as of 16 Oct 2026, the hackathon).** This file was written on the night of 15 Oct. It records the state at that time: worktree and branch names, commit hashes and test counts below are old, and some run steps have changed (for example, `./demo.sh` and `scripts/run-demo.ps1` now check `/health` and choose the engine explicitly). For the current state, read [`README.md`](README.md), [`PLAN.md`](remediation-plan.md) and [`SUMMARY.md`](SUMMARY.md). The integrated code is on `main`.
 
 
 # How the parts connect

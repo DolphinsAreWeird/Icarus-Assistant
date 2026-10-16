@@ -33,7 +33,7 @@ services:
       - key: FASTPATH
         value: "1"
       - key: VOICE_ID_EN
-        value: mYcpTKg1oj1H5CtzUZNO
+        value: XiPS9cXxAVbaIWtGDHDh
       - key: VOICE_ID_TH
         value: mYcpTKg1oj1H5CtzUZNO
       - key: LLM_PROVIDER

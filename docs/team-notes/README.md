@@ -15,3 +15,6 @@ team's context is [`icarus context.md`](icarus%20context.md).
 | [`demo model source pack.md`](demo%20model%20source%20pack.md) | Sources for the demo model |
 | [`SUMMARY.md`](SUMMARY.md) | Luka's summary of the backend demo work and open decisions |
 | [`message.txt`](message.txt) | A team message about the data pipeline |
+| [`project-review.md`](project-review.md) | Luka's review of the whole project on 16 Oct (what works, gaps, risks) |
+| [`remediation-plan.md`](remediation-plan.md) | Luka's fix plan from that review |
+| [`how-the-parts-connect.md`](how-the-parts-connect.md) | How the app, voice server and backend connect, and how to run all three (15 Oct) |

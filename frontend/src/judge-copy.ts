@@ -52,7 +52,7 @@ export const JUDGE_COPY: ReadonlyArray<readonly [string, string]> = [
   ['<div style="font-size:12.5px;color:#8A6B75;margin-top:8px;line-height:1.5">UI ids: home.balance · asset.chart · asset.change24h · buy.amount_input · buy.fee_line · buy.confirm_button · swap.from_asset · swap.to_asset · portfolio.allocation</div>',
     '<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#8A6B75;margin-top:12px;flex-wrap:wrap">' +
     '<span style="width:8px;height:8px;border-radius:50%;background:{{ statusColor }}"></span>AI {{ backendText }} · ' +
-    `<a href="${REPO}/blob/main/INTEGRATION.md" target="_blank" rel="noopener" style="color:#A8385A">how a developer adds it</a></div>`],
+    `<a href="${REPO}/blob/main/docs/team-notes/how-the-parts-connect.md" target="_blank" rel="noopener" style="color:#A8385A">how a developer adds it</a></div>`],
   // the live line: the same summary the app sends with every question (getContext)
   ["backendText:this.backend?'connected':'demo responses (no backend set)',",
     "backendText:this.backend?'connected':'scripted answers (no AI connected)',seesNow:(()=>{try{const c=this.getContext();" +

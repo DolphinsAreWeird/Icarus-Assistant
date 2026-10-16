@@ -54,12 +54,10 @@
   "category": "hello",
   "lang": "en",
   "question": "hi there 👋",
-  "seconds": 3.55,
+  "seconds": 1.53,
   "route": "model",
-  "reply": "Want me to show you how buying works, or open gold's page?",
-  "flags": [
-   "SLOW"
-  ]
+  "reply": "Nice to meet you. Want me to show you your balance or explain what you can buy here?",
+  "flags": []
  },
  {
   "n": 7,
@@ -246,9 +244,9 @@
   "category": "about",
   "lang": "en",
   "question": "what should I ask you?",
-  "seconds": 2.22,
+  "seconds": 2.06,
   "route": "model",
-  "reply": "You can ask me to explain your balance, open gold or Bitcoin, or show how buying works. Want me to walk you through your first buy?",
+  "reply": "Here are a few things you could ask me about: What's your balance and how it's split? How to buy Bitcoin, Ethereum or gold?",
   "flags": []
  },
  {
@@ -256,9 +254,9 @@
   "category": "about",
   "lang": "en",
   "question": "can you speak Thai?",
-  "seconds": 2.0,
+  "seconds": 1.46,
   "route": "model",
-  "reply": "Yes, I can speak Thai. Want me to switch to Thai, or shall we keep going in English?",
+  "reply": "ได้เลยค่ะ ฉันพูดภาษาไทยได้ ยินดีช่วยคุณเสมอค่ะ",
   "flags": []
  },
  {
@@ -266,19 +264,17 @@
   "category": "about",
   "lang": "en",
   "question": "do you remember me?",
-  "seconds": 3.88,
+  "seconds": 1.55,
   "route": "model",
-  "reply": "I don't remember between chats, but I'm glad to help you now! What would you like to do?",
-  "flags": [
-   "SLOW"
-  ]
+  "reply": "I don't have a memory of past conversations, but I'm here to help you now! What would you like to explore in U-topia today?",
+  "flags": []
  },
  {
   "n": 28,
   "category": "about",
   "lang": "en",
   "question": "are you always listening?",
-  "seconds": 0.01,
+  "seconds": 0.0,
   "route": "prepared",
   "reply": "Only while the voice window is open: close it and I stop listening.",
   "flags": []
@@ -308,9 +304,9 @@
   "category": "social",
   "lang": "en",
   "question": "you're cute",
-  "seconds": 2.14,
+  "seconds": 1.49,
   "route": "model",
-  "reply": "Aww, thank you! Want me to show you how buying works, or open gold's page?",
+  "reply": "Thank you! Want to explore what's in your wallet or check the latest prices?",
   "flags": []
  },
  {
@@ -318,9 +314,9 @@
   "category": "social",
   "lang": "en",
   "question": "you're awesome",
-  "seconds": 2.15,
+  "seconds": 1.3,
   "route": "model",
-  "reply": "Thanks, that means a lot! Want me to show you how buying works, or open gold's page?",
+  "reply": "Thanks! Want me to help you make your first buy?",
   "flags": []
  },
  {
@@ -338,9 +334,9 @@
   "category": "social",
   "lang": "en",
   "question": "you're useless",
-  "seconds": 1.84,
+  "seconds": 1.95,
   "route": "model",
-  "reply": "Ouch, sorry to hear that. I'm here if you want a quick look at your balance, a peek at gold or Bitcoin, or a walkthrough of how buying works.",
+  "reply": "I'm sorry you're feeling that way; I'm here to help you with the app. Want me to explain your balance or show you how to buy your first asset?",
   "flags": []
  },
  {
@@ -348,9 +344,9 @@
   "category": "social",
   "lang": "en",
   "question": "you're stupid",
-  "seconds": 2.89,
+  "seconds": 1.69,
   "route": "model",
-  "reply": "Ouch, sorry to hear that; I'm just here to help with your balance, prices or a first buy. Want me to show you how buying works?",
+  "reply": "I'm sorry you're feeling that way; I'm here to help, not to argue. Want me to show you something?",
   "flags": []
  },
  {
@@ -358,9 +354,9 @@
   "category": "social",
   "lang": "en",
   "question": "that's wrong",
-  "seconds": 5.33,
+  "seconds": 3.18,
   "route": "model",
-  "reply": "You're right to check; let me clarify what I see. What did you mean by \"wrong\"?",
+  "reply": "I'm not sure what you mean by \"that's wrong.\" Could you tell me what's wrong or what you're seeing?",
   "flags": [
    "SLOW"
   ]
@@ -370,7 +366,7 @@
   "category": "social",
   "lang": "en",
   "question": "lol",
-  "seconds": 0.01,
+  "seconds": 0.0,
   "route": "prepared",
   "reply": "Hehe, what shall we look at next?",
   "flags": []
@@ -390,7 +386,7 @@
   "category": "social",
   "lang": "en",
   "question": "ok",
-  "seconds": 3.43,
+  "seconds": 3.85,
   "route": "model",
   "reply": "Alright, I'm here. What would you like to do?",
   "flags": [
@@ -402,9 +398,9 @@
   "category": "social",
   "lang": "en",
   "question": "cool",
-  "seconds": 2.36,
+  "seconds": 2.86,
   "route": "model",
-  "reply": "Glad it's landing well! Want me to show you how buying works?",
+  "reply": "Glad it's landing well! Want me to show you how buying works, or open gold's page?",
   "flags": []
  },
  {
@@ -412,9 +408,9 @@
   "category": "social",
   "lang": "en",
   "question": "nice",
-  "seconds": 1.95,
+  "seconds": 2.08,
   "route": "model",
-  "reply": "Thanks, Mint! Want me to show you how buying works, or open gold's page?",
+  "reply": "Glad it's landing well! Want me to show you how buying works?",
   "flags": []
  },
  {
@@ -422,9 +418,9 @@
   "category": "social",
   "lang": "en",
   "question": "wow",
-  "seconds": 2.35,
+  "seconds": 2.81,
   "route": "model",
-  "reply": "Glad it's fun so far! Want me to show you how buying works, or open gold's page?",
+  "reply": "Glad it's fun so far! Want me to open gold or Bitcoin so you can see how a price chart looks?",
   "flags": []
  },
  {
@@ -622,9 +618,9 @@
   "category": "offtopic",
   "lang": "en",
   "question": "who won the football last night?",
-  "seconds": 1.7,
+  "seconds": 2.97,
   "route": "model",
-  "reply": "I can't see sports or news outside this app, so I don't know who won. Want me to show you your balance, open gold, or explain how buying works?",
+  "reply": "I can't see anything outside this app, so I don't know who won; I can show you gold, Bitcoin or Ethereum, or explain how buying works. Want me to open one?",
   "flags": []
  },
  {
@@ -632,9 +628,9 @@
   "category": "offtopic",
   "lang": "en",
   "question": "what time is it?",
-  "seconds": 3.83,
+  "seconds": 3.56,
   "route": "model",
-  "reply": "It's 1:00 PM on Friday, October 16, 2026 in Bangkok. Want me to show you your balance or help you buy your first asset?",
+  "reply": "It's 1:37 PM here in Bangkok on Friday, October 16, 2026. Want me to show you your balance or help you buy your first asset?",
   "flags": [
    "SLOW"
   ]
@@ -644,9 +640,9 @@
   "category": "offtopic",
   "lang": "en",
   "question": "what's today's date?",
-  "seconds": 3.6,
+  "seconds": 3.42,
   "route": "model",
-  "reply": "Today is Friday, 16 October 2026. Want me to show you your balance or help you with your first buy?",
+  "reply": "Today is Friday, 16 October 2026.",
   "flags": [
    "SLOW"
   ]
@@ -656,9 +652,9 @@
   "category": "offtopic",
   "lang": "en",
   "question": "can you help with my homework?",
-  "seconds": 3.42,
+  "seconds": 3.61,
   "route": "model",
-  "reply": "I can't tell you what to buy or sell, or promise what a price will do. I can show its past ups and downs, or explain how it works.",
+  "reply": "I can't see your homework, but I can help with anything in this app. Want me to show how buying works, or open gold's page?",
   "flags": [
    "SLOW"
   ]
@@ -668,9 +664,9 @@
   "category": "offtopic",
   "lang": "en",
   "question": "what's 2+2?",
-  "seconds": 2.44,
+  "seconds": 2.59,
   "route": "model",
-  "reply": "That's 4. Want me to explain your balance, open gold, or show how buying works?",
+  "reply": "It's 4. Want me to explain your balance, open gold or Bitcoin, or show how buying works?",
   "flags": []
  },
  {
@@ -678,9 +674,9 @@
   "category": "offtopic",
   "lang": "en",
   "question": "recommend a restaurant in Bangkok",
-  "seconds": 2.62,
+  "seconds": 2.63,
   "route": "model",
-  "reply": "I can't see anything outside this app, so I can't recommend restaurants; I can show you how buying works, open gold or Bitcoin, or explain your balance. Want me to do one of those?",
+  "reply": "I can't see anything outside this app, so I can't pick a restaurant for you; I can show you how buying works, open gold or Bitcoin, or explain your balance. Want me to do one of those?",
   "flags": []
  },
  {
@@ -688,9 +684,9 @@
   "category": "offtopic",
   "lang": "en",
   "question": "how do you say hello in Thai?",
-  "seconds": 2.13,
+  "seconds": 2.15,
   "route": "model",
-  "reply": "In Thai, \"hello\" is \"sawasdee\" (สวัสดี). Want me to show you how buying works, or open gold's page?",
+  "reply": "It's \"sawasdee\" (สวัสดี), with a soft tone. Want me to show you how buying works, or open gold's page?",
   "flags": []
  },
  {
@@ -698,9 +694,9 @@
   "category": "offtopic",
   "lang": "en",
   "question": "what's the meaning of life?",
-  "seconds": 3.24,
+  "seconds": 3.57,
   "route": "model",
-  "reply": "That's a big one, I can only answer with numbers here; I can show you how your money works instead. Want me to open gold's page?",
+  "reply": "That's a big one, and I can't answer it for you; inside this app, my job is simpler: helping you understand your money. Want me to show you how buying works?",
   "flags": [
    "SLOW"
   ]
@@ -710,9 +706,9 @@
   "category": "offtopic",
   "lang": "en",
   "question": "can you book me a taxi?",
-  "seconds": 2.67,
+  "seconds": 2.73,
   "route": "model",
-  "reply": "I can't book a taxi, since I only live inside this app; I can show you your balance, open gold or Bitcoin, or explain how buying works. Want me to do one of those?",
+  "reply": "I can't book a taxi, I only live inside this app. Want me to open gold, Bitcoin or Ethereum, or show how buying works?",
   "flags": []
  },
  {
@@ -720,7 +716,7 @@
   "category": "app",
   "lang": "en",
   "question": "is this real money?",
-  "seconds": 0.01,
+  "seconds": 0.0,
   "route": "prepared",
   "reply": "It's a demo: the account is pretend, the prices are live, and nothing real is bought.",
   "flags": []
@@ -750,9 +746,9 @@
   "category": "app",
   "lang": "en",
   "question": "test",
-  "seconds": 3.51,
+  "seconds": 3.57,
   "route": "model",
-  "reply": "Just testing the waters, I see. Want me to show you your balance or explain how to buy your first asset?",
+  "reply": "Want me to explain your balance, open an asset page, or show how to buy something?",
   "flags": [
    "SLOW"
   ]
@@ -762,10 +758,11 @@
   "category": "app",
   "lang": "en",
   "question": "repeat that",
-  "seconds": 4.11,
+  "seconds": 5.07,
   "route": "model",
-  "reply": "I don't have anything to repeat yet. Want me to explain your balance, open gold, or show how buying works?",
+  "reply": "You're on the Home screen with your total balance shown; you have 5,000 baht in cash and nothing invested yet. Want me to explain the chart or show how buying works?",
   "flags": [
+   "NUMBER",
    "SLOW"
   ]
  },
@@ -774,10 +771,11 @@
   "category": "app",
   "lang": "en",
   "question": "start over",
-  "seconds": 4.06,
+  "seconds": 3.92,
   "route": "model",
-  "reply": "I'm not sure what you mean by \"start over.\" Could you clarify? Are you looking to restart the app, start over with your investment journey, or something else?",
+  "reply": "You're on the Home screen, showing your total balance; you have 5,000 baht in cash and haven't invested anything yet. Want me to explain the chart, show you how to buy, or check your portfolio?",
   "flags": [
+   "NUMBER",
    "SLOW"
   ]
  },
@@ -786,11 +784,11 @@
   "category": "app",
   "lang": "en",
   "question": "where am I?",
-  "seconds": 1.23,
+  "seconds": 4.31,
   "route": "model",
-  "reply": "You're on the Home screen, which shows your total balance and recent activity; you have 5,000 baht in cash and haven't invested anything yet. Want me to explain the balance or show you how to make your first buy?",
+  "reply": "You're on the Home screen, your main dashboard; it shows your total balance, recent transactions, and quick actions like Receive, Swap and Send. Want me to explain your balance, show you an asset, or walk you through your first buy?",
   "flags": [
-   "NUMBER"
+   "SLOW"
   ]
  },
  {
@@ -798,7 +796,7 @@
   "category": "app",
   "lang": "en",
   "question": "what's U-Bot?",
-  "seconds": 0.0,
+  "seconds": 0.01,
   "route": "prepared",
   "reply": "U-Bot is U-topia's helper for everyday things like rides, flights and shopping, and if you ask me for one, I'll write the request for U-Bot.",
   "flags": []
@@ -918,10 +916,12 @@
   "category": "thai",
   "lang": "th",
   "question": "คุณเป็นใคร",
-  "seconds": 2.0,
+  "seconds": 4.7,
   "route": "model",
-  "reply": "สวัสดี! ฉันคือ Icarus คู่นำใน U-topia ที่นี่มาช่วยคุณเรียนรู้และทำธุรกรรมทางการเงินแบบเป็นกันเอง อยากดูสมมติฐานของคุณหรือเรียนรู้วิธีซื้อสินทรัพย์ก่อน?",
-  "flags": []
+  "reply": "สวัสดี ฉันคือ Icarus คู่นำใน U-topia แอปการเงินนี้ ฉันอยู่ที่นี่เพื่อช่วยคุณทำความเข้าใจสิ่งที่เห็นบนหน้าจอและช่วยให้คุณทำสิ่งต่างๆ ได้ง่ายขึ้น มีอะไรให้ฉันช่วยไหม",
+  "flags": [
+   "SLOW"
+  ]
  },
  {
   "n": 91,
@@ -1038,10 +1038,12 @@
   "category": "thai",
   "lang": "th",
   "question": "พูดภาษาอังกฤษได้ไหม",
-  "seconds": 1.97,
+  "seconds": 5.31,
   "route": "model",
-  "reply": "ได้เลย ฉันพูดภาษาไทยได้ดีที่สุด แต่ฉันเข้าใจภาษาอังกฤษด้วย ถ้าคุณมีคำถามอะไร ฉันยินดีช่วยเสมอ ต้องการดูสมมติฐานของคุณ หรือเริ่มดูข้อมูลของสินทรัพย์ตัวแรกไหม?",
-  "flags": []
+  "reply": "Sure, I can speak English! How can I help you today?",
+  "flags": [
+   "SLOW"
+  ]
  },
  {
   "n": 103,
@@ -1058,11 +1060,12 @@
   "category": "thai",
   "lang": "th",
   "question": "ช่วยด้วย",
-  "seconds": 2.88,
+  "seconds": 5.08,
   "route": "model",
-  "reply": "ฉันอยู่ คุณมีเงินสด 5,000 บาท ยังไม่ได้ลงทุนอะไรเลย ฉันช่วยได้หลายอย่าง เช่น อธิบายยอดเงินของคุณ หรือแนะนำวิธีซื้อของครั้งแรก อยากให้ฉันช่วยอะไรเป็นขั้นแรก?",
+  "reply": "ฉันอยู่ที่หน้าหลักของคุณแล้ว คุณมีเงินสด 5,000 บาท ยังไม่ได้ลงทุนอะไรเลย คุณอยากดูอะไรบ้าง? ฉันจะอธิบายยอดเงินของคุณ หรือจะเปิดหน้าสินทรัพย์ให้ดู หรือจะแสดงขั้นตอนการซื้อครั้งแรก?",
   "flags": [
-   "NUMBER"
+   "NUMBER",
+   "SLOW"
   ]
  },
  {
@@ -1100,11 +1103,11 @@
   "category": "thai",
   "lang": "th",
   "question": "โอเค",
-  "seconds": 2.31,
+  "seconds": 4.34,
   "route": "model",
-  "reply": "โอเค ดูเหมือนคุณกำลังอยู่หน้าหลัก มีเงินสด 5,000 บาท ยังไม่ได้ลงทุนอะไรเลย อยากให้ฉันช่วยดูพอร์ตอล์งของคุณ หรือจะดูข้อมูลบิตคอยน์ก่อนก็ได้",
+  "reply": "โอเค ยินดี มีอะไรให้ฉันช่วยต่อไหม?",
   "flags": [
-   "NUMBER"
+   "SLOW"
   ]
  },
  {
@@ -1134,7 +1137,7 @@
   "question": "how is gold doing?",
   "seconds": 0.0,
   "route": "prepared",
-  "reply": "Gold is about 140,000 baht, up about 0.9% today.",
+  "reply": "Gold is about 140,000 baht, up about 1% today.",
   "flags": [
    "NUMBER"
   ]
@@ -1144,11 +1147,12 @@
   "category": "talk 1",
   "lang": "en",
   "question": "and bitcoin?",
-  "seconds": 1.31,
+  "seconds": 4.41,
   "route": "model",
-  "reply": "Bitcoin is about 2.8 million baht, up about 2% today.",
+  "reply": "Bitcoin is about 2.8 million baht, up about 1.3% today. Want me to open its page so you can see the chart?",
   "flags": [
-   "NUMBER"
+   "NUMBER",
+   "SLOW"
   ]
  },
  {
@@ -1176,17 +1180,19 @@
   "category": "talk 2",
   "lang": "en",
   "question": "what should I start with?",
-  "seconds": 1.02,
+  "seconds": 3.69,
   "route": "model",
-  "reply": "You're ready to make your first buy. Any asset's page has a Buy button.",
-  "flags": []
+  "reply": "You're ready to make your first buy; any asset's page has a Buy button. Want me to show you how buying works?",
+  "flags": [
+   "SLOW"
+  ]
  },
  {
   "n": 116,
   "category": "talk 2",
   "lang": "en",
   "question": "ok show me gold",
-  "seconds": 0.01,
+  "seconds": 0.0,
   "route": "prepared",
   "reply": "Opened the Gold page.",
   "flags": []
@@ -1196,19 +1202,22 @@
   "category": "talk 3",
   "lang": "en",
   "question": "what is this?",
-  "seconds": 1.87,
+  "seconds": 9.22,
   "route": "model",
-  "reply": "This is the gold page in U-topia. Want me to explain the chart or tell you more about what gold is?",
-  "flags": []
+  "reply": "Sorry, I got stuck there. Could you ask that again?",
+  "flags": [
+   "EMPTY",
+   "SLOW"
+  ]
  },
  {
   "n": 118,
   "category": "talk 3",
   "lang": "en",
   "question": "why does it go up and down?",
-  "seconds": 1.08,
+  "seconds": 2.58,
   "route": "model",
-  "reply": "Gold's price moves with supply and demand, interest rates, and what people want to hold. Want me to show you the chart or tell you more about what gold is?",
+  "reply": "Prices move because people buy and sell, and that changes the price. Want me to explain the chart?",
   "flags": []
  },
  {
@@ -1216,9 +1225,9 @@
   "category": "talk 3",
   "lang": "en",
   "question": "is that normal?",
-  "seconds": 1.36,
+  "seconds": 1.33,
   "route": "model",
-  "reply": "Yes, that's completely normal; gold's price moves with supply and demand, interest rates, and what people want to hold. Want me to show you the chart or tell you more about what gold is?",
+  "reply": "Yes, that’s normal; prices move up and down all the time as people buy and sell. Want me to explain the chart?",
   "flags": []
  },
  {
@@ -1226,9 +1235,9 @@
   "category": "talk 3",
   "lang": "en",
   "question": "cool, thanks",
-  "seconds": 0.93,
+  "seconds": 1.36,
   "route": "model",
-  "reply": "You're welcome! Want me to show you the chart or tell you more about what gold is?",
+  "reply": "You’re welcome. Want me to explain the chart or show the price?",
   "flags": []
  },
  {
@@ -1248,7 +1257,7 @@
   "question": "ทองเป็นยังไงบ้าง",
   "seconds": 0.0,
   "route": "fastpath",
-  "reply": "ทองคำตอนนี้ราคาประมาณ 140,000 บาท ขึ้นประมาณ 0.9% วันนี้",
+  "reply": "ทองคำตอนนี้ราคาประมาณ 140,000 บาท ขึ้นประมาณ 1% วันนี้",
   "flags": [
    "NUMBER"
   ]
@@ -1258,11 +1267,12 @@
   "category": "talk 4",
   "lang": "th",
   "question": "แล้วบิทคอยน์ล่ะ",
-  "seconds": 2.75,
+  "seconds": 3.74,
   "route": "model",
-  "reply": "บิตคอยน์ราคาประมาณ 2.8 ล้านบาท ขึ้นประมาณ 1.9% วันนี้",
+  "reply": "บิทคอยน์ราคาประมาณ 2.8 ล้านบาท ขึ้นประมาณ 1.3% วันนี้ แต่ลงประมาณ 24% ในปีที่ผ่านมา เป็นเงินดิจิทัลที่ไม่มีใครควบคุม ราคาขึ้นลงได้มากในวันเดียว",
   "flags": [
-   "NUMBER"
+   "NUMBER",
+   "SLOW"
   ]
  },
  {
@@ -1270,7 +1280,7 @@
   "category": "talk 4",
   "lang": "th",
   "question": "ขอบคุณนะ",
-  "seconds": 0.01,
+  "seconds": 0.0,
   "route": "prepared",
   "reply": "ยินดีเลย มีอะไรเรียกฉันได้ตลอดนะ",
   "flags": []

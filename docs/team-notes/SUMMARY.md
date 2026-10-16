@@ -1,4 +1,4 @@
-> **Historical note (as of 16 Oct 2026, the hackathon).** This summary describes work on the `backend` branch and its worktree. It records the state at that time: worktree and branch names, commit hashes and test counts below are old, and its statements that nothing was merged into `main` are out of date. For the current state, read [`README.md`](../../README.md), [`PLAN.md`](../../PLAN.md) and [`SUMMARY.md`](../../SUMMARY.md). The integrated code is on `main`.
+> **Historical note (as of 16 Oct 2026, the hackathon).** This summary describes work on the `backend` branch and its worktree. It records the state at that time: worktree and branch names, commit hashes and test counts below are old, and its statements that nothing was merged into `main` are out of date. For the current state, read [`README.md`](../../README.md), [`remediation-plan.md`](remediation-plan.md) and [`project-review.md`](project-review.md). The integrated code is on `main`.
 
 
 # Backend demo summary
