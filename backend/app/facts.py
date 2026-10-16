@@ -173,20 +173,57 @@ class FactPacks:
                              "assets.json (reviewed by us)")
         return None
 
-    def for_model(self, app_ids: list[str], lang: str, fees: bool = False) -> tuple[dict, list[dict]]:
-        """Compact facts for the model's context, and their envelopes (cite only those the reply used)."""
+    def for_model(self, app_ids: list[str], lang: str, fees: bool = False,
+                  chart: tuple[str, str] | None = None) -> tuple[dict, list[dict]]:
+        """Compact facts for the model's context, keyed by the names the user sees, and their envelopes
+        (cite only those the reply used). app_ids, the assets this turn is about: what it is, price, today,
+        and the past week, month and year. Every other asset: price and today, so "how's everything?"
+        needs no tool. chart, (asset, period) of the chart on screen: its change, start and end. fees: the
+        rule, with examples to do the math with."""
         facts, holder = {}, SimpleNamespace(results={}, lang=lang)
-        for app_id in dict.fromkeys(app_ids):
+        about = list(dict.fromkeys(app_ids))
+        for app_id in about + [a for a in self.assets if a not in about]:
             say = self.say(app_id, lang)
-            if not say:
+            pack = {k: say[k] for k in ("price", "today") if k in say}
+            if chart and chart[0] == app_id and chart[1] in say:
+                period = chart[1]
+                pack["chart on screen"] = (f"{say[period]}, from {say[period + '_start']} to {say[period + '_end']}"
+                                           if lang != "th" else
+                                           f"{say[period]} จาก{say[period + '_start']} เป็น{say[period + '_end']}")
+                self.cite(holder, app_id, "history", period)
+            if app_id in about:  # the numbers first: a model leads with what comes first
+                pack |= {k: say[k] for k in ("1W", "1M", "1Y", "about") if k in say}
+            if not pack:
                 continue
-            facts[app_id] = {k: say[k] for k in ("name", "price", "today", "1W", "1M", "1Y") if k in say}
-            self.cite(holder, app_id, "price")
+            if "price" in pack:
+                self.cite(holder, app_id, "price")
             for p in ("1W", "1M", "1Y"):
-                self.cite(holder, app_id, "history", p)
+                if p in pack:
+                    self.cite(holder, app_id, "history", p)
+            if "about" in pack:
+                self.cite(holder, app_id, "about")
+            facts[say["name"]] = pack
         if fees:
-            facts["fees"] = {"rule": f"{self.fees['say']['en']['pct']} of the amount, at least "
-                                     f"{self.fees['say'][lang]['min_fee']}, included in what you pay",
-                             "smallest_buy": self.fees["say"][lang]["min_buy"]}
+            say = self.fees["say"]["th" if lang == "th" else "en"]
+            facts["fees"] = {"rule": f"{say['pct']} of the amount, at least {say['min_fee']}, included in what you pay",
+                             "smallest_buy": say["min_buy"],
+                             "examples": {f"on {display.exact_baht(a, lang)}": say[str(a)] for a in FEE_EXAMPLES}}
             self.cite(holder, "", "fees")
         return facts, list(holder.results.values())
+
+    def money_for_model(self, user: dict, lang: str, snapshot: dict | None = None) -> tuple[dict, list[dict]]:
+        """The user's own money for the model's context, as the app shows it, and its envelope."""
+        holder, snap = SimpleNamespace(results={}, lang=lang), snapshot or {}
+        if snap.get("portfolio") and snap.get("data_source") != "backend_demo":
+            # The app shows its own demo portfolio: talk about what the user sees, like get_portfolio does.
+            _envelope(holder, "get_portfolio", snap["portfolio"], "app screen (demo data)", freshness="screen")
+            return {"on screen": snap["portfolio"]}, list(holder.results.values())
+        pack = self.portfolio(user, lang)
+        _envelope(holder, "get_portfolio", {k: v for k, v in pack.items() if k != "say"}, "demo account",
+                  freshness="simulated")
+        money = {"cash": pack["say"]["cash"], "invested": {
+            name(h["asset_id"], lang): display.baht(h["value_thb"], lang) for h in pack["holdings"] if h["value_thb"]}
+            or "nothing yet"}
+        if pack["holdings"]:
+            money["total"] = pack["say"]["total"]
+        return money, list(holder.results.values())

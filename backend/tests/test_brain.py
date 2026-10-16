@@ -298,11 +298,21 @@ def test_failed_intent_tells_the_model_and_adds_nothing(cache, state):
 
 
 def test_too_many_actions_are_refused(cache, state):
-    many = [("set_card_frozen", {"frozen": i % 2 == 0}) for i in range(9)]
+    many = [("change_chart_period", {"period": p}) for p in ("1D", "1W", "1M", "3M", "1Y", "ALL")]
+    many += [("highlight_element", {"element_id": e}) for e in ("asset.chart", "asset.change24h", "asset.buy_button")]
     fake = FakeLLM([calls(*many), text("ok")])
-    reply = ask(Assistant(fake, state, cache), "freeze unfreeze...", snapshot=SNAPSHOT)
+    reply = ask(Assistant(fake, state, cache), "every period, and point at everything", snapshot=SNAPSHOT)
     assert len(reply.ui_actions) == ui.MAX_ACTIONS_PER_TURN
     assert tool_results(fake, 1)[-1]["reason"] == "too_many_actions"
+
+
+def test_the_same_tool_call_twice_in_a_turn_runs_once(cache, state):
+    # caught live: a model highlighted the balance four times for "what am I looking at"
+    fake = FakeLLM([calls(("highlight_element", {"element_id": "home.balance"})),
+                    calls(("highlight_element", {"element_id": "home.balance"})), text("That's your total balance.")])
+    reply = ask(Assistant(fake, state, cache), "what am I looking at", snapshot={**SNAPSHOT, "screen": "home"})
+    assert reply.ui_actions == [{"type": "highlight", "element_id": "home.balance"}]
+    assert tool_results(fake, 2)[-1]["reason"] == "repeated" and reply.text == "That's your total balance."
 
 
 def test_explain_uses_the_numbers_on_screen_and_highlights(cache, state):
@@ -363,7 +373,7 @@ def test_request_shape(cache, state):
     call = fake.calls[0]
     assert [m["role"] for m in call["messages"]] == ["system", "user"]
     assert "Reply language: Thai" in call["messages"][0]["content"]
-    assert "The app shows: Gold · 1M chart." in call["messages"][0]["content"]
+    assert "On screen: gold's page (the app's label: Gold · 1M chart)." in call["messages"][0]["content"]
     names = {t["function"]["name"] for t in call["tools"]}
     assert {"prepare_trade", "cancel_trade", "show_asset", "go_to_screen", "explain_element"} <= names
     assert not names & {"prepare_buy", "cancel_buy"}

@@ -109,6 +109,11 @@ def _one(kind):
     return lambda m, here: Intent(kind, {"asset_id": _asset(m)})
 
 
+def _advice(m, here):
+    """"Should I buy?" on gold's page is about gold."""
+    return Intent("advice", {"asset_id": _asset(m) or here})
+
+
 def _const(kind, **args):
     return lambda m, here: Intent(kind, dict(args))
 
@@ -143,7 +148,7 @@ RULES = [
       r"what should i do with (?:my |this |the )?(?:money|cash|savings|it)(?: now| today)?",
       r"where should i (?:put|invest) (?:my )?(?:money|cash|savings)(?: now| today)?",
       r"how should i invest(?: my (?:money|cash|savings))?",
-      r"มีเงิน\s*\d+(?:\.\d{1,2})?\s*บาท\s*(?:ควร)?(?:ทำอะไรดี|ลงทุนอะไรดี|ซื้ออะไรดี)"], _one("advice")),
+      r"มีเงิน\s*\d+(?:\.\d{1,2})?\s*บาท\s*(?:ควร)?(?:ทำอะไรดี|ลงทุนอะไรดี|ซื้ออะไรดี)"], _advice),
     # a minus amount: ask again, never read it as a buy
     ([r"(?:buy|purchase|get|put|invest|sell)(?: in)? -\d.*", r"(?:ซื้อ|ขาย|ลงทุน).*-\s*\d.*"], _const("bad_amount")),
     # stocks are on the Invest screen to look at; the demo only buys gold, Bitcoin and Ethereum

@@ -1,10 +1,11 @@
 """What the assistant remembers between turns: model answers for a few minutes, and a log of questions.
 
 AnswerCache keeps replies that needed the model, for the same normalized question on the same screen,
-asset and chart period, while the facts we would say are unchanged (the fact packs' version), for
-ANSWER_CACHE_TTL_S seconds (default 300; 0 turns it off). Only answers built from read-only tools are
-kept, never trades, cancels or guides, and only for questions that don't lean on the conversation
-("what about it?"). An answer that read the user's own money is kept for that user only.
+asset, chart period, tapped element and typed amount, while the facts we would say are unchanged (the
+fact packs' version), for ANSWER_CACHE_TTL_S seconds (default 300; 0 turns it off). Only answers built
+from read-only tools are kept, never trades, cancels or guides, and only for questions that don't lean
+on the conversation ("what about it?", "what do you mean", "and then?"). The model has the user's own
+money in its context, so an answer is kept for that user only, while their money is unchanged.
 
 QuestionLog writes one JSON line per question with the route that answered it (prepared, fastpath,
 cache, model) to QUESTION_LOG (default backend/.runtime/questions.jsonl; 0 turns it off). The
@@ -24,9 +25,9 @@ from app.config import BACKEND_DIR
 
 READ_ONLY_TOOLS = {"get_prices", "get_history", "get_asset_info", "explain_element", "get_portfolio", "show_chart",
                    "show_steps", "go_to_screen", "show_asset", "change_chart_period", "filter_assets", "highlight_element"}
-PERSONAL_TOOLS = {"get_portfolio", "explain_element"}  # explain_element can read the user's buy or portfolio numbers
 BACK_REFERENCE = re.compile(r"\b(?:it|its|that|those|them|they|their|there|same|again|else|also|too|more|instead|"
-                            r"what about|how about)\b|มัน|นั้น|ล่ะ|อีก|เหมือนกัน")
+                            r"what about|how about|you mean|mean by|go on|keep going|carry on)\b|"
+                            r"^(?:and|but|or|then|like)\b|มัน|นั้น|ล่ะ|อีก|เหมือนกัน")
 DEFAULT_LOG = BACKEND_DIR / ".runtime" / "questions.jsonl"
 
 
@@ -35,10 +36,9 @@ def standalone(norm: str) -> bool:
     return len(norm.split()) >= 2 and BACK_REFERENCE.search(norm) is None
 
 
-def reusable(tools_used: list[str]) -> tuple[bool, bool]:
-    """(can the answer be kept, is it personal) for the tools a model answer called."""
-    used = set(tools_used)
-    return used <= READ_ONLY_TOOLS, bool(used & PERSONAL_TOOLS)
+def reusable(tools_used: list[str]) -> bool:
+    """Can an answer that called these tools be given again? Not after a trade, a cancel or a guide."""
+    return set(tools_used) <= READ_ONLY_TOOLS
 
 
 class AnswerCache:

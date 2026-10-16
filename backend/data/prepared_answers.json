@@ -1,5 +1,5 @@
 {
- "_note": "Prepared answers: the questions people ask most, answered with no model call (app/assistant/prepared.py). ask: ways people say it, matched after normalizing (case, punctuation, 1,000 = 1000, PAXG = gold, Thai particles). An answer is do (a fast-path intent: show, show_price, trade, period, freeze, hide, back, cancel, steps, guide, compare, explain_chart, portfolio, price, advice), say (fixed text, or a template with slots filled from the fact packs when asked: {XAU.price} {XAU.today} {XAU.today_short} {BTC.1Y} {BTC.1Y_short} {ETH.about} {XAU.Name} {here.price} {fees.pct} {fees.min_fee} {fees.min_buy} {fees.1000}), or glossary (a term in glossary.json). Keep say to one short, plain sentence, no em dashes. Every glossary term also answers 'what is <term>' by itself. Thai needs a Thai speaker's check (th_reviewed). The questions that still go to the model are in backend/.runtime/questions.jsonl: add the common ones here.",
+ "_note": "Prepared answers: the questions people ask most, answered with no model call (app/assistant/prepared.py). ask: ways people say it, matched after normalizing (case, punctuation, 1,000 = 1000, PAXG = gold, Thai particles). An answer is do (a fast-path intent: show, show_price, trade, period, freeze, hide, back, cancel, steps, guide, compare, explain_chart, portfolio, price, advice), say (fixed text, or a template with slots filled from the fact packs when asked: {XAU.price} {XAU.today} {XAU.today_short} {BTC.1Y} {BTC.1Y_short} {ETH.about} {XAU.Name} {here.price} {fees.pct} {fees.min_fee} {fees.min_buy} {fees.1000}), or glossary (a term in glossary.json). Keep say to one short, plain sentence, no em dashes. Every glossary term also answers 'what is <term>' by itself. List only ways that clearly ARE the question, with its key words: never a vague or open one ('help', 'is it safe', 'what is this', 'explain'), which depends on the screen or the conversation and goes to the model, so it gets a real answer. Thai needs a Thai speaker's check (th_reviewed). The questions that still go to the model are in backend/.runtime/questions.jsonl: add the common ones here.",
  "th_reviewed": false,
  "answers": [
   {
@@ -599,9 +599,9 @@
    "ask": {
     "en": [
      "is my money safe",
-     "is this safe",
-     "is it safe",
      "is this app safe",
+     "is this app safe to use",
+     "is it safe to use this app",
      "is my money secure",
      "is my money safe here",
      "is my money safe in this app",
@@ -615,7 +615,6 @@
     ],
     "th": [
      "เงินของฉันปลอดภัยไหม",
-     "ปลอดภัยไหม",
      "แอปนี้ปลอดภัยไหม",
      "เงินปลอดภัยไหม",
      "แอปนี้ไว้ใจได้ไหม",
@@ -651,8 +650,8 @@
     "en": [
      "what can you do",
      "what can i ask you",
-     "help",
      "how can you help",
+     "what can you help me with",
      "what do you do"
     ],
     "th": [
@@ -730,11 +729,14 @@
     "en": [
      "thanks",
      "thank you",
-     "thx"
+     "thx",
+     "thank you so much",
+     "thanks a lot"
     ],
     "th": [
      "ขอบคุณ",
-     "ขอบใจ"
+     "ขอบใจ",
+     "ขอบคุณมาก"
     ]
    },
    "say": {
