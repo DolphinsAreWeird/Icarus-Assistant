@@ -11,8 +11,9 @@ from functools import cache
 from app import knowledge
 
 THAI = re.compile(r"[฀-๿]")
-NAMES = {"gold": "XAU", "bitcoin": "BTC", "ethereum": "ETH"}   # normalized name -> app id, assets with data
 CANONICAL = {"gold": "gold", "btc": "bitcoin", "eth": "ethereum", "usdt": "usdt"}  # data id -> normalized name
+# normalized name -> app id, for every asset with data (stocks and funds are named by their data id: "nvda")
+NAMES = {CANONICAL.get(a["data_id"], a["data_id"]): app_id for app_id, a in knowledge.app_ui()["assets"].items() if a["data_id"]}
 
 EN_REPLACE = [(re.compile(p), r) for p, r in [
     (r"\bwhat's\b", "what is"), (r"\bhow's\b", "how is"), (r"\bwhere's\b", "where is"), (r"\bwho's\b", "who is"),
@@ -56,11 +57,11 @@ def _aliases() -> tuple[re.Pattern, re.Pattern, dict]:
     """Every asset alias -> its normalized name: English as whole words, Thai anywhere."""
     names = {}
     for data_id, a in knowledge.assets().items():
-        for alias in a["aliases"] + [a["unit"]]:
+        for alias in a["aliases"] + ([] if a["unit"] == "shares" else [a["unit"]]):  # "shares" names no one asset
             names[alias.lower()] = CANONICAL.get(data_id, data_id)
     for app_id, a in knowledge.app_ui()["assets"].items():
-        if a["data_id"] in CANONICAL:
-            names[app_id.lower()] = names[a["name"].lower()] = CANONICAL[a["data_id"]]
+        if a["data_id"]:
+            names[app_id.lower()] = names[a["name"].lower()] = CANONICAL.get(a["data_id"], a["data_id"])
     th = sorted((k for k in names if THAI.search(k)), key=len, reverse=True)
     en = sorted((k for k in names if not THAI.search(k)), key=len, reverse=True)
     return (re.compile(r"\b(?:" + "|".join(map(re.escape, en)) + r")\b"),

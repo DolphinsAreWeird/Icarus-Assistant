@@ -12,8 +12,15 @@
     "BTC":  {"name": "Bitcoin",  "data_id": "btc"},
     "ETH":  {"name": "Ethereum", "data_id": "eth"},
     "XAU":  {"name": "Gold",     "data_id": "gold"},
-    "AAPL": {"name": "Apple",    "data_id": null},
-    "TSLA": {"name": "Tesla",    "data_id": null}
+    "AAPL": {"name": "Apple",    "data_id": "aapl"},
+    "TSLA": {"name": "Tesla",    "data_id": "tsla"},
+    "QQQ":  {"name": "Nasdaq 100", "data_id": "qqq", "in_app": false},
+    "MSFT": {"name": "Microsoft", "data_id": "msft", "in_app": false},
+    "NVDA": {"name": "Nvidia",   "data_id": "nvda",  "in_app": false},
+    "GOOGL": {"name": "Alphabet", "data_id": "googl", "in_app": false},
+    "AMZN": {"name": "Amazon",   "data_id": "amzn",  "in_app": false},
+    "META": {"name": "Meta",     "data_id": "meta",  "in_app": false},
+    "BRK":  {"name": "Berkshire Hathaway", "data_id": "brk", "in_app": false}
   },
   "periods": ["1D", "1W", "1M", "3M", "1Y", "ALL"],
   "filters": ["All", "Crypto", "Stocks", "Gold"],

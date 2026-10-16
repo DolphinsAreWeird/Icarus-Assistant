@@ -31,6 +31,8 @@ def _prepare_trade(state, cache, user_id, asset_id, side, amount_thb):
     user = state.users[user_id]
     if asset_id not in assets:
         raise TradeError("unknown_asset", asset_id=asset_id)
+    if not assets[asset_id].get("tradable", True):
+        raise TradeError("not_tradable", asset_id=asset_id)  # shown for prices and charts only (stocks and funds)
     if side not in ("buy", "sell") or not math.isfinite(amount_thb) or not 0 < amount_thb <= 1e9:
         raise TradeError("bad_amount", amount_thb=amount_thb)
     if side == "buy" and amount_thb < fees["min_buy_thb"]:

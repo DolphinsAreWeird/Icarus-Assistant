@@ -2,24 +2,35 @@
 import re
 from uuid import uuid4
 
-from app import ui
+from app import knowledge, ui
 from app.contracts import ChatReply, SourceRef
 from app.tools import ToolContext, TOOLS
 
 from app.insights import MONTH_NUMBERS as MONTHS
 
-ALIASES = r"gold|xau|ทอง(?:คำ)?|bitcoin|btc|บิ[ทต]คอยน์|ethereum|eth|อีเธอเรียม|apple|aapl|แอปเปิล|tesla|tsla|เทสลา"
+_BASE = r"gold|xau|ทอง(?:คำ)?|bitcoin|btc|บิ[ทต]คอยน์|ethereum|eth|อีเธอเรียม"
+_ALIAS_TO_APP = {alias.lower(): app_id for app_id, ui_a in knowledge.app_ui()["assets"].items() if ui_a["data_id"]
+                 for alias in knowledge.assets()[ui_a["data_id"]]["aliases"] + [app_id]}
+# every alias of the stocks and funds too, longest first ("meta platforms" before "meta")
+ALIASES = _BASE + "|" + "|".join(re.escape(k) for k in sorted(_ALIAS_TO_APP, key=len, reverse=True))
 
 
 def asset(text):
     return ("XAU" if re.fullmatch(r"gold|xau|ทอง(?:คำ)?", text, re.I) else
             "BTC" if re.fullmatch(r"bitcoin|btc|บิ[ทต]คอยน์", text, re.I) else
-            "AAPL" if re.fullmatch(r"apple|aapl|แอปเปิล", text, re.I) else
-            "TSLA" if re.fullmatch(r"tesla|tsla|เทสลา", text, re.I) else "ETH")
+            "ETH" if re.fullmatch(r"ethereum|eth|อีเธอเรียม", text, re.I) else
+            _ALIAS_TO_APP.get(text.lower(), "ETH"))
 
 
 def parse_intent(message):
     t = message.strip().rstrip("?.! ").lower()
+    parsed = _parse(t)
+    if parsed and parsed[0] == "show_asset" and not ui.in_app(parsed[1]["asset_id"]):
+        return "show_chart", {"asset_ids": [parsed[1]["asset_id"]], "period": "1Y"}  # no page in the app: show its chart
+    return parsed
+
+
+def _parse(t):
     # Full-request matches intentionally reject advice, negation, conditions and compounds.
     m = re.fullmatch(rf"(?:put|buy|invest)\s+([0-9]+(?:,[0-9]{{3}})*(?:\.[0-9]{{1,2}})?)\s+(?:baht|thb)\s+(?:in|of)\s+({ALIASES})", t)
     if not m:

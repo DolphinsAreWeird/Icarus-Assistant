@@ -133,12 +133,31 @@ def _envelope(ctx: ToolContext, tool: str, data: dict, provider: str,
     return env
 
 
+SOURCE_NAMES = {"binance": "binance", "yahoo": "yahoo finance"}
+
+
+def _providers(data_ids, kind: str) -> str:
+    """The label for where numbers came from: "binance + frankfurter" for prices, "binance history snapshot" for history.
+    Stocks and funds come from Yahoo Finance; a mix names both."""
+    names = [n for n in dict.fromkeys(SOURCE_NAMES.get(knowledge.assets().get(d, {}).get("source", "binance"), "binance")
+                                      for d in data_ids if d) ] or ["binance"]
+    joined = " + ".join(names)
+    return f"{joined} + frankfurter" if kind == "price" else f"{joined} history snapshot"
+
+
 def _data_id(asset_id: str) -> str | None:
     """Our data id for an asset. Takes the app's id (XAU) or ours (gold)."""
     app_asset = ui.to_app_asset(asset_id)
     if app_asset is None:
         raise ValueError(f"unknown asset {asset_id}")
     return knowledge.app_ui()["assets"][app_asset]["data_id"]
+
+
+def _safe_data_id(asset_id: str) -> str | None:
+    try:
+        return _data_id(asset_id)
+    except (ValueError, KeyError):
+        return None
 
 
 def _price(ctx: ToolContext, app_asset: str) -> dict:
@@ -182,7 +201,7 @@ def get_prices(ctx: ToolContext, asset_ids: list[str]) -> dict:
     worst = next((f for f in ("offline", "delayed") if any(p["freshness"] == f for p in live)),
                  "live" if live else "n/a")
     as_of = max((p["as_of"] for p in live), default=None)
-    return _envelope(ctx, "get_prices", data, "binance + frankfurter", as_of, worst)
+    return _envelope(ctx, "get_prices", data, _providers([_safe_data_id(a) for a in asset_ids], "price"), as_of, worst)
 
 
 def get_history(ctx: ToolContext, asset_id: str, period: str) -> dict:
@@ -193,7 +212,7 @@ def get_history(ctx: ToolContext, asset_id: str, period: str) -> dict:
                                               "note": "no price history for this asset"}, "app_ui.json")
     return _envelope(ctx, "get_history", {"asset_id": asset_id, "period": period, "summary": s,
                                           "say": _say_summary(s, period, ctx.lang)},
-                     "binance history snapshot", s["end"]["t"] if s else None, "snapshot")
+                     _providers([data_id], "history"), s["end"]["t"] if s else None, "snapshot")
 
 
 def get_asset_info(ctx: ToolContext, asset_id: str) -> dict:
@@ -299,6 +318,11 @@ def prepare_trade_tool(ctx: ToolContext, asset_id: str, side: str, amount_thb: f
     if data_id is None:
         return {"ok": False, "reason": "no_data",
                 "message": "this asset can't be traded through Icarus yet"}
+    if not knowledge.assets()[data_id].get("tradable", True):
+        name_en, name_th = _asset_name(ui.to_app_asset(asset_id), "en"), _asset_name(ui.to_app_asset(asset_id), "th")
+        return {"ok": False, "reason": "not_tradable", "message": f"{name_en} is for prices and charts only in this demo",
+                "reply": {"en": f"I can show the price and chart of {name_en}, but this demo only buys gold, Bitcoin and Ethereum.",
+                          "th": f"ฉันดูราคาและกราฟของ{name_th}ให้ได้ แต่เดโมนี้ซื้อได้แค่ทองคำ บิตคอยน์ และอีเธอเรียม"}}
     try:
         preview = prepare_trade(ctx.state, ctx.cache, ctx.user_id, data_id, side, amount_thb)
     except TradeError as e:
@@ -359,7 +383,7 @@ def show_chart(ctx: ToolContext, asset_ids: list[str], period: str) -> dict:
         except ui.UIError as e:
             return {"ok": False, "reason": e.code, "message": e.message}
         return _envelope(ctx, "show_chart", {"ok": True, "done": ui.describe(actions), "say": said},
-                         "binance history snapshot", freshness="snapshot")
+                         _providers([names[a]["data_id"] for a in assets], "history"), freshness="snapshot")
 
     series, unit = [], "THB" if len(assets) == 1 else "%"
     for a in assets:
@@ -374,14 +398,15 @@ def show_chart(ctx: ToolContext, asset_ids: list[str], period: str) -> dict:
     title = " vs ".join(names[a]["name"] for a in assets)
     card = {"title": title, "period": period, "period_text": display.period(period, ctx.lang),
             "unit": unit, "series": series,
-            "source": "Binance price history, in baht at each day's exchange rate"}
+            "source": (f"{_providers([names[a]['data_id'] for a in assets], 'history').removesuffix(' history snapshot').title()} "
+                       "price history, in baht at each day's exchange rate")}
     try:
         _add_actions(ctx, [{"type": "card", "card_type": "chart", "data": card}])
     except ui.UIError as e:
         return {"ok": False, "reason": e.code, "message": e.message}
     return _envelope(ctx, "show_chart", {"ok": True, "shown": "a chart card", "say": said,
                                          "next": "Say the main change in one sentence. The chart shows the rest."},
-                     "binance history snapshot", freshness="snapshot")
+                     _providers([names[a]["data_id"] for a in assets], "history"), freshness="snapshot")
 
 
 def show_steps(ctx: ToolContext, topic: str) -> dict:
@@ -436,6 +461,12 @@ def _no_data(ctx: ToolContext, tool: str, app_asset: str, what: str) -> dict:
         "th": f"ยังไม่มีข้อมูล{what}ของ {name_th} จึงตอบเรื่องนี้ไม่ได้"}}
 
 
+def _closed(ctx: ToolContext, app_asset: str) -> bool:
+    """True when the asset's market is shut right now (stocks and funds; the cache records it). Crypto never closes."""
+    p = ctx.cache.get(_safe_data_id(app_asset) or "")
+    return bool(p) and p.get("market_open") is False
+
+
 def tell_price(ctx: ToolContext, asset_id: str) -> dict:
     app_asset = ui.to_app_asset(asset_id)
     if app_asset is None:
@@ -444,12 +475,16 @@ def tell_price(ctx: ToolContext, asset_id: str) -> dict:
     if price.get("available") is False:
         return _no_data(ctx, "tell_price", app_asset, "a price")
     en, th = _asset_name(app_asset, "en"), _asset_name(app_asset, "th")
-    stale = {"live": "", "delayed": " (delayed)", "offline": " (from the saved snapshot)"}.get(price["freshness"], "")
-    stale_th = {"live": "", "delayed": " (ล่าช้า)", "offline": " (จากข้อมูลที่บันทึกไว้)"}.get(price["freshness"], "")
+    notes = {"live": "", "delayed": "delayed", "offline": "from the saved snapshot"}
+    notes_th = {"live": "", "delayed": "ล่าช้า", "offline": "จากข้อมูลที่บันทึกไว้"}
+    closed = _closed(ctx, app_asset)
+    note = ", ".join(n for n in (notes.get(price["freshness"], ""), "market closed, last close" if closed else "") if n)
+    note_th = " ".join(n for n in (notes_th.get(price["freshness"], ""), "ตลาดปิด ราคาปิดล่าสุด" if closed else "") if n)
+    stale, stale_th = (f" ({note})" if note else ""), (f" ({note_th})" if note_th else "")
     reply = {"en": f"{en} is at {display.baht(price['price_thb'])}, {display.change(price['change_24h_pct'])} today{stale}.",
              "th": f"{th}อยู่ที่ {display.baht(price['price_thb'], 'th')} {display.change(price['change_24h_pct'], 'th')} วันนี้{stale_th}"}
-    return _envelope(ctx, "tell_price", {"ok": True, "asset_id": app_asset, **price, "reply": reply},
-                     "binance + frankfurter", price["as_of"], price["freshness"])
+    return _envelope(ctx, "tell_price", {"ok": True, "asset_id": app_asset, **price, "market_closed": closed, "reply": reply},
+                     _providers([_safe_data_id(app_asset)], "price"), price["as_of"], price["freshness"])
 
 
 def get_balance(ctx: ToolContext) -> dict:

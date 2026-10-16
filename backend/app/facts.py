@@ -15,7 +15,7 @@ from app import display, knowledge, ui
 from app.assistant.checks import first_sentences
 from app.fees import trade_fee
 from app.market.history import PERIODS, period_rows, summarize
-from app.tools import _envelope
+from app.tools import _envelope, _providers
 
 FEE_EXAMPLES = (500, 1000, 5000)
 NAMES = {"XAU": {"en": "gold", "th": "ทองคำ"}, "BTC": {"en": "Bitcoin", "th": "บิตคอยน์"},
@@ -29,7 +29,11 @@ def name(app_id: str, lang: str) -> str:
     """An asset's name mid-sentence: "gold", "Bitcoin", "ทองคำ"."""
     if app_id in NAMES:
         return NAMES[app_id]["th" if lang == "th" else "en"]
-    return knowledge.app_ui()["assets"].get(app_id, {}).get("name", app_id)
+    app = knowledge.app_ui()["assets"].get(app_id, {})
+    named = knowledge.assets().get(app.get("data_id") or "")
+    if lang == "th" and named:
+        return named["name_th"].split(" (")[0]
+    return app.get("name", app_id)
 
 
 def _cap(text: str, limit: int) -> str:
@@ -162,12 +166,12 @@ class FactPacks:
         if part == "price":
             data = {app_id: {k: pack[k] for k in ("price_thb", "change_24h_pct", "as_of", "freshness")}
                     | {"say": {"price": say.get("price"), "change_24h": say.get("today")}}}
-            return _envelope(ctx, "get_prices", data, PRICE_PROVIDER, pack["as_of"], pack["freshness"])
+            return _envelope(ctx, "get_prices", data, _providers([knowledge.app_ui()["assets"][app_id]["data_id"]], "price"), pack["as_of"], pack["freshness"])
         if part == "history" and period in pack["history"]:
             s = pack["history"][period]
             data = {"asset_id": app_id, "period": period, "summary": s,
                     "say": {"change": say[period], "start": say[period + "_start"], "end": say[period + "_end"]}}
-            return _envelope(ctx, "get_history", data, HISTORY_PROVIDER, s["end"]["t"], "snapshot")
+            return _envelope(ctx, "get_history", data, _providers([knowledge.app_ui()["assets"][app_id]["data_id"]], "history"), s["end"]["t"], "snapshot")
         if part == "about":
             return _envelope(ctx, "get_asset_info", {"asset_id": app_id, "name": say["name"], "description": say["about"]},
                              "assets.json (reviewed by us)")

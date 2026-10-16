@@ -40,8 +40,11 @@ class Intent:
 
 # ---------- parsing ----------
 
-A = r"(?P<a>gold|bitcoin|ethereum)"
-B = r"(?P<b>gold|bitcoin|ethereum)"
+_NAMES = "|".join(sorted(NAMES, key=len, reverse=True))
+A = rf"(?P<a>{_NAMES})"
+B = rf"(?P<b>{_NAMES})"
+_VIEW_ONLY = "|".join(n for n, app_id in NAMES.items()
+                      if not knowledge.assets()[knowledge.app_ui()["assets"][app_id]["data_id"]].get("tradable", True))
 AMOUNT = r"(?P<n>\d+(?:\.\d{1,2})?) baht"
 PERIOD = (r"(?P<p>(?:(?:over|in|during|for|from|this|the|past|last|a|one|1|3|three|7|12|24|30|all|time|days?|"
           r"weeks?|months?|years?|hours?|quarter|ever|1d|1w|1m|3m|1y) ?)+)")
@@ -152,8 +155,8 @@ RULES = [
     # a minus amount: ask again, never read it as a buy
     ([r"(?:buy|purchase|get|put|invest|sell)(?: in)? -\d.*", r"(?:ซื้อ|ขาย|ลงทุน).*-\s*\d.*"], _const("bad_amount")),
     # stocks are on the Invest screen to look at; the demo only buys gold, Bitcoin and Ethereum
-    ([r"(?:buy|purchase|get|sell|invest in)(?: \d+(?:\.\d{1,2})?(?: baht)?)?(?: (?:of|in|worth of))?(?: shares? of| stocks? of)? (?:tesla|apple|tsla|aapl)(?: shares?| stocks?)?(?: for \d+(?:\.\d{1,2})? baht)?",
-      r"(?:ซื้อ|ขาย|ลงทุน)\s*(?:หุ้น)?\s*(?:เทสลา|แอปเปิล|tesla|apple)\s*.*"], _const("stocks")),
+    ([r"(?:buy|purchase|get|sell|invest in)(?: \d+(?:\.\d{1,2})?(?: baht)?)?(?: (?:of|in|worth of))?(?: shares? of| stocks? of)? (?:"+_VIEW_ONLY+r")(?: shares?| stocks?)?(?: for \d+(?:\.\d{1,2})? baht)?",
+      r"(?:ซื้อ|ขาย|ลงทุน)\s*(?:หุ้น)?\s*(?:"+_VIEW_ONLY+r")\s*.*"], _const("stocks")),
     # buy and sell: an amount in baht, and an asset (or the asset page the user is on)
     ([rf"(?P<side>buy|purchase|get|put|invest) {AMOUNT}(?: worth)?(?: (?:of|in|into) {A})?",
       rf"(?P<side>buy|purchase|get) {A} (?:for|with) {AMOUNT}",
@@ -444,8 +447,8 @@ def run(intent: Intent, ctx, facts, lang: str, llm=None, user_text: str = "") ->
         return ("จำนวนเงินต้องมากกว่าศูนย์นะ อยากใส่เท่าไหร่ดี" if th
                 else "Amounts start above zero. How much would you like to put in?"), 0
     if kind == "stocks":
-        return ("หุ้นอย่าง Tesla และ Apple ดูได้ในหน้าลงทุน แต่ในเดโมนี้ฉันซื้อให้ได้แค่ทองคำ บิตคอยน์ และอีเธอเรียม" if th
-                else "Stocks like Tesla and Apple are on the Invest screen to look at; in this demo I can buy gold, Bitcoin and Ethereum."), 0
+        return ("หุ้นอย่าง Tesla และ Apple ฉันดูราคาและกราฟให้ได้ แต่ในเดโมนี้ซื้อได้แค่ทองคำ บิตคอยน์ และอีเธอเรียม" if th
+                else "I can show the price and chart of stocks like Tesla and Apple, but in this demo I can only buy gold, Bitcoin and Ethereum."), 0
     if kind == "price":
         return price_text(facts, ctx, args["asset_id"], lang), 0
     if kind == "info":
