@@ -29,7 +29,7 @@ Built for U-Hackathon 2026 (FLOW Summit, Bangkok, 15 to 16 Oct 2026), AI track. 
 
 ![How Icarus works: you ask (voice or text, English or Thai); it listens (ElevenLabs Scribe); it thinks (code works out what you want first, the AI only finds the words); it shows (one sentence out loud while it moves the screens); you tap Confirm. It thinks with prepared answers, an AI model in the cloud with a backup, live data and house rules. Non-finance requests are written up for U-Bot, and every question feeds a friction map.](docs/media/architecture.png)
 
-Code does the work, the AI finds the words. The backend works out what the user wants and gets the numbers first (prepared fact sheets, refreshed with every price), so plain requests never wait for an AI: the 8 most common questions went from 42 s to 3 s in total, and 33 of 40 tricky judge-style questions answer in under 2 s (`backend/scripts/judge_battery.py`). New questions get one short AI call; a backup model answers if the first is slow. Drawn in [`docs/architecture.html`](docs/architecture.html).
+Code does the work, the AI finds the words. The backend works out what the user wants and gets the numbers first (prepared fact sheets, refreshed with every price), so plain requests never wait for an AI: 8 everyday questions went from 42 s to 3 s in total (measured 16 Oct 2026). New questions get one short AI call, and a backup model answers if the first is slow; asked again within 5 minutes, they come back instantly. New questions are logged, so the most-asked ones become prepared answers. A 100-question battery (`backend/scripts/battery100.py`) checks the answers and the house rules. Drawn in [`docs/architecture.html`](docs/architecture.html).
 
 ## The problem
 
