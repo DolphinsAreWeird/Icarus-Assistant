@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { JUDGE_COPY, LIVE_DATA_COPY, PRODUCT_POLISH, withJudgeCopy } from '../src/judge-copy';
+import { DASHBOARD_COPY, JUDGE_COPY, LIVE_DATA_COPY, PRODUCT_POLISH, withJudgeCopy } from '../src/judge-copy';
 
 const PROTOTYPE = readFileSync(path.join(__dirname, '..', 'prototype', 'Icarus Prototype.dc.html'), 'utf8');
+const DASHBOARD = readFileSync(path.join(__dirname, '..', 'prototype', 'Icarus Business Dashboard.dc.html'), 'utf8');
 
 describe('judge copy', () => {
   it('finds every line it changes in the current design (a new export from Oasis would show up here)', () => {
@@ -33,4 +34,9 @@ describe('judge copy', () => {
   it('leaves text it does not know alone', () => {
     expect(withJudgeCopy('<div>Hello</div>')).toBe('<div>Hello</div>');
   });
+});
+
+it('every dashboard replacement still matches the dashboard design', () => {
+  for (const [from] of DASHBOARD_COPY) expect(DASHBOARD, from).toContain(from);
+  expect(withJudgeCopy(DASHBOARD)).not.toMatch(/Scenario [AB]|฿1,010/);
 });

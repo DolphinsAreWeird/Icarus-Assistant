@@ -3,35 +3,35 @@
     "rate": 33.54,
     "as_of": "2026-10-15",
     "source": "frankfurter",
-    "fetched_at": 1792130986.7864199
+    "fetched_at": 1792132354.7958882
   },
   "prices": {
     "btc": {
       "asset_id": "btc",
-      "price_usd": 82090.63,
-      "price_thb": 2753319.73,
-      "change_24h_pct": 1.68,
-      "as_of": "2026-10-16T06:09:47+00:00",
+      "price_usd": 82188.78,
+      "price_thb": 2756611.68,
+      "change_24h_pct": 1.47,
+      "as_of": "2026-10-16T06:32:35+00:00",
       "source": "binance",
-      "fetched_at": 1792130986.7864199
+      "fetched_at": 1792132354.7958882
     },
     "eth": {
       "asset_id": "eth",
-      "price_usd": 2443.62,
-      "price_thb": 81959.01,
-      "change_24h_pct": 3.82,
-      "as_of": "2026-10-16T06:09:46+00:00",
+      "price_usd": 2449.43,
+      "price_thb": 82153.88,
+      "change_24h_pct": 3.59,
+      "as_of": "2026-10-16T06:32:35+00:00",
       "source": "binance",
-      "fetched_at": 1792130986.7864199
+      "fetched_at": 1792132354.7958882
     },
     "gold": {
       "asset_id": "gold",
-      "price_usd": 4174.02,
-      "price_thb": 139996.63,
-      "change_24h_pct": 0.89,
-      "as_of": "2026-10-16T06:09:44+00:00",
+      "price_usd": 4181.04,
+      "price_thb": 140232.08,
+      "change_24h_pct": 0.93,
+      "as_of": "2026-10-16T06:32:34+00:00",
       "source": "binance",
-      "fetched_at": 1792130986.7864199
+      "fetched_at": 1792132354.7958882
     },
     "usdt": {
       "asset_id": "usdt",
@@ -40,7 +40,7 @@
       "change_24h_pct": 0.0,
       "as_of": "2026-10-15",
       "source": "fixed",
-      "fetched_at": 1792130986.7864199
+      "fetched_at": 1792132354.7958882
     }
   }
 }
