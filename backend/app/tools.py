@@ -409,6 +409,14 @@ def show_chart(ctx: ToolContext, asset_ids: list[str], period: str) -> dict:
                      _providers([names[a]["data_id"] for a in assets], "history"), freshness="snapshot")
 
 
+def show_asset(ctx: ToolContext, asset_id: str, period: str | None = None) -> dict:
+    """Open an asset's page. A stock or fund has no page in the app, so show its chart instead."""
+    app_asset = ui.to_app_asset(asset_id)
+    if app_asset and not ui.in_app(app_asset):
+        return show_chart(ctx, [app_asset], period or "1Y")
+    return _ui_tool(lambda s, asset_id, period=None: ui.show_asset(s, asset_id, period))(ctx, asset_id=asset_id, period=period)
+
+
 def show_steps(ctx: ToolContext, topic: str) -> dict:
     """A step-by-step card from data/howto.json. Each step can point at the element it talks about."""
     topics = knowledge.howto()
@@ -571,7 +579,7 @@ TOOLS = {
     "get_portfolio": get_portfolio,
     "go_to_screen": _ui_tool(ui.go_to_screen),
     "go_back": _ui_tool(ui.go_back),
-    "show_asset": _ui_tool(lambda s, asset_id, period=None: ui.show_asset(s, asset_id, period)),
+    "show_asset": show_asset,
     "change_chart_period": _ui_tool(ui.change_chart_period),
     "filter_assets": _ui_tool(ui.filter_assets),
     "show_chart": show_chart,

@@ -5,10 +5,14 @@ type Asset = { price_thb: number; freshness: string; as_of?: string; charts: Rec
 export interface DemoBundle {
   mode: 'simulated'; currency: 'THB'; user_id: string; display_name: string; cash_thb: number;
   holdings: Record<string, number>; assets: Record<string, Asset>;
+  watchlist?: Record<string, WatchItem>; // stocks and funds listed to look at (the demo buys only gold, Bitcoin and Ethereum)
   fees: { trading_fee_pct: number; min_fee_thb: number; min_buy_thb: number };
   transactions: Array<{ id: string; type: string; asset_id: string | null; amount_thb: number; qty: number; ts: string }>;
   notice: string;
 }
+
+/** One stock or fund row on the Invest screen. Tapping it asks Icarus for its chart. */
+export type WatchItem = { name: string; ticker: string; mono: string; bg: string; price_thb: number; change_1d_pct: number; spark: number[] };
 
 type Prototype = Record<string, any>; // The design runtime exports a dynamic logic class.
 const money = (n: number) => `฿${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -42,6 +46,22 @@ export function agedFreshness(freshness: string | undefined, asOf: string | unde
 }
 export const ageLabel = (ms: number) => { const m = Math.floor(ms / 60_000); return m < 1 ? `${Math.max(1, Math.floor(ms / 1000))}s old` : m < 60 ? `${m} min old` : `${Math.floor(m / 60)} h old`; };
 const signedPct = (p: number) => `${p >= 0 ? '+' : '−'}${Math.abs(p).toFixed(2)}%`;
+
+/** Same little line the design draws for its own assets, from the backend's month of closes. */
+const sparkPath = (values: number[]) => {
+  const min = Math.min(...values), max = Math.max(...values);
+  return values.map((v, i) => `${i ? 'L' : 'M'}${(i / (values.length - 1) * 60).toFixed(1)} ${(3 + (1 - (v - min) / ((max - min) || 1)) * 22).toFixed(1)}`).join('');
+};
+const validWatch = (w: any): w is WatchItem => !!w && typeof w.name === 'string' && typeof w.ticker === 'string' && typeof w.mono === 'string' && typeof w.bg === 'string'
+  && Number.isFinite(w.price_thb) && w.price_thb > 0 && Number.isFinite(w.change_1d_pct) && Array.isArray(w.spark) && w.spark.length >= 2 && w.spark.every(Number.isFinite);
+/** Rows for the stocks and funds. A bad entry is left out; it never breaks the screen. */
+export function watchRows(proto: Prototype, watchlist: Record<string, WatchItem> | undefined) {
+  return Object.entries(watchlist ?? {}).filter(([, w]) => validWatch(w)).map(([id, w]) => ({
+    id, name: w.name, ticker: w.ticker, mono: w.mono, bg: w.bg, price: money(w.price_thb), change: `${signedPct(w.change_1d_pct)} 1D`,
+    color: w.change_1d_pct >= 0 ? GREEN : RED, spark: sparkPath(w.spark),
+    onOpen: (e: any) => { e?.stopPropagation?.(); proto.send(`How did ${w.name} do?`); },
+  }));
+}
 
 export function installDemoData(proto: Prototype, url: string, userId: string, onError: (message: string) => void, fetchImpl: typeof fetch = fetch) {
   let bundle: DemoBundle | null = null, fetchedAt = 0, inflight: Promise<void> | null = null;
@@ -206,10 +226,15 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
     view.pfChange = invested ? (allLive ? 'Value at live prices' : 'Value at last known prices') : 'Nothing invested yet';
     // The change over the 1D chart the app shows (a % with its colour), instead of a placeholder label.
     const dayChange = (id: string) => { const s = proto.chartStats(id, '1D'); return Number.isFinite(s.pct) && s.start ? s.pct : null; };
-    view.assetRows = view.assetRows.filter((a: any) => bundle!.assets[a.id]).map((a: any) => {
+    const tradable = view.assetRows.filter((a: any) => bundle!.assets[a.id]).map((a: any) => {
       const d = dayChange(a.id);
       return { ...a, price: money(bundle!.assets[a.id]!.price_thb), change: d === null ? (freshness(bundle!.assets[a.id]).state === 'live' ? 'Live' : 'Delayed') : `${signedPct(d)} 1D`, color: d === null || d >= 0 ? GREEN : RED };
     });
+    // Stocks and funds sit between crypto and gold: gold is the last row of All. They can't be bought here, so a tap asks Icarus.
+    const watch = watchRows(proto, bundle.watchlist);
+    const filter = proto.state.filter;
+    const rows = filter === 'Stocks' ? watch : filter === 'All' ? [...tradable.filter((a: any) => a.id !== 'XAU'), ...watch, ...tradable.filter((a: any) => a.id === 'XAU')] : tradable;
+    view.assetRows = rows.map((a: any, i: number) => ({ ...a, border: i ? '1px solid #F8E8EC' : '1px solid transparent' }));
     const d24 = dayChange(proto.state.assetId);
     const fr = freshness(current), live = fr.state === 'live';
     const delayedText = fr.state === 'offline' ? 'Saved price' : `Delayed price · ${ageLabel(fr.age)}`;
