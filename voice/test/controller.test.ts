@@ -42,6 +42,21 @@ async function ready(options: IcarusVoiceOptions = {}) {
   return s;
 }
 
+/** A quiet room, at the mic. */
+const ROOM = 0.002;
+/** The user speaking normally, at the mic: far above the room. */
+const VOICE = 0.15;
+
+/**
+ * The user talks over Icarus, like a real mic and Scribe deliver it: speech clearly louder than the room, long
+ * enough to count (client/barge-in.ts), then Scribe's partial a moment later (it lags the sound).
+ */
+function talkOver(s: ReturnType<typeof setup>, partial: string, ms = 400) {
+  s.mic.feed(s.timers, VOICE, ms);
+  s.mic.feed(s.timers, ROOM, 300);
+  s.stt().partial(partial);
+}
+
 /**
  * The user says something, like a real mic would deliver it: a pause, speech, a partial
  * transcript, the endpointing silence, then the final. Waits for the assistant and the audio.
@@ -180,6 +195,8 @@ describe('local voice commands', () => {
     const s = await ready();
     await userSays(s, 'take me to gold');
     const asks = s.api.asks.length;
+    s.mic.feed(s.timers, VOICE, 400); // the user says "stop" over Icarus (no partial came in time)
+    s.mic.feed(s.timers, ROOM, 600);
     s.stt().final('stop', 0.9);
     await flush();
     expect(s.output.last.stopped).toBe(true);
@@ -228,6 +245,8 @@ describe('local voice commands', () => {
     s.stt().final('louder', 0.9);
     await flush();
     expect(s.output.volume).toBe(1.4);
+    s.output.last.finishNaturally(); // Icarus says "Louder" and finishes
+    await flush();
     s.stt().final('slower', 0.9);
     await flush();
     expect(s.api.ttsRequests.at(-1)?.speed).toBe(0.9);
@@ -251,65 +270,158 @@ describe('barge-in', () => {
     return s;
   }
 
-  it('a partial transcript stops playback at once, and the time is counted from the first loud sound', async () => {
+  it('real words over sustained loudness stop playback, and the time is counted from the first loud sound', async () => {
     const s = await speaking();
-    s.mic.feed(s.timers, 0.001, 200); // quiet
-    s.mic.feed(s.timers, 0.02, 40); // the user starts to talk (2 frames)
-    s.mic.feed(s.timers, 0.5, 40); // louder (2 more frames): only 60 ms between the first and last frame
+    s.mic.feed(s.timers, ROOM, 200);
+    const firstLoud = s.timers.now() + 20;
+    s.mic.feed(s.timers, VOICE, 400); // the user talks...
+    s.mic.feed(s.timers, ROOM, 300); // ...and Scribe's words come a moment later
+    expect(s.output.last.stopped).toBe(false); // the loudness alone did nothing
     s.stt().partial('wait I mean');
-    // (the loudness check needs 120 ms of loud sound, so the transcript got there first)
     expect(s.log.bargeIn[0]).toMatchObject({ source: 'transcript' });
-    expect(s.log.bargeIn[0]?.ms).toBe(60);
+    expect(s.log.bargeIn[0]?.ms).toBe(s.timers.now() - firstLoud);
     expect(s.output.last.stopped).toBe(true);
     expect(s.log.speakingEnd.at(-1)).toEqual({ reason: 'interrupted' });
     expect(s.voice.state).toBe('listening');
   });
 
-  it('loud mic stops playback within about 150 ms (hybrid mode)', async () => {
+  it('loudness alone never stops Icarus: a shout from across the room, a laugh, a door', async () => {
     const s = await speaking();
-    s.mic.feed(s.timers, 0.001, 200); // background level
-    s.mic.feed(s.timers, 0.5, 400);
-    expect(s.output.last.stopped).toBe(true);
-    const bargeIn = s.log.bargeIn[0]!;
-    expect(bargeIn.source).toBe('energy');
-    expect(bargeIn.ms).toBeLessThan(500);
-    expect(bargeIn.ms).toBeLessThanOrEqual(160);
+    s.mic.feed(s.timers, ROOM, 200);
+    s.mic.feed(s.timers, 0.5, 1000);
+    s.mic.feed(s.timers, ROOM, 500);
+    expect(s.output.last.stopped).toBe(false);
+    expect(s.log.bargeIn).toHaveLength(0);
+    expect(s.voice.state).toBe('speaking');
   });
 
-  it('still barges in by loudness if the user was already mid-sentence when Icarus started', async () => {
+  it('words alone never stop Icarus: people chatting quietly nearby, or a word Scribe guessed from noise', async () => {
+    const s = await speaking();
+    s.mic.feed(s.timers, 0.012, 1000); // a murmur, well below a voice at the mic
+    s.stt().partial('so then I told him');
+    s.mic.feed(s.timers, 0.012, 600);
+    s.stt().partial('so then I told him about the');
+    s.mic.feed(s.timers, 0.6, 20); // a click...
+    s.mic.feed(s.timers, ROOM, 600);
+    s.stt().partial('Thank you.'); // ...that Scribe heard as words
+    expect(s.output.last.stopped).toBe(false);
+    expect(s.log.bargeIn).toHaveLength(0);
+  });
+
+  it('fillers never stop Icarus, even said loudly: "mm-hmm", "okay", "yeah"', async () => {
+    const s = await speaking();
+    talkOver(s, 'Mm-hmm.');
+    talkOver(s, 'okay yeah');
+    expect(s.output.last.stopped).toBe(false);
+  });
+
+  it('still stops if the user was already mid-sentence when Icarus started, once their words come in', async () => {
     const s = await ready();
+    s.mic.feed(s.timers, ROOM, 1000);
     s.mic.feed(s.timers, 0.2, 400); // still talking...
     s.stt().final('what is this red number', 0.95); // ...when the answer arrives and plays
     await flush();
     expect(s.voice.state).toBe('speaking');
-    s.mic.feed(s.timers, 0.5, 300); // and they keep talking
+    s.mic.feed(s.timers, 0.2, 400); // and they keep talking
+    expect(s.output.last.stopped).toBe(false); // not on loudness alone
+    s.stt().partial('and how much is it');
     expect(s.output.last.stopped).toBe(true);
-    expect(s.log.bargeIn[0]?.source).toBe('energy');
+    expect(s.log.bargeIn[0]?.source).toBe('transcript');
   });
 
-  it('does not use mic loudness in transcript-only mode', async () => {
-    const s = await speaking({ config: { bargeIn: { mode: 'transcript' } } });
-    s.mic.feed(s.timers, 0.5, 400);
-    expect(s.output.last.stopped).toBe(false);
-    s.stt().partial('hold on');
-    expect(s.output.last.stopped).toBe(true);
-  });
-
-  it("ignores Icarus's own voice coming back through the mic", async () => {
+  it('if the words came first, the loudness lasting long enough completes it', async () => {
     const s = await speaking();
+    s.mic.feed(s.timers, ROOM, 200);
+    s.mic.feed(s.timers, VOICE, 200);
+    s.stt().partial('hold on'); // a fast partial: not loud for long enough yet
+    expect(s.output.last.stopped).toBe(false);
+    s.mic.feed(s.timers, VOICE, 200);
+    expect(s.output.last.stopped).toBe(true);
+    expect(s.log.bargeIn[0]).toMatchObject({ source: 'energy', ms: 280 });
+  });
+
+  it('in a noisy room the bar rises with the noise: chatter does not stop Icarus, the user speaking up does', async () => {
+    const s = await ready();
+    const cafe = (i: number) => 0.03 + 0.015 * Math.sin(i * 1.7); // 0.015 to 0.045: above the fixed minimum
+    const feedCafe = (ms: number) => { for (let i = 0; i < ms / 20; i++) s.mic.feed(s.timers, cafe(i), 20); };
+    feedCafe(4000);
+    void s.voice.speak('Gold is down two point three percent since yesterday.');
+    await flush();
+    feedCafe(800);
+    s.stt().partial('two flat whites please');
+    feedCafe(800);
+    expect(s.output.last.stopped).toBe(false);
+    s.mic.feed(s.timers, 0.25, 500); // the user, at the mic
+    feedCafe(300);
+    s.stt().partial('wait a second');
+    expect(s.output.last.stopped).toBe(true);
+  });
+
+  it("ignores Icarus's own voice coming back through the mic, even when it is loud", async () => {
+    const s = await speaking();
+    s.mic.feed(s.timers, 0.1, 600); // the speaker's echo, loud and long
     s.stt().partial("That red number is today's change");
     expect(s.output.last.stopped).toBe(false);
     expect(s.log.bargeIn).toHaveLength(0);
   });
 
-  it('a very short interruption like "stop" always works, even if Icarus is saying that word', async () => {
-    const s = await speaking();
+  it('a short "stop" works when it is really said, even if Icarus is saying that word', async () => {
+    const s = await ready();
+    s.mic.feed(s.timers, ROOM, 1000);
+    void s.voice.speak('Please stop and think before you buy anything.');
+    await flush();
+    s.mic.feed(s.timers, VOICE, 320); // "stop!": about a third of a second
+    s.mic.feed(s.timers, ROOM, 300);
     s.stt().partial('stop');
     expect(s.output.last.stopped).toBe(true);
   });
 
+  it('Thai: "หยุด" said over Icarus stops it', async () => {
+    const s = await ready({ language: 'th' });
+    await userSays(s, 'ตัวเลขสีแดงคืออะไร');
+    expect(s.voice.state).toBe('speaking');
+    talkOver(s, 'หยุด');
+    expect(s.output.last.stopped).toBe(true);
+  });
+
+  it('a sentence heard while Icarus talks is background, unless the user really spoke over it', async () => {
+    const s = await speaking();
+    const asks = s.api.asks.length;
+    s.mic.feed(s.timers, 0.012, 1500); // someone nearby, quietly
+    s.stt().final('see you tomorrow then', 0.9);
+    await flush();
+    expect(s.log.transcriptIgnored.at(-1)).toMatchObject({ text: 'see you tomorrow then', reason: 'background' });
+    expect(s.output.last.stopped).toBe(false);
+    expect(s.log.finalTranscript.map((f) => f.text)).not.toContain('see you tomorrow then');
+
+    s.mic.feed(s.timers, VOICE, 800); // now the user, at the mic
+    s.mic.feed(s.timers, ROOM, 700);
+    s.stt().final('take me to bitcoin', 0.9);
+    await flush();
+    expect(s.log.bargeIn.at(-1)).toMatchObject({ source: 'final' });
+    expect(s.api.asks.slice(asks).map((a) => a.text)).toEqual(['take me to bitcoin']);
+  });
+
+  it('tapping the mascot (stopSpeaking) stops Icarus at once, without any loudness or words', async () => {
+    const s = await speaking();
+    s.voice.stopSpeaking();
+    expect(s.output.last.stopped).toBe(true);
+    expect(s.voice.state).toBe('listening');
+  });
+
+  it('after Icarus finishes, turn-taking is as quick as before: a softly spoken question is answered', async () => {
+    const s = await speaking();
+    s.output.last.finishNaturally();
+    await flush();
+    s.mic.feed(s.timers, 0.01, 500); // soft: below the barge-in level, which only applies while Icarus talks
+    s.stt().final('take me to gold', 0.9);
+    await flush();
+    expect(s.api.asks.at(-1)?.text).toBe('take me to gold');
+  });
+
   it('the final transcript after an interruption starts a normal new turn', async () => {
     const s = await speaking();
+    s.mic.feed(s.timers, VOICE, 400);
     s.stt().partial('take me');
     s.stt().final('take me to gold', 0.95);
     await flush();
@@ -372,9 +484,25 @@ describe('money confirmation, end to end', () => {
     expect(s.log.assistantReply[0]?.reply.ui_actions.some((a) => a.type === 'show_card')).toBe(true);
   });
 
+  it('a "confirm" from the background during the read-back changes nothing: the read-back goes on', async () => {
+    const s = await readbackPlaying();
+    s.mic.feed(s.timers, 0.01, 800); // quiet: not the user at the mic
+    s.stt().final('confirm', 0.99);
+    await flush();
+    expect(s.log.transcriptIgnored.at(-1)).toMatchObject({ text: 'confirm', reason: 'background' });
+    expect(s.output.last.stopped).toBe(false);
+    expect(s.api.ttsRequests).toHaveLength(1);
+    s.output.last.finishNaturally();
+    await flush();
+    s.timers.advance(10_000);
+    expect(s.log.countdown).toHaveLength(0);
+    expect(s.log.confirmIntent).toHaveLength(0);
+  });
+
   it('does NOT accept "confirm" while the read-back is still playing. It starts the read-back over', async () => {
     const s = await readbackPlaying();
-    s.mic.feed(s.timers, 0.001, 100);
+    s.mic.feed(s.timers, VOICE, 400); // the user says "confirm" over the read-back
+    s.mic.feed(s.timers, ROOM, 600);
     s.stt().final('confirm', 0.99); // too early
     await flush();
     expect(s.log.countdown).toHaveLength(0);
@@ -454,7 +582,7 @@ describe('money confirmation, end to end', () => {
 
   it('barging in on the read-back stops it, and "confirm" still does nothing', async () => {
     const s = await readbackPlaying();
-    s.stt().partial('wait');
+    talkOver(s, 'wait');
     expect(s.output.last.stopped).toBe(true);
     await userSays(s, 'confirm', 0.99);
     expect(s.log.countdown).toHaveLength(0);
@@ -896,7 +1024,7 @@ describe('speak() returns a promise (for hooks like Icarus.setTTS in the prototy
     const s = await ready();
     const done = s.voice.speak('A fairly long line that Icarus is saying right now.');
     await flush();
-    s.stt().partial('hold on a second');
+    talkOver(s, 'hold on a second');
     await expect(done).resolves.toBe('interrupted');
   });
 
@@ -949,7 +1077,7 @@ describe("assistant: 'external' (voice in and out only, the host does the thinki
     const done = s.voice.speak('Sure, taking you to gold.');
     await flush();
     expect(s.voice.state).toBe('speaking');
-    s.stt().partial('actually wait');
+    talkOver(s, 'actually wait');
     await expect(done).resolves.toBe('interrupted');
     expect(s.voice.state).toBe('listening');
   });
@@ -958,6 +1086,8 @@ describe("assistant: 'external' (voice in and out only, the host does the thinki
     const s = await ready({ assistant: 'external' });
     const done = s.voice.speak('A fairly long line that is being said right now.');
     await flush();
+    s.mic.feed(s.timers, VOICE, 400); // the user says "stop" over it
+    s.mic.feed(s.timers, ROOM, 600);
     s.stt().final('stop', 0.9);
     await expect(done).resolves.toBe('interrupted');
     expect(s.log.command.map((c) => c.name)).toContain('stop');

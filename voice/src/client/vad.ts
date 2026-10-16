@@ -1,12 +1,12 @@
 // Local voice activity detection, based on how loud the mic is. No network, no model.
 //
-// Used for three things:
-//   1. barge-in: the user starts talking while Icarus is talking
-//   2. timing: when did the user stop speaking (for the latency numbers)
-//   3. knowing when an utterance started (so an early "confirm" can be rejected)
+// Used for TIMING only:
+//   1. when did the user stop speaking (for the latency numbers)
+//   2. knowing when an utterance started (the echo check, and so an early "confirm" can be rejected)
 //
-// This is NOT the thing that decides the user is done. Scribe's own VAD does that.
-// Loud means: louder than the learned background level times a ratio, and above a floor.
+// It never stops Icarus: barge-in is decided in barge-in.ts, which needs real words too.
+// It is NOT the thing that decides the user is done either. Scribe's own VAD does that.
+// Loud means: louder than the room's noise floor (noise-floor.ts, shared with barge-in) times a ratio, and above a minimum.
 // While Icarus is speaking we use a bigger ratio so the speaker's echo does not count.
 
 export interface VadConfig {
@@ -19,10 +19,14 @@ export interface VadConfig {
   ratioWhileSpeaking: number;
 }
 
+/** Where the room's background level comes from (noise-floor.ts). */
+export interface FloorSource {
+  readonly value: number;
+}
+
 export type VadEvent = 'speech_start' | 'speech_end';
 
 export class EnergyVad {
-  private noiseFloor = 0.004;
   private aboveSince: number | null = null;
   private inSpeech = false;
   /** Last time a frame was loud enough. */
@@ -30,19 +34,22 @@ export class EnergyVad {
   /** When the current (or last) stretch of loudness began. */
   speechStartedAt: number | null = null;
 
-  constructor(private readonly cfg: VadConfig) {}
+  constructor(
+    private readonly cfg: VadConfig,
+    private readonly floor: FloorSource,
+  ) {}
 
   get speaking(): boolean {
     return this.inSpeech;
   }
 
   get background(): number {
-    return this.noiseFloor;
+    return this.floor.value;
   }
 
   threshold(icarusSpeaking: boolean): number {
     const ratio = icarusSpeaking ? this.cfg.ratioWhileSpeaking : this.cfg.ratio;
-    return Math.max(this.cfg.minRms, this.noiseFloor * ratio);
+    return Math.max(this.cfg.minRms, this.floor.value * ratio);
   }
 
   /** Feed one frame (about 20 ms). `nowMs` is any steadily increasing clock. */
@@ -62,8 +69,6 @@ export class EnergyVad {
 
     if (!this.inSpeech) {
       this.aboveSince = null;
-      // Learn the background level, but never from echo of our own voice.
-      if (!icarusSpeaking) this.noiseFloor = this.noiseFloor * 0.95 + rms * 0.05;
       return null;
     }
 

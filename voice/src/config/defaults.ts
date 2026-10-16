@@ -37,32 +37,70 @@ export const DEFAULTS = {
     requiresTap: true,
   },
 
-  // ---- Barge-in (user talks while Icarus is talking) ----
+  // ---- Barge-in: the user talks while Icarus is talking (client/barge-in.ts) ----
+  // Icarus stops talking ONLY when ALL three hold. Strangers try the demo in noisy places, so a cough, a door,
+  // a laugh or people chatting nearby must never cut it off:
+  //   (a) LOUD:  the mic level is above max(noise floor x levelRatio, minLevel). The noise floor is learned all
+  //              the time, while listening AND while Icarus talks: a low percentile of recent mic levels
+  //              (client/noise-floor.ts). A noisy room raises it by itself; a quiet room lowers it again.
+  //   (b) LONG:  that loudness lasts sustainMs. Short dips are bridged, but most of the stretch must be loud.
+  //   (c) WORDS: Scribe heard real words with it (minWords words, one word of minLetters letters, or a stop word),
+  //              and they are not Icarus's own voice coming back through the mic (echo).
+  // Mic levels are RMS, 0 to 1 (0.02 is about -34 dBFS). Frames are 20 ms.
+  // Tapping the mascot (stopSpeaking) and the push-to-talk button skip all of this: they always stop Icarus at once.
   bargeIn: {
+    // (a) The noise floor: this percentile of the mic level over the last floorWindowMs...
+    floorPercentile: 0.2,
+    floorWindowMs: 5000,
+    /** ...or this level, until floorWarmupMs of audio has been heard (just after the mic starts). */
+    floorInitial: 0.005,
+    floorWarmupMs: 500,
+    /** Loud means at least this many times the noise floor... */
+    levelRatio: 3,
+    /** ...and never below this level, so in a very quiet room a breath or a rustle is still not "loud". */
+    minLevel: 0.02,
+
+    // (b) Sustained: loud for at least this long, so a single spike (a clap, a door slam, a dropped phone) is not enough...
+    sustainMs: 300,
+    /** ...where quiet gaps up to this long do not break it (the pause in "wait, stop", the silent part of a "t")... */
+    maxGapMs: 150,
+    /** ...but at least this share of the stretch must be loud. Typing and footsteps are spikes with gaps: they fail this. */
+    minLoudShare: 0.6,
+
+    // (c) Words: Scribe's transcripts lag the sound by about 1 to 2 seconds, so the words may arrive after the
+    // loud stretch has ended. They count if they arrive within this long of its last loud frame (and not before it began).
+    wordsWithinMs: 2000,
+    /** At least this many words... */
+    minWords: 2,
+    /** ...or one word with at least this many letters (Thai: base letters, without vowel and tone marks)... */
+    minLetters: 4,
     /**
-     * 'transcript': stop when Scribe returns a partial that is not an echo of Icarus.
-     * 'hybrid': also stop when the mic is clearly loud for a short time (faster, but a loud
-     *           speaker echo can trigger it. Use headphones or lower the volume if it does).
+     * ...or one of these stop words, however short. Matched anywhere in the transcript (Thai: inside the text).
+     * Fillers ("uh", "mm", "okay", "ครับ": NOISE_FRAGMENTS in config/voice-commands.ts) and sound tags like
+     * "(coughs)" never count as words. THAI REVIEW: check the Thai list.
      */
-    mode: 'hybrid' as 'transcript' | 'hybrid',
-    /** Mic must be this many times louder than the background level to count as speech... */
-    energyRatio: 3,
-    /** ...and this much louder while Icarus is speaking (echo protection). */
-    energyRatioWhileSpeaking: 6,
-    /** Smallest mic level (0 to 1) that can ever count as speech. */
-    minRms: 0.015,
-    /** How long the mic must stay loud before we call it speech. */
-    onsetMs: 120,
-    /** Partials shorter than this are ignored for barge-in. */
-    minPartialChars: 2,
-    /** Partials at least this long that match what Icarus is saying are treated as echo. */
+    stopWords: {
+      en: ['stop', 'wait', 'hold on', 'hang on', 'cancel'],
+      th: ['หยุด', 'เดี๋ยว', 'รอก่อน', 'รอแป๊บ', 'พอแล้ว', 'ยกเลิก', 'เงียบ'],
+    },
+    /** Transcripts at least this long that match what Icarus is saying are echo (English. Thai matches loosely). */
     echoMinChars: 8,
   },
 
-  // ---- Local voice activity detection (energy based) ----
+  // ---- Local voice activity detection (client/vad.ts) ----
+  // For TIMING only: when the user started and stopped speaking (latency numbers, the echo check, the confirm rule).
+  // It never stops Icarus. It measures against the same noise floor as barge-in.
   vad: {
     /** Silence after speech before we say the user stopped. Used for timing and idle checks. */
     hangoverMs: 400,
+    /** How long the mic must stay loud before we call it speech. */
+    onsetMs: 120,
+    /** Smallest mic level (0 to 1) that can ever count as speech. */
+    minRms: 0.015,
+    /** Mic must be this many times louder than the noise floor to count as speech... */
+    energyRatio: 3,
+    /** ...and this much louder while Icarus is speaking (echo protection). */
+    energyRatioWhileSpeaking: 6,
   },
 
   // ---- Credits protection ----

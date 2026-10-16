@@ -102,7 +102,7 @@ function wire(v: IcarusVoice): void {
   v.on('bargeIn', ({ source, ms }) => {
     const text = ms === null ? 'n/a' : `${ms}`;
     el.barge.textContent = `${text} (${source})`;
-    el.barge.className = ms !== null && ms < 500 ? 'good' : 'bad';
+    el.barge.className = ms !== null && ms < 2000 ? 'good' : 'bad'; // it waits for Scribe's words (barge-in.ts)
     log(`barge-in by ${source}: ${text} ms`);
   });
   v.on('turnMetrics', showMetrics);

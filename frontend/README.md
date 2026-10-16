@@ -25,7 +25,7 @@ No ElevenLabs key? `cd voice && npm run dev:fake`. Same app, with beeps instead 
 | `Icarus.setBackend(fn)` for answers | Not replaced. The prototype's own demo assistant answers. Plug the real one in with `Icarus.setBackend` |
 | `demoRespond(text, ctx)`, the one method every typed or spoken request goes through | Wrapped, to add **Ask U-topia** answers and **handoffs to U-Bot** (see below) |
 
-Voice commands ("stop", "repeat that", "louder", "slower", "go back") are handled by the voice module, so the prototype never sees them as questions. You can interrupt Icarus by talking over it.
+Voice commands ("stop", "repeat that", "louder", "slower", "go back") are handled by the voice module, so the prototype never sees them as questions. You can interrupt Icarus by talking over it: it stops for real speech (loud, sustained, with words), not for background noise. Tapping the mascot always stops it at once.
 
 If the mic is blocked or the voice server is not running, the prototype falls back to its tap-a-phrase demo mode by itself. The pill under the phone says what the voice stack is doing and shows any problem. Click it to hide it.
 
