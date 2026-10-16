@@ -14,6 +14,7 @@ import { installTour, type TourInstance } from './tour';
 import { installUtopiaRouting, withUtopiaRouting, type PrototypeInstance } from './utopia-bridge';
 import { attachTts, installVoice } from './voice-bridge';
 import { installCardGuard } from './card-guard';
+import { installMockVoice } from './mock-voice';
 import { installDemoData } from './demo-data';
 import { createCardChips } from './card-chips';
 import { backendNudge, installIdleNudge } from './idle-nudge';
@@ -227,6 +228,7 @@ async function main() {
             }),
         });
       }
+      if (PARAMS.has('mock')) installMockVoice(instance as never); // live demo: the Icarus button never listens (mock-voice.ts)
       installCardGuard(instance as never); // a frozen card blocks buying (after the demo-data adapter: outermost)
       // Stuck for 15 s on a money screen? Icarus quietly offers help (rules on the backend, no model; silent).
       if (backend) {
