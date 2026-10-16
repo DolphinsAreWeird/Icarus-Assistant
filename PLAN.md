@@ -15,7 +15,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 ## Issue checklist
 
 - [x] **I01: Preserve decimal purchase amounts.** Keep requested, spoken, displayed and executed amounts equal; regress 1000.49/1000.50 and boundaries.
-- [ ] **I02: Suppress unsupported generated financial figures.** Reject unsafe text before display, speech, history and caching; retain grounded tool output.
+- [x] **I02: Suppress unsupported generated financial figures.** Reject unsafe text before display, speech, history and caching; retain grounded tool output.
 - [ ] **I03: Ground legacy trade arguments.** Require the user's purchase intent, asset, side and amount before producing an actionable preview.
 - [ ] **I04: Isolate cached contextual answers.** Prevent reuse across users, sessions or different relevant conversation histories.
 - [x] **I05: Preserve reviewed server preview terms.** Carry preview identity/terms into native review; never silently create and execute an unseen replacement.
@@ -44,6 +44,8 @@ The issue's commit subject identifies its checkpoint. Hashes will be collected a
 | I06 | `fix: block global reset on public demo proxy`: 54 voice tests and typecheck passed; encoded paths/local reset covered | SOL 6.1 High approved; independently reran 22 proxy regressions |
 
 | I05 | `fix: confirm only the reviewed server purchase preview`: 115 frontend tests, typecheck and build passed; expiry, repricing, retries and edited-order regressions | SOL 6.1 High approved; independently reran 53 purchase tests |
+
+| I02 | `fix: suppress ungrounded bilingual financial figures`: 275 full pinned backend tests passed; 175 focused guard tests, including English/Thai digit and spelled amounts, voice/history/cache | SOL 6.1 High approved after bilingual bypass corrections; independently reran 175 tests |
 
 ## Execution notes
 

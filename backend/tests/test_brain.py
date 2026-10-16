@@ -409,10 +409,26 @@ def test_bad_arguments_from_a_weak_model_become_tool_errors(cache, state):
     assert reply.ui_actions == [] and reply.text == "Sorry, try again."
 
 
-def test_made_up_number_is_flagged(cache, state):
+def test_made_up_number_is_replaced_before_delivery_and_history(cache, state):
     fake = FakeLLM([calls(("get_prices", {"asset_ids": ["XAU"]})),
                     text("Gold is about 134,000 baht, up 0.5% today. Last week it was 99,999.")])
-    assert ask(Assistant(fake, state, cache), "gold price?").debug["unbacked_numbers"] == [99999.0]
+    reply = Assistant(fake, state, cache).chat(ChatRequest(
+        session_id="s1", user_id="u_new", text="gold price?", input_mode="voice"))
+    assert reply.debug["unbacked_numbers"] == [99999.0]
+    assert reply.status == "unavailable" and reply.speak
+    assert "99,999" not in reply.text and reply.speech is None
+    assert reply.ui_actions == []
+    assert state.sessions["u_new:s1"][-1]["content"] == reply.text
+    assert "99,999" not in json.dumps(state.sessions)
+
+
+def test_grounded_tool_figures_and_user_amounts_survive(cache, state):
+    fake = FakeLLM([calls(("get_prices", {"asset_ids": ["XAU"]})),
+                    text("Gold is about 134,000 baht, up 0.5% today; your budget is 1,000.49 baht.")])
+    reply = ask(Assistant(fake, state, cache), "Explain gold pricing for my 1,000.49 baht budget")
+    assert reply.status == "ok" and reply.debug["unbacked_numbers"] == []
+    assert "134,000" in reply.text and "1,000.49" in reply.text
+    assert {source.tool for source in reply.sources} == {"get_prices"}
 
 
 def test_think_tags_are_removed(cache, state):
@@ -437,6 +453,22 @@ def test_checks():
     assert unbacked_numbers("about 2.7 million baht", [{"p": 2_729_983.59}], "") == []
     assert unbacked_numbers("down about 3%", [{"c": -3.02}], "") == []
     assert unbacked_numbers("in 2 steps", [], "") == []
+    assert unbacked_numbers("ราคา999999บาท", [], "") == [999999.0]
+    assert unbacked_numbers("ราคาหนึ่งล้านบาท", [], "") == [1000000.0]
+    assert unbacked_numbers("ราคาหนึ่งแสนสามหมื่นสี่พันบาท", [{"p": 134000}], "") == []
+    assert unbacked_numbers("ราคาสองจุดเจ็ดล้านบาท", [{"p": 2729983.59}], "") == []
+    assert unbacked_numbers("ค่าธรรมเนียมห้าบาท", [], "") == [5.0]
+    assert unbacked_numbers("เพิ่มขึ้นยี่สิบเอ็ดเปอร์เซ็นต์", [], "") == [21.0]
+    assert unbacked_numbers("ฉันมีหนึ่งร้อยยี่สิบสามบาท", [], "ฉันมี 123 บาท") == []
+    assert unbacked_numbers("หนึ่งขั้นตอนและหลายพันเรื่อง", [], "") == []
+    assert unbacked_numbers("ราคา2.7ล้านบาท", [{"p": 2729983.59}], "") == []
+    assert unbacked_numbers("one million baht", [], "") == [1000000.0]
+    assert unbacked_numbers("two point seven million baht", [{"p": 2729983.59}], "") == []
+    assert unbacked_numbers("five percent", [], "") == [5.0]
+    assert unbacked_numbers("one step and a card", [], "") == []
+    assert unbacked_numbers("Your budget is one thousand baht", [], "My budget is 1000 baht") == []
+    assert unbacked_numbers("The fee is 5 baht", [], "") == [5.0]
+    assert unbacked_numbers("The fee is ฿5", [], "") == [5.0]
     assert unbacked_numbers("over the last 24 hours", [], "") == []
     # caught live: mistral said "up 5 percent" when the tool said 0.2
     assert unbacked_numbers("gold went up 5 percent", [{"c": 0.2}], "") == [5.0]

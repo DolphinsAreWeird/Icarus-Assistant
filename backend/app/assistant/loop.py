@@ -120,10 +120,11 @@ class Assistant:
             if done is None:
                 return None
             text, calls = done
-            history.extend([{"role": "user", "content": req.text}, {"role": "assistant", "content": text}])
+            reply = self._finish(req, ctx, text, started, norm, turn | info, route=route, model_calls=calls,
+                                 **self._who(calls))
+            history.extend([{"role": "user", "content": req.text}, {"role": "assistant", "content": reply.text}])
             trim(history)
-            return self._finish(req, ctx, text, started, norm, turn | info, route=route, model_calls=calls,
-                                **self._who(calls))
+            return reply
 
         reply = None
         if fastpath.enabled():
@@ -177,7 +178,7 @@ class Assistant:
                     text = REFUSAL_REPLY[lang]
                     history.append({"role": "assistant", "content": text})
                     break
-                history.append(msg)
+                history.append(dict(msg))
                 if not msg.get("tool_calls"):
                     text = THINK_TAGS.sub("", msg["content"]).strip()
                     break
@@ -193,8 +194,6 @@ class Assistant:
         except Exception:
             del history[start_len:]  # drop this turn so the session stays valid
             raise
-        trim(history)
-
         if not text:  # the model said nothing: say what its tools did, if they said it themselves
             text = said_by_tools(results, lang) or FALLBACK_REPLY[lang]
         # a fact we gave the model is a source when it backs a number nothing before it backs
@@ -205,12 +204,21 @@ class Assistant:
                 cited, unbacked = cited + [envelope], left
         reply = self._finish(req, ctx, text, started, norm, turn, extra=cited, route="model", model_calls=calls,
                              finish_reason=finish, **self._who(calls))
+        # Only the checked response may become conversational memory. Tool-call messages
+        # retain their pairing, but their optional generated prose is never trusted.
+        for message in history[start_len:]:
+            if message["role"] == "assistant":
+                message["content"] = "" if message.get("tool_calls") else reply.text
+        if history[-1]["role"] != "assistant" or history[-1].get("tool_calls"):
+            history.append({"role": "assistant", "content": reply.text})
+        trim(history)
         keep, personal = reusable(used)
         if (keep and fastpath.enabled() and standalone(norm) and finish != "content_filter"
-                and text != FALLBACK_REPLY[lang]):
+                and text != FALLBACK_REPLY[lang] and reply.status == "ok"):
             self.answers.put(self._cache_key(req, user_id, lang, norm, start, facts, personal),
                              {"text": reply.text, "ui_actions": reply.ui_actions,
-                              "sources": [s.model_dump() for s in reply.sources], "model": reply.debug["model"]})
+                              "sources": [s.model_dump() for s in reply.sources], "model": reply.debug["model"],
+                              "grounding": [*ctx.results.values(), *cited]})
         return reply
 
     # ---------- the answer cache ----------
@@ -225,6 +233,10 @@ class Assistant:
         hit = (self.answers.get(self._cache_key(req, user_id, lang, norm, start, facts, False))
                or self.answers.get(self._cache_key(req, user_id, lang, norm, start, facts, True)))
         if hit is None:
+            return None
+        # Source labels alone cannot prove a cached figure. Old entries without the
+        # original tool evidence must go through the model again if they contain figures.
+        if unbacked_numbers(hit["text"], hit.get("grounding", []), req.text):
             return None
         history.extend([{"role": "user", "content": req.text}, {"role": "assistant", "content": hit["text"]}])
         trim(history)
@@ -245,6 +257,13 @@ class Assistant:
                 "model": getattr(self.llm, "last_model", None) or self.llm.model}
 
     def _finish(self, req, ctx, text, started, norm, turn, extra=(), **debug) -> ChatReply:
+        envelopes = list(ctx.results.values()) + list(extra)
+        unbacked = unbacked_numbers(text, envelopes, req.text)
+        if unbacked:
+            text = ("I can't verify those figures. Please ask for a current price or account summary."
+                    if turn["lang"] == "en" else
+                    "ยังตรวจสอบตัวเลขเหล่านั้นไม่ได้ กรุณาถามราคาหรือสรุปบัญชีอีกครั้ง")
+            ctx.ui_actions = []
         text = DASH.sub(", ", text)
         ctx.ui_actions = ui.finalize(ctx.ui_actions)
         cards = {a["card_type"] for a in ctx.ui_actions if a["type"] == "card"}
@@ -254,15 +273,15 @@ class Assistant:
             text = first_sentences(text, 2)  # never long; a trade keeps its "tap Confirm"
         for action in ctx.ui_actions:  # last gate: only the closed set ever leaves the backend
             ui.validate(action)
-        envelopes = list(ctx.results.values()) + list(extra)
         return ChatReply(
             text=text,
+            status="unavailable" if unbacked else "ok",
             speak=req.input_mode == "voice",
             ui_actions=ctx.ui_actions,
             sources=[SourceRef(result_id=e["result_id"], tool=e["tool"], **e["source"]) for e in envelopes],
             debug=turn | {"finish_reason": None} | debug | {
                 "screen_after": ctx.ui_state.screen, "asset_after": ctx.ui_state.asset,
-                "unbacked_numbers": unbacked_numbers(text, envelopes, req.text),
+                "unbacked_numbers": unbacked,
                 "latency_ms": round((time.perf_counter() - started) * 1000)},
         )
 

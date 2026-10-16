@@ -286,6 +286,76 @@ def test_long_model_answers_are_cut_to_two_sentences_without_em_dashes(cache, st
 
 # ---------- the answer cache, the log, warming up ----------
 
+@pytest.mark.parametrize("claim, figure, value, lang", [
+    ("Bitcoin costs 999999 baht today.", "999999", 999999.0, "en"),
+    ("ราคา999999บาท", "999999", 999999.0, "th"),
+    ("ราคาหนึ่งล้านบาท", "หนึ่งล้าน", 1000000.0, "th"),
+    ("Bitcoin costs one million baht today.", "one million", 1000000.0, "en"),
+])
+def test_invented_price_is_never_cached_or_retained(cache, state, claim, figure, value, lang):
+    fake = FakeLLM([text(claim)] * 2)
+    bot = Assistant(fake, state, cache)
+    for _ in range(2):
+        reply = bot.chat(ChatRequest(session_id="s1", user_id="u_new",
+                                    text="Is bitcoin risky to hold long term?", lang=lang,
+                                    input_mode="voice", snapshot=HOME))
+        assert reply.status == "unavailable"
+        assert reply.debug["route"] == "model"
+        assert figure not in reply.text and reply.speak and reply.speech is None
+        assert reply.debug["unbacked_numbers"] == [value]
+    assert len(fake.calls) == 2 and not bot.answers._items
+    assert figure not in json.dumps(state.sessions, ensure_ascii=False)
+    assert figure not in json.dumps(fake.calls[1]["messages"], ensure_ascii=False)
+
+
+@pytest.mark.parametrize("claim, lang", [
+    ("Gold costs one hundred and thirty-four thousand baht.", "en"),
+    ("ทองราคา134000บาท", "th"),
+    ("ทองราคาหนึ่งแสนสามหมื่นสี่พันบาท", "th"),
+])
+def test_grounded_word_and_unspaced_thai_prices_remain_cacheable(cache, state, claim, lang):
+    fake = FakeLLM([calls(("get_prices", {"asset_ids": ["XAU"]})), text(claim)])
+    bot = Assistant(fake, state, cache)
+    request = ChatRequest(session_id="s1", user_id="u_new", text="Is gold risky to hold long term?",
+                          input_mode="voice", lang=lang, snapshot=HOME)
+    first = bot.chat(request)
+    again = bot.chat(request)
+    assert first.status == again.status == "ok"
+    assert first.text == again.text == claim and first.speak and again.speak
+    assert first.sources and again.sources == first.sources
+    assert again.debug["route"] == "cache" and len(fake.calls) == 2
+
+
+def test_prepared_wording_cannot_retain_invented_figures(cache, state):
+    odd = {**HOME, "portfolio": {"value_usd": 4825.5, "positions": 3}}
+    fake = FakeLLM([text("Your portfolio is worth 999999 baht.")])
+    reply = ask(Assistant(fake, state, cache), "explain my portfolio", snapshot=odd)
+    assert reply.debug["route"] == "prepared" and reply.debug["model_calls"] == 1
+    assert reply.status == "unavailable" and "999999" not in reply.text
+    assert "999999" not in json.dumps(state.sessions)
+
+
+def test_cached_figures_are_rechecked_against_retained_evidence(cache, state):
+    fake = FakeLLM([text("Gold is about 134,000 baht.")])
+    bot = Assistant(fake, state, cache)
+    question = "Explain gold pricing in detail"
+    first = ask(bot, question)
+    assert first.status == "ok" and first.sources
+    cached = ask(bot, question)
+    assert cached.debug["route"] == "cache" and cached.text == first.text
+    assert cached.sources == first.sources
+    # Simulate a stale/unsafe entry created before the guard, with source labels
+    # but no evidence supporting its invented number.
+    key = next(iter(bot.answers._items))
+    hit = bot.answers.get(key)
+    hit["text"] = "Bitcoin costs 999999 baht today."
+    hit.pop("grounding")
+    bot.answers.put(key, hit)
+    bot.llm = FakeLLM([text("Gold is about 134,000 baht.")])
+    checked = ask(bot, question)
+    assert checked.debug["route"] == "model" and checked.status == "ok"
+    assert "999999" not in json.dumps(state.sessions)
+
 def test_model_answers_are_reused_for_the_same_question_screen_and_facts(cache, state):
     fake = FakeLLM([calls(("get_history", {"asset_id": "BTC", "period": "1Y"})),
                     text("Bitcoin is down about 24% over the past year.")])
