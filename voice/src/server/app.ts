@@ -7,6 +7,7 @@
 //   POST /api/friction       every final transcript goes to the logFriction stub
 //   POST /api/turn-metrics   per-turn latency numbers
 //   GET  /api/health         what is configured (never returns the key)
+//   *    /brain/*            the backend, when BACKEND_PROXY_URL is set (the hosted demo: one address for everything)
 //
 // The API key stays on this server. The browser never sees it.
 
@@ -42,12 +43,37 @@ export interface AppDeps {
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
+/**
+ * On the public demo, at most `max` requests a minute per visitor for each kind of request, so one visitor (or a bot)
+ * can't spend the voice and model budget for everyone. Off when running locally.
+ */
+function makeLimiter(enabled: boolean) {
+  const hits = new Map<string, number[]>();
+  return (kind: string, max: number) => (req: Request, res: Response, next: NextFunction) => {
+    if (!enabled) return next();
+    const key = `${kind}:${req.ip ?? 'unknown'}`;
+    const now = Date.now();
+    const recent = (hits.get(key) ?? []).filter((t) => now - t < 60_000);
+    if (recent.length >= max) {
+      res.setHeader('Retry-After', '20');
+      return void res.status(429).json({ error: { code: 'slow_down', message: 'Too many requests. Wait a few seconds.' } });
+    }
+    recent.push(now);
+    if (hits.size > 5000) hits.clear(); // a crude cap: the demo has a handful of visitors
+    hits.set(key, recent);
+    next();
+  };
+}
+
 export function createApp(deps: AppDeps): express.Express {
   const { cfg, assistant, tts, port, usage, friction, utopia } = deps;
   const log = deps.log ?? ((l: string) => console.log(l));
   const redact = makeRedactor(cfg.apiKey, cfg.utopiaApiKey);
   const app = express();
   app.disable('x-powered-by');
+  // Behind the host's proxy, the visitor's address is in X-Forwarded-For.
+  if (cfg.publicDemo) app.set('trust proxy', true);
+  const limit = makeLimiter(Boolean(cfg.publicDemo));
 
   // ---- CORS: Oasis's frontend runs on another port while developing ----
   app.use((req, res, next) => {
@@ -84,11 +110,14 @@ export function createApp(deps: AppDeps): express.Express {
       utopia: cfg.utopiaMode,
       ubot: cfg.ubotMode,
       stt: { commitStrategy: cfg.stt.commitStrategy, vadSilenceSecs: cfg.stt.vadSilenceSecs },
+      // Where the app finds the backend on this address (the hosted demo). Absent when it runs elsewhere.
+      ...(cfg.backendProxyUrl ? { backend: '/brain' } : {}),
+      ...(cfg.publicDemo ? { publicDemo: true } : {}),
     });
   });
 
   // ---- speech-to-text token ----
-  app.post('/api/scribe-token', async (req, res) => {
+  app.post('/api/scribe-token', limit('stt', 12), async (req, res) => {
     const language: LangSetting = ['en', 'th', 'auto'].includes(req.body?.language) ? req.body.language : 'en';
     const mode: Mode = req.body?.mode === 'push-to-talk' ? 'push-to-talk' : 'hands-free';
     if (!port) return fail(res, 503, 'no_api_key', 'ELEVENLABS_API_KEY is not set on the server.');
@@ -119,7 +148,7 @@ export function createApp(deps: AppDeps): express.Express {
   });
 
   // ---- assistant ----
-  app.post('/api/ask', async (req, res) => {
+  app.post('/api/ask', limit('ask', 30), async (req, res) => {
     const body = isObject(req.body) ? req.body : {};
     const text = typeof body.text === 'string' ? body.text.trim() : '';
     if (!text || text.length > 2000) return fail(res, 400, 'bad_request', 'text is required (up to 2000 characters).');
@@ -141,7 +170,7 @@ export function createApp(deps: AppDeps): express.Express {
 
   // ---- U-topia questions and handoffs to U-Bot ----
   // Body: { text, language, fallback? }. Reply: { kind: 'answer' | 'handoff' | 'none', ... } (see UtopiaRoute).
-  app.post('/api/utopia/route', async (req, res) => {
+  app.post('/api/utopia/route', limit('route', 40), async (req, res) => {
     const body = isObject(req.body) ? req.body : {};
     const text = typeof body.text === 'string' ? body.text.trim() : '';
     if (!text || text.length > 1000) return fail(res, 400, 'bad_request', 'text is required (up to 1000 characters).');
@@ -161,7 +190,7 @@ export function createApp(deps: AppDeps): express.Express {
   });
 
   // ---- text-to-speech (streamed) ----
-  app.post('/api/tts', async (req, res) => {
+  app.post('/api/tts', limit('tts', 60), async (req, res) => {
     const body = isObject(req.body) ? req.body : {};
     const text = typeof body.text === 'string' ? body.text : '';
     const lang: Lang = body.language === 'th' ? 'th' : 'en';
@@ -248,10 +277,38 @@ export function createApp(deps: AppDeps): express.Express {
     res.status(204).end();
   });
 
+  // ---- the backend (the brain), when it runs next to this server: /brain/x -> BACKEND_PROXY_URL/x ----
+  // The hosted demo is one address, so the app needs no backend URL and there is no CORS.
+  if (cfg.backendProxyUrl) {
+    const target = cfg.backendProxyUrl;
+    app.use('/brain', limit('brain', 40), async (req, res) => {
+      const hasBody = !['GET', 'HEAD'].includes(req.method) && req.body !== undefined;
+      try {
+        const upstream = await fetch(target + req.url, {
+          method: req.method,
+          headers: hasBody ? { 'content-type': 'application/json' } : {},
+          ...(hasBody ? { body: JSON.stringify(req.body) } : {}),
+          signal: AbortSignal.timeout(45_000),
+        });
+        res.status(upstream.status);
+        const type = upstream.headers.get('content-type');
+        if (type) res.setHeader('Content-Type', type);
+        res.setHeader('Cache-Control', 'no-store');
+        res.send(Buffer.from(await upstream.arrayBuffer()));
+      } catch (err) {
+        log(`[brain] ${req.method} ${req.path} failed: ${redact((err as Error).message)}`);
+        fail(res, 502, 'backend_unreachable', 'The assistant backend did not answer.');
+      }
+    });
+  }
+
   // ---- the Icarus app (Oasis's prototype, built from ../frontend) at /app/ ----
   // Same origin as the voice API, so there is no CORS to set up and the mic works on localhost.
   // A stand-in for U-Bot until U-topia shares an API (ubot-mock/index.ts).
   if (deps.ubotSessions) mountUbotMock(app, deps.ubotSessions);
+
+  // The public demo opens on the app. The voice test page stays at /index.html.
+  if (cfg.publicDemo) app.get('/', (_req, res) => res.redirect(302, '/app/'));
 
   app.use('/app', express.static(path.join(VOICE_ROOT, '..', 'frontend', 'dist')));
 

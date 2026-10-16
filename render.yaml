@@ -1,0 +1,29 @@
+# Render Blueprint for the hosted demo (render.com > New > Blueprint > this repo). One web service from the Dockerfile.
+# Render asks for the three keys when the Blueprint is created; they live only in Render's settings.
+# Starter plan: the service never sleeps, so a judge never waits for a cold start.
+services:
+  - type: web
+    name: icarus
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: VOICE_ID_EN
+        value: XiPS9cXxAVbaIWtGDHDh
+      - key: VOICE_ID_TH
+        value: mYcpTKg1oj1H5CtzUZNO
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: LLM_MODEL
+        value: gemini-3-flash-preview,gemini-3.1-flash-lite
+      - key: LLM_TIMEOUT_S
+        value: "6"

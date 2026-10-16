@@ -67,6 +67,11 @@ export interface ServerConfig {
   logDir: string;
   /** '*' or a list of allowed origins for CORS. */
   allowedOrigins: '*' | string[];
+
+  /** The backend (the brain) when it runs next to this server. /brain/* is passed to it, so the app needs one address. */
+  backendProxyUrl?: string;
+  /** The hosted demo for judges: / opens the app, and each visitor gets a fair share of the API budget. */
+  publicDemo?: boolean;
 }
 
 const num = (v: string | undefined, fallback: number) => {
@@ -152,6 +157,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     demoAudioDir: path.resolve(VOICE_ROOT, env.DEMO_AUDIO_DIR?.trim() || 'demo-audio'),
     logDir: path.resolve(VOICE_ROOT, env.LOG_DIR?.trim() || 'logs'),
     allowedOrigins: !origins || origins === '*' ? '*' : origins.split(',').map((s) => s.trim()),
+
+    backendProxyUrl: orUndefined(env.BACKEND_PROXY_URL)?.replace(/\/+$/, ''),
+    publicDemo: bool(env.PUBLIC_DEMO, false),
   };
 }
 
