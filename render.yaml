@@ -33,9 +33,9 @@ services:
       - key: FASTPATH
         value: "1"
       - key: VOICE_ID_EN
-        value: OgYaI2gRZaQ7b2dSmv2Z
+        value: mYcpTKg1oj1H5CtzUZNO
       - key: VOICE_ID_TH
-        value: OgYaI2gRZaQ7b2dSmv2Z
+        value: mYcpTKg1oj1H5CtzUZNO
       - key: LLM_PROVIDER
         value: gemini
       - key: LLM_MODEL

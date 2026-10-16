@@ -160,7 +160,7 @@ export function useIcarusVoice(serverUrl: string) {
 
 Notes:
 
-- **Voice.** Since 16 Oct Icarus has **one voice in both languages**: **Icarus Soft** (`OgYaI2gRZaQ7b2dSmv2Z`), an original anime-style voice we made with ElevenLabs Voice Design for the mascot (not a clone of anyone). English uses Flash v2.5, Thai uses v4 Turbo; the voice is the same. Before that: Brittney (English) and Malee (Thai) from the Voice Library, see [Choosing the voices](#choosing-the-voices). **A Thai speaker still has to listen to the Thai.**
+- **Voice.** Since 16 Oct Icarus uses **Malee** (`mYcpTKg1oj1H5CtzUZNO`, Voice Library) for **both English and Thai**, so the mascot is one character. KP picked her over the designed voices below after listening. **A Thai speaker still has to listen to the Thai.**
 - **Key permissions.** A restricted key works for the app if it has **Text to Speech** and **Speech to Text**. `npm run check` also wants **Models: read** and **Voices: read**, and explains if they are missing.
 - If ElevenLabs text-to-speech fails, the module falls back to the browser's own voice (macOS has an English voice and a Thai one called Kanya). It sounds different, but everything keeps working.
 

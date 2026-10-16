@@ -496,11 +496,14 @@ export function createGuide(getPhone: () => Element | null): Guide {
         }
       }
     }
-    pointer.style.opacity = pointing ? '1' : '0';
+    // Fade in, but vanish at once: a fading arrow left over the mascot as it flies off looks broken.
+    const showArrow = pointing && gap > -4;
+    pointer.style.transition = showArrow ? 'opacity .3s ease' : 'none';
+    pointer.style.opacity = showArrow ? '1' : '0';
     if (ptr.shown) {
       pointer.style.transform = `translate(${(ptr.x - 32).toFixed(1)}px, ${(ptr.y - 32).toFixed(1)}px) rotate(${ptr.angle.toFixed(3)}rad) scale(${ptr.scale.toFixed(3)})`;
     }
-    trailA = approach(trailA, pointing && gap > 14 ? 1 : 0, 0.12, dt);
+    trailA = pointing && gap > 14 ? approach(trailA, 1, 0.12, dt) : 0;
     trail.setAttribute('opacity', trailA.toFixed(3));
     if (!point) ptr.shown = false;
 
@@ -598,6 +601,7 @@ export function createGuide(getPhone: () => Element | null): Guide {
       cancelAnimationFrame(raf);
       bubble.style.opacity = '0';
       ask.style.opacity = '0';
+      pointer.style.transition = 'none';
       pointer.style.opacity = '0';
       trail.setAttribute('opacity', '0');
       shade.setAttribute('opacity', '0');
