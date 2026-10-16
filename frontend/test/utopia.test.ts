@@ -107,6 +107,18 @@ describe('Ask U-topia, inside the real prototype', () => {
   });
 });
 
+describe('a finance question the app has no data for, inside the real prototype', () => {
+  it('says plainly what Icarus can do instead of a dead end or a U-Bot handoff, and never a number', async () => {
+    const f = makeFetch(standard);
+    install(f.fn);
+    await ask('how is the S&P 500 doing today?');
+    const text = document.body.textContent ?? '';
+    expect(text).toContain("I don't have data for that in this app, so I won't guess a number.");
+    expect(card()).toBeNull();
+    expect(f.calls.some((c) => c.fallback)).toBe(false); // not sent to U-Bot
+  });
+});
+
 describe('handoff to U-Bot, inside the real prototype', () => {
   it('says it cannot do it, shows the card with a real link, and logs a friction event', async () => {
     install(makeFetch(standard).fn);

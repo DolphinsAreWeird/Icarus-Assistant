@@ -7,7 +7,8 @@
 //        answer  -> a question about U-topia ("What is U-Coin?"): answer it (mock glossary for now)
 //        handoff -> something Icarus cannot do (travel, rides, groceries, drawing...): say so and show the U-Bot card
 //        none    -> a normal in-app request: the prototype answers it exactly as before
-//   2. if the prototype itself falls back to "I didn't catch that" on a real request, offer U-Bot instead of a dead end
+//   2. if the prototype itself falls back to "I didn't catch that" on a real request, offer U-Bot instead of a dead end;
+//      but a finance question (S&P 500, interest rates...) is ours, so Icarus says plainly what it has instead
 //
 // If the voice server is down, everything falls through to the prototype's own answers. Nothing breaks.
 
@@ -40,6 +41,15 @@ interface RouteReply {
 }
 
 const THAI = /[฀-๿]/;
+
+/** Markets and money: if the prototype cannot answer one of these, it is not U-Bot's job either. */
+const FINANCE = /s&p|\bsp ?500\b|nasdaq|dow jones|\bdow\b|\bindex\b|indices|stocks?\b|shares?\b|\betf|\bfunds?\b|bonds?\b|interest rate|inflation|forex|exchange rate|currency|\bmarket|\bprice|\bcrypto|\bcoin|\btoken|dividend|portfolio|invest|ราคา|หุ้น|ดัชนี|ตลาด|กองทุน|ดอกเบี้ย|ค่าเงิน|ลงทุน|พันธบัตร/i;
+
+// THAI REVIEW: the Thai line.
+const NO_DATA = {
+  en: "I don't have data for that in this app, so I won't guess a number. I can show prices and charts for the assets in this app, explain anything on your screen, or set up a buy.",
+  th: 'ในแอปนี้ยังไม่มีข้อมูลเรื่องนั้น ฉันจะไม่เดาตัวเลข ฉันช่วยดูราคาและกราฟของสินทรัพย์ในแอปนี้ อธิบายอะไรก็ได้บนหน้าจอ หรือเตรียมการซื้อให้ได้',
+} as const;
 const SUGGESTIONS = ['Show me gold', 'What can you do?'];
 
 type Responder = (q: string, ctx: unknown) => unknown;
@@ -90,6 +100,11 @@ function makeRouter(options: UtopiaBridgeOptions, inst: PrototypeInstance) {
     const answer = await next();
     // The prototype's dead end. A real request deserves a handoff, a misheard word does not.
     if (typeof (answer as { text?: unknown })?.text === 'string' && (answer as { text: string }).text.startsWith("I didn't catch that")) {
+      // A finance question we have no data for: say so, honestly, with what Icarus can do. Never a made-up number.
+      if (FINANCE.test(q)) {
+        inst.log?.('no_data', { question: q }); // the friction map shows what people wanted that the app lacks
+        return reply(NO_DATA[th ? 'th' : 'en'], { emo: 'thinking', src: ["Not in this app's data"] });
+      }
       const fallback = await askServer(q, language, true);
       if (fallback.kind === 'handoff' && fallback.handoff) return handoffReply(fallback.handoff, th);
     }
