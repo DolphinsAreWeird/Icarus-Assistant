@@ -284,6 +284,19 @@ export function createApp(deps: AppDeps): express.Express {
     app.use('/brain', limit('brain', 40), async (req, res) => {
       const hasBody = !['GET', 'HEAD'].includes(req.method) && req.body !== undefined;
       try {
+        if (cfg.publicDemo) {
+          // Match what the upstream receives: URL normalization, one path decode,
+          // and slash/dot segments. Query strings never change route permission.
+          const segments: string[] = [];
+          const pathname = decodeURIComponent(new URL(target + req.url).pathname);
+          for (const segment of pathname.replace(/\\/g, '/').split('/')) {
+            if (segment === '..') segments.pop();
+            else if (segment && segment !== '.') segments.push(segment);
+          }
+          if (/(?:^|\/)demo\/reset$/i.test(segments.join('/'))) {
+            return fail(res, 403, 'public_reset_disabled', 'Global demo reset is disabled on the public demo.');
+          }
+        }
         const upstream = await fetch(target + req.url, {
           method: req.method,
           headers: hasBody ? { 'content-type': 'application/json' } : {},
