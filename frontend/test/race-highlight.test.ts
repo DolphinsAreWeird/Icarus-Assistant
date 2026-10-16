@@ -22,11 +22,11 @@ beforeEach(async () => {
 });
 afterEach(async () => { await act(async () => root.unmount()); delete (window as { Icarus?: unknown }).Icarus; setMascotFallback(false); });
 
-it('tints, rings and pulses the two race rows and rings the stopwatch; the other rows stay quiet', () => {
+it('tints and rings the two race rows and rings the stopwatch; the other rows stay quiet', () => {
   const out = withJudgeCopy(HTML);
-  expect(out.match(/pulse:'icPulse 1\.8s ease-in-out infinite'/g)).toHaveLength(2);
-  expect(out.match(/pulse:'none'/g)).toHaveLength(4);
-  expect(out).toContain('@keyframes icPulse');
+  expect(out.match(/hl:'#FFEAF1',ring:'#E67895'/g)).toHaveLength(2);
+  expect(out.match(/hl:'transparent',ring:'transparent'/g)).toHaveLength(4);
+  expect(out).not.toContain('c.pulse'); // no animation on the Start buttons
   expect(out).toContain('The race: try both');
 });
 
@@ -36,8 +36,8 @@ it('renders the race rows in the console with the highlight and no template left
   expect(text).toContain('Race 1: without Icarus');
   expect(text).toContain('Race 2: with Icarus');
   expect(document.body.innerHTML).not.toMatch(/\{\{|undefined/);
-  const starts = [...document.querySelectorAll<HTMLElement>('div')].filter((d) => d.textContent === 'Start' && d.style.animation.includes('icPulse'));
+  const starts = [...document.querySelectorAll<HTMLElement>('div')].filter((d) => d.textContent === 'Start');
   expect(starts).toHaveLength(2);
-  const racing = starts[0]!.parentElement as HTMLElement;
-  expect(racing.style.background).toBeTruthy();
+  expect(starts.every((d) => !d.style.animation)).toBe(true); // the Start buttons stay still
+  expect((starts[0]!.parentElement as HTMLElement).style.background).toBeTruthy();
 });
