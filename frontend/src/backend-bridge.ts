@@ -10,8 +10,7 @@
 //     draw them, so we show them over the phone (trade-card.ts, chat-cards.ts)
 //
 // A buy comes as a trade preview card with the backend's numbers, and Icarus reads it back EXACTLY from that card
-// (hard rule 3). The user taps Confirm on the card (hard rule 4). An older backend drove the prototype's own buy
-// screens instead; for that, the read-back comes from the prototype's own calc(), what its review screen shows.
+// (hard rule 3). The user taps Confirm (hard rule 4). Native screens retain the same preview identity and terms.
 
 import { withReadbackFields } from '../../voice/src/shared/backend-card';
 import { buildReadback, parsePreview } from '../../voice/src/shared/readback';
@@ -61,6 +60,7 @@ export type PrototypeCalc = (asset: string, amount: number, wallet: string) => {
 export interface PrototypeLike {
   state?: { asst?: string; assetId?: string; walletId?: string };
   calc?: PrototypeCalc;
+  reviewServerPreview?: (preview: Record<string, unknown>) => boolean;
   /** The prototype's own scripted answers. Used when the backend does not answer, so the demo never dead-ends. */
   demoRespond?: (q: string, ctx: unknown) => unknown;
   /** The prototype's own "explain this" answer for a tapped element. */
@@ -73,19 +73,21 @@ const PROTOTYPE_ASSETS: Record<string, string> = { gold: 'XAU', btc: 'BTC', eth:
 /**
  * A buy from the backend's trade card, done on the prototype's OWN buy screens: open the asset, start the buy,
  * type the amount, pick the wallet, stop on the review screen. Then what is on screen, what Icarus says (the
- * prototype's calc) and the demo's stopwatch (it stops on the app's own Confirm purchase) all agree.
+ * server preview) and the demo's stopwatch (it stops on the app's own Confirm purchase) all agree.
  * Null when the prototype cannot do it (a sale, an asset it does not have, no calculator).
  */
 export function buyOnAppScreens(card: Record<string, unknown>, proto: PrototypeLike | null): Array<Record<string, unknown>> | null {
-  if (card.side !== 'buy' || typeof proto?.calc !== 'function') return null;
+  if (card.side !== 'buy' || typeof proto?.reviewServerPreview !== 'function') return null;
   const asset = PROTOTYPE_ASSETS[String(card.asset_id ?? '').toLowerCase()];
   const amount = Number(card.amount_thb);
-  if (!asset || !Number.isFinite(amount) || amount <= 0) return null;
+  if (!asset || !Number.isFinite(amount) || amount <= 0 || typeof card.preview_id !== 'string' ||
+    !['fee_thb', 'price_thb', 'qty', 'you_pay_thb'].every(k => typeof card[k] === 'number' && Number.isFinite(card[k])) ||
+    typeof card.unit !== 'string') return null;
   return [
     { type: 'start_buy', asset },
     { type: 'type_amount', value: amount },
     { type: 'select_wallet', wallet: 'thb' },
-    { type: 'review' },
+    { type: 'review', preview: { ...card, expires_at: card.expires_at ?? (Date.now() / 1000 + Number(card.expires_in_s ?? 0)) } },
   ];
 }
 
@@ -188,15 +190,21 @@ export function toPrototypeReply(r: BackendReply, lang: 'en' | 'th', ctx?: Proto
     if (action) actions.push(action);
   }
   // A buy goes through the app's own screens when it can (see buyOnAppScreens); the card is then not shown.
-  // With ?backend, demo-data.ts makes those screens use the backend's account and fee, so it all agrees.
-  const onScreens = cards.trade ? buyOnAppScreens(cards.trade, proto) : null;
+  // demo-data.ts consumes the attached preview at Review; no local quote replaces its terms.
+  const serverPreview = cards.trade;
+  const onScreens = serverPreview ? buyOnAppScreens(serverPreview, proto) : null;
   if (onScreens) {
     actions.push(...onScreens);
     cards.trade = null;
   }
-  let speech = buyReadback(actions, ctx, proto, lang) ?? r.speech ?? r.text;
-  const preview = cards.trade ? parsePreview(cards.trade) : null;
-  if (preview) speech = `${buildReadback(preview, lang, { prompt: false })} ${STRINGS[lang].lines.tapToConfirm}`;
+  let speech = proto?.reviewServerPreview && !serverPreview && actions.some(a => a.type === 'review')
+    ? (lang === 'th' ? 'ตรวจสอบรายการจากเซิร์ฟเวอร์ก่อน แล้วแตะยืนยันเมื่อพร้อม' : 'Check the server preview on screen, then tap Confirm purchase when you are ready.')
+    : buyReadback(actions, ctx, proto, lang) ?? r.speech ?? r.text;
+  const preview = serverPreview ? parsePreview(serverPreview) : null;
+  if (preview) {
+    const terms = onScreens ? (lang === 'th' ? ` จำนวน ${serverPreview!.qty} ${serverPreview!.unit} ราคาต่อหน่วย ${serverPreview!.price_thb} บาท.` : ` Quantity ${serverPreview!.qty} ${serverPreview!.unit}. Unit price ${serverPreview!.price_thb} baht.`) : '';
+    speech = `${buildReadback(preview, lang, { prompt: false })}${terms} ${onScreens ? STRINGS[lang].lines.tapConfirmPurchase : STRINGS[lang].lines.tapToConfirm}`;
+  }
   return {
     reply: {
       text: r.text,

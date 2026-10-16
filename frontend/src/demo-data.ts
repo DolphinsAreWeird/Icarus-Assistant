@@ -25,12 +25,50 @@ const signedPct = (p: number) => `${p >= 0 ? '+' : '−'}${Math.abs(p).toFixed(2
 
 export function installDemoData(proto: Prototype, url: string, userId: string, onError: (message: string) => void, fetchImpl: typeof fetch = fetch) {
   let bundle: DemoBundle | null = null;
-  let revision = 0, signature = '', pending: Record<string, any> | null = null, busy = false;
+  let revision = 0, signature = '', pending: Record<string, any> | null = null, busy = false, attempted = false;
+  const matches = (p: Record<string, any>, state = proto.state) => state.tab === 'invest' && state.view === 'buy' && ids[state.assetId] === p.asset_id && Number(state.buyAmount) === p.amount_thb && state.walletId === 'thb';
+  const valid = (p: Record<string, any>) => typeof p.preview_id === 'string' && p.side === 'buy' &&
+    ['amount_thb', 'fee_thb', 'price_thb', 'qty', 'you_pay_thb', 'expires_at'].every(k => typeof p[k] === 'number' && Number.isFinite(p[k])) &&
+    p.amount_thb > p.fee_thb && p.fee_thb >= 0 && p.price_thb > 0 && p.qty > 0 && p.you_pay_thb === p.amount_thb &&
+    typeof p.unit === 'string' && (!p.user_id || p.user_id === userId) && (!p.status || p.status === 'pending');
+  const stale = (p: Record<string, any>) => Date.now() / 1000 > p.expires_at;
+  const invalidate = () => { pending = null; attempted = false; proto.setState({ buyStep: 'amount' }); };
+  proto.reviewServerPreview = (preview: Record<string, any>) => {
+    if (!valid(preview) || stale(preview)) { invalidate(); onError('Review a new server preview before confirming.'); return false; }
+    proto.setState((state: any) => {
+      if (!matches(preview, state)) {
+        pending = null; attempted = false;
+        onError('Review the amount again before confirming.');
+        return { buyStep: 'amount' };
+      }
+      pending = Object.freeze({ ...preview }); attempted = false;
+      return { buyStep: 'review' };
+    });
+    return true;
+  };
+  const setState = proto.setState.bind(proto);
+  proto.setState = (patch: any, callback?: () => void) => setState((state: any, props: any) => {
+    const next = typeof patch === 'function' ? patch(state, props) : patch;
+    if (pending && next && (
+      ['assetId', 'buyAmount', 'walletId'].some(k => k in next && String(next[k]) !== String(state[k])) ||
+      ('buyStep' in next && next.buyStep !== 'review') || ('view' in next && next.view !== 'buy') || ('tab' in next && next.tab !== 'invest')
+    )) { pending = null; attempted = false; }
+    return next;
+  }, callback);
+  const doAction = proto.doAction.bind(proto);
+  proto.doAction = (action: Record<string, any>) => {
+    if (action.type === 'review') {
+      if (action.preview) proto.reviewServerPreview(action.preview);
+      else { invalidate(); void manual(false); }
+      return 600;
+    }
+    return doAction(action);
+  };
   const original = Object.fromEntries(['renderVals', 'getContext', 'calc', 'assetSeries', 'pfSummary', 'pfSeries', 'dateLabel'].map(k => [k, proto[k].bind(proto)]));
   const request = async (path: string, body?: unknown) => {
     const res = await fetchImpl(`${url}${path}`, { ...(body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(15000) });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.detail?.message_en ?? 'Demo backend unavailable.');
+    if (!res.ok) throw Object.assign(new Error(data.detail?.message_en ?? 'Demo backend unavailable.'), { code: data.detail?.code });
     return data;
   };
   const chart = (id = proto.state.assetId, period = proto.state.period): Chart | undefined => bundle?.assets[id]?.charts[period];
@@ -68,6 +106,9 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
   proto.calc = (id: string, raw: number, wallet: string) => {
     const old = original.calc!(id, raw, wallet);
     if (!bundle) return old;
+    if (pending && proto.state.buyStep === 'review' && matches(pending) && id === proto.state.assetId && Number(raw) === pending.amount_thb && wallet === 'thb') {
+      return { ...old, amt: pending.amount_thb - pending.fee_thb, fee: pending.fee_thb, total: pending.you_pay_thb, qty: pending.qty, avail: proto.state.thbBal, ok: true, err: '' };
+    }
     const total = Number(raw) || 0;
     const fee = Math.max(Math.round(Math.round(total * 100) * bundle.fees.trading_fee_pct / 100), Math.round(bundle.fees.min_fee_thb * 100)) / 100;
     const price = bundle.assets[id]?.price_thb;
@@ -123,10 +164,12 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
     const btc = bundle.assets.BTC?.price_thb;
     view.swapBtc = btc ? (500 / btc).toFixed(6) : '–';
     view.btcThb = btc ? money(btc) : 'unavailable';
-    view.buy.unitPrice = `1 unit ≈ ${money(current?.price_thb ?? 0)}`;
+    const reviewed = pending && proto.state.buyStep === 'review' && matches(pending) ? pending : null;
+    view.buy.unitPrice = reviewed ? `1 ${reviewed.unit} = ${money(reviewed.price_thb)}` : `1 unit ≈ ${money(current?.price_thb ?? 0)}`;
+    view.buy.qty = reviewed ? `${reviewed.qty} ${reviewed.unit}` : `${Number(calc.qty).toFixed(8)} ${BADGES[proto.state.assetId]?.unit ?? ''}`;
     if (proto.state.assetId === 'XAU') {
       view.asset.qty = `${Number(proto.state.hold.XAU ?? 0).toFixed(8)} PAXG`;
-      view.buy.qty = `${Number(calc.qty).toFixed(8)} PAXG`;
+      if (!reviewed) view.buy.qty = `${Number(calc.qty).toFixed(8)} PAXG`;
       if (proto.state.lastBuy?.asset === 'XAU') view.done.qty = `${Number(proto.state.lastBuy.qty).toFixed(8)} PAXG`;
     }
     view.buy.fee = money(calc.fee); view.buy.total = money(calc.total); view.buy.amt = money(calc.amt);
@@ -155,26 +198,29 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
       if (!confirm) {
         const amount = Number(proto.state.buyAmount), appAsset = proto.state.assetId;
         if (!proto.calc(appAsset, amount, 'thb').ok) throw new Error('Check the amount and available balance.');
-        pending = await request('/trades/preview', { user_id: userId, asset_id: ids[appAsset], amount_thb: amount });
-        proto.setState({ buyStep: 'review' });
+        const preview = await request('/trades/preview', { user_id: userId, asset_id: ids[appAsset], amount_thb: amount });
+        // Reject a late response if the user changed the order while it loaded.
+        proto.reviewServerPreview(preview);
       } else {
-        // Icarus fills the buy screen and moves it to Review without a tap there, so make the preview now if needed
-        // (the race's Confirm did nothing after Icarus filled the screen).
-        const amount = Number(proto.state.buyAmount), appAsset = proto.state.assetId;
-        if (!pending || ids[appAsset] !== pending.asset_id || amount !== pending.amount_thb) {
-          if (!proto.calc(appAsset, amount, 'thb').ok) throw new Error('Check the amount and available balance.');
-          pending = await request('/trades/preview', { user_id: userId, asset_id: ids[appAsset], amount_thb: amount });
+        if (proto.state.buyStep !== 'review' || !pending || !matches(pending)) {
+          invalidate(); throw new Error('Review the amount again before confirming.');
         }
-        // Never confirm a preview that doesn't match what the screen shows.
-        if (!pending || ids[appAsset] !== pending.asset_id || amount !== pending.amount_thb) throw new Error('Review the amount again before confirming.');
+        // An uncertain confirmation retries the same ID: it may already have executed.
+        if (!attempted && stale(pending)) { invalidate(); throw new Error('Preview expired. Review a new server preview before confirming.'); }
         const preview = pending as Record<string, any>;
-        await request(`/trades/${encodeURIComponent(preview.preview_id)}/confirm`, { user_id: userId });
-        pending = null;
-        proto.setState({ buyStep: 'done', lastBuy: { asset: proto.state.assetId, amt: preview.amount_thb - preview.fee_thb, fee: preview.fee_thb, total: preview.amount_thb, qty: preview.qty } });
+        attempted = true;
+        const result = await request(`/trades/${encodeURIComponent(preview.preview_id)}/confirm`, { user_id: userId });
+        if (result.status !== 'confirmed') throw new Error('Confirmation was not acknowledged. Retry the same preview.');
+        const stillReviewed = pending === preview && matches(preview);
+        if (stillReviewed) { pending = null; attempted = false; }
+        if (stillReviewed) proto.setState({ buyStep: 'done', lastBuy: { asset: proto.state.assetId, amt: preview.amount_thb - preview.fee_thb, fee: preview.fee_thb, total: preview.amount_thb, qty: preview.qty } });
         finishTimer();
         await refresh();
       }
-    } catch (error) { onError((error as Error).message); }
+    } catch (error) {
+      if (['preview_expired', 'preview_cancelled', 'preview_not_found'].includes((error as any).code)) invalidate();
+      onError((error as Error).message);
+    }
     finally { busy = false; }
   };
   proto.toReview = () => bundle ? manual(false) : onError('Wait for the demo account to load before trading.');

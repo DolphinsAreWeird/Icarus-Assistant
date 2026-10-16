@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createDcApp } from '../src/dc-runtime';
 import { setMascotFallback } from '../src/assets';
-import { buyOnAppScreens, toPrototypeReply } from '../src/backend-bridge';
+import { toPrototypeReply } from '../src/backend-bridge';
 import { installDemoData, type DemoBundle } from '../src/demo-data';
 import { spokenExactNumber } from '../../voice/src/shared/speech-format';
 
@@ -64,7 +64,7 @@ it.each([100, 100.01, 1000, 1000.49, 1000.50, 4999.99, 5000])('backend budget %s
     assets: { XAU: { price_thb: 10000, freshness: 'offline', charts: {} } },
   };
   const fee = Math.max(Math.round(amount * .25) / 100, 5);
-  const preview = { preview_id: 'pv-decimal', side: 'buy', asset_id: 'gold', amount_thb: amount, fee_thb: fee, qty: Math.round((amount - fee) / 10000 * 1e8) / 1e8 };
+  const preview = { preview_id: 'pv-decimal', side: 'buy', asset_id: 'gold', amount_thb: amount, fee_thb: fee, price_thb: 10000, unit: 'PAXG', you_pay_thb: amount, expires_at: Date.now() / 1000 + 120, qty: Math.round((amount - fee) / 10000 * 1e8) / 1e8 };
   let confirmed = false;
   const fetcher = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
     if (String(url).endsWith('/preview')) {
@@ -90,8 +90,8 @@ it.each([100, 100.01, 1000, 1000.49, 1000.50, 4999.99, 5000])('backend budget %s
   expect(proto.renderVals().buy.total).toBe(money(amount));
   expect(document.body.textContent).toContain(money(amount));
   expect(confirmed).toBe(false);
-  // Prepare via the native review boundary, then execute only the user's tap.
-  await act(async () => proto.toReview());
+  expect(proto.state.buyStep).toBe('review');
+  expect(fetcher.mock.calls.filter(([u]) => String(u).endsWith('/preview'))).toHaveLength(0);
   await act(async () => document.querySelector<HTMLElement>('[data-ui-id="buy.confirm_button"]')!.click());
   expect(confirmed).toBe(true);
   expect(proto.state.thbBal).toBeCloseTo(5000 - amount, 8);
@@ -100,7 +100,7 @@ it.each([100, 100.01, 1000, 1000.49, 1000.50, 4999.99, 5000])('backend budget %s
 });
 
 it.each([99.99, 47772.29])('animation preserves rejected boundary %s without enabling execution', async amount => {
-  const actions = buyOnAppScreens({ side: 'buy', asset_id: 'gold', amount_thb: amount }, proto)!;
+  const actions = [{ type: 'start_buy', asset: 'XAU' }, { type: 'type_amount', value: amount }, { type: 'select_wallet', wallet: 'thb' }, { type: 'review' }];
   await act(async () => proto.runActions(actions));
   await act(async () => vi.advanceTimersByTimeAsync(6000));
   expect(proto.state.buyAmount).toBe(String(amount));

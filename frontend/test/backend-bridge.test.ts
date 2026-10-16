@@ -183,11 +183,12 @@ describe('the backend\'s cards and screen actions', () => {
 
 describe('showcase: a buy goes through the app\'s own screens, and the backend never dead-ends', () => {
   it('turns a buy card into the app\'s own buy steps, read back from the screen\'s own numbers', () => {
-    const r = toPrototypeReply({ text: "Here's your preview.", ui_actions: [{ type: 'open_asset', asset: 'XAU' }, TRADE_CARD] }, 'en', undefined, fakeProto());
+    const r = toPrototypeReply({ text: "Here's your preview.", ui_actions: [{ type: 'open_asset', asset: 'XAU' }, TRADE_CARD] }, 'en', undefined, { ...fakeProto(), reviewServerPreview: () => true });
     expect(r.trade).toBeNull();
     expect(r.reply.ui_actions.map((a) => a.type)).toEqual(['open_asset', 'start_buy', 'type_amount', 'select_wallet', 'review']);
+    expect(r.reply.ui_actions.at(-1)?.preview).toMatchObject(TRADE_CARD.data);
     expect(r.reply.ui_actions[2]).toEqual({ type: 'type_amount', value: 1000 });
-    expect(r.reply.speech).toBe('one thousand baht into gold. Fee ten baht. Total one thousand ten baht. Tap Confirm purchase when you are ready.');
+    expect(r.reply.speech).toBe('nine hundred ninety-five baht into gold. Fee five baht. Total one thousand baht. Quantity 0.00715118 PAXG. Unit price 139137.82 baht. Tap Confirm purchase when you are ready.');
   });
 
   it('keeps the card for a sale, for an asset the app does not have, and without the app\'s calculator', () => {
@@ -325,7 +326,7 @@ describe("inside the REAL prototype: the backend's buy card is done on Oasis's o
     setMascotFallback(false);
   });
 
-  it('opens gold, types 1,000 and stops on Review purchase; no card covers the screen', async () => {
+  it('keeps the server card when the native preview boundary is unavailable', async () => {
     document.head.innerHTML = '';
     document.body.innerHTML = '<div id="root"></div>';
     setMascotFallback(true);
@@ -340,8 +341,8 @@ describe("inside the REAL prototype: the backend's buy card is done on Oasis's o
     installBackend({ url: 'http://be', userId: 'u_new', getInstance: () => instance, showTrade, hideCards: () => undefined, fetchImpl });
     await act(async () => (window as unknown as { Icarus: { send: (t: string) => void } }).Icarus.send('Put 1,000 baht in gold'));
     await act(async () => sleep(6000));
-    expect(instance!.state).toMatchObject({ view: 'buy', buyStep: 'review', buyAmount: '1000', assetId: 'XAU' });
-    expect(showTrade).not.toHaveBeenCalled();
+    expect(instance!.state).toMatchObject({ view: 'asset', assetId: 'XAU' });
+    expect(showTrade).toHaveBeenCalledWith(expect.objectContaining({ preview_id: 'pv' }), 'en');
   }, 20_000);
 });
 

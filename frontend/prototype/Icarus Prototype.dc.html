@@ -240,6 +240,7 @@ input{font-family:inherit}
 <div style="display:flex;justify-content:space-between;padding:12px 0"><div style="color:#6E5560">Asset</div><div>{{ asset.name }} ({{ asset.ticker }})</div></div>
 <div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #F8E8EC"><div style="color:#6E5560">Purchase amount</div><div>{{ buy.amt }}</div></div>
 <div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #F8E8EC"><div style="color:#6E5560">Estimated quantity</div><div>{{ buy.qty }}</div></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #F8E8EC"><div style="color:#6E5560">Price</div><div>{{ buy.unitPrice }}</div></div>
 <div data-ui-id="buy.fee_line" onClick="{{ tapFee }}" style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #F8E8EC;cursor:pointer"><div style="color:#6E5560;display:flex;align-items:center;gap:6px">Transaction fee (1%)<span style="width:16px;height:16px;border-radius:50%;border:1.3px solid #AE939B;font-size:10px;display:flex;align-items:center;justify-content:center;color:#8A6B75">?</span></div><div>{{ buy.fee }}</div></div>
 <div style="display:flex;justify-content:space-between;padding:14px 0;border-top:1px solid #F8E8EC;font-size:17px;font-weight:600"><div>Total</div><div>{{ buy.total }}</div></div>
 </div>

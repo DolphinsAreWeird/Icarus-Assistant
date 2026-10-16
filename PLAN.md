@@ -18,7 +18,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 - [ ] **I02: Suppress unsupported generated financial figures.** Reject unsafe text before display, speech, history and caching; retain grounded tool output.
 - [ ] **I03: Ground legacy trade arguments.** Require the user's purchase intent, asset, side and amount before producing an actionable preview.
 - [ ] **I04: Isolate cached contextual answers.** Prevent reuse across users, sessions or different relevant conversation histories.
-- [ ] **I05: Preserve reviewed server preview terms.** Carry preview identity/terms into native review; never silently create and execute an unseen replacement.
+- [x] **I05: Preserve reviewed server preview terms.** Carry preview identity/terms into native review; never silently create and execute an unseen replacement.
 - [x] **I06: Protect public administrative reset.** Public visitors cannot globally reset other accounts or previews.
 - [ ] **I07: Make QA failures enforceable.** High-severity scans and failed phone confirmation must produce failing run/exit status.
 - [ ] **I08: Separate hosted request budgets.** Avoid shared-IP starvation of account reads and confirmations; test multiple visitors and bursts.
@@ -42,6 +42,8 @@ The issue's commit subject identifies its checkpoint. Hashes will be collected a
 | I01 | `fix: preserve decimal purchase amounts`: 107 frontend tests, typecheck and build passed; 17 new mounted amount regressions | SOL 6.1 High approved; independently reran 17 regressions |
 
 | I06 | `fix: block global reset on public demo proxy`: 54 voice tests and typecheck passed; encoded paths/local reset covered | SOL 6.1 High approved; independently reran 22 proxy regressions |
+
+| I05 | `fix: confirm only the reviewed server purchase preview`: 115 frontend tests, typecheck and build passed; expiry, repricing, retries and edited-order regressions | SOL 6.1 High approved; independently reran 53 purchase tests |
 
 ## Execution notes
 

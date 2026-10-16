@@ -46,7 +46,7 @@ it('renders backend THB prices and cash, uses exact chart points and one fee rul
 
 it('manual review prepares a server preview and only a confirm tap changes the account', async () => {
   const fetcher = vi.fn(async (url: string | URL | Request) => {
-    if (String(url).endsWith('/preview')) return Response.json({ preview_id: 'pv-test', asset_id: 'gold', amount_thb: 1000, fee_thb: 5, qty: .0995 });
+    if (String(url).endsWith('/preview')) return Response.json({ preview_id: 'pv-test', side: 'buy', asset_id: 'gold', amount_thb: 1000, fee_thb: 5, qty: .0995, price_thb: 10000, unit: 'PAXG', you_pay_thb: 1000, expires_at: Date.now() / 1000 + 120 });
     if (String(url).endsWith('/confirm')) return Response.json({ status: 'confirmed' });
     const confirmed = fetcher.mock.calls.some(([u]) => String(u).endsWith('/confirm'));
     return Response.json(confirmed ? { ...data, cash_thb: 4000, holdings: { ...data.holdings, XAU: 1.0995 } } : data);
@@ -67,13 +67,112 @@ it('manual review prepares a server preview and only a confirm tap changes the a
 
 it('prevents a changed manual order from using the previous preview', async () => {
   const fetcher = vi.fn(async (url: string | URL | Request) => Response.json(String(url).endsWith('/preview')
-    ? { preview_id: 'pv', asset_id: 'gold', amount_thb: 1000 } : data));
+    ? { preview_id: 'pv', side: 'buy', asset_id: 'gold', amount_thb: 1000, fee_thb: 5, qty: .0995, price_thb: 10000, unit: 'PAXG', you_pay_thb: 1000, expires_at: Date.now() / 1000 + 120 } : data));
   const error = vi.fn();
   const demo = installDemoData(proto, 'http://be', 'u_new', error, fetcher);
-  await act(async () => { await demo.refresh(); proto.setState({ buyAmount: '1000' }); });
+  await act(async () => { await demo.refresh(); proto.setState({ buyAmount: '1000', tab: 'invest', view: 'buy' }); });
   await act(async () => proto.toReview());
   await act(async () => proto.setState({ buyAmount: '2000' }));
   await act(async () => proto.confirm());
   expect(error).toHaveBeenCalledWith('Review the amount again before confirming.');
+  expect(fetcher.mock.calls.some(([u]) => String(u).endsWith('/confirm'))).toBe(false);
+});
+
+const serverPreview = (overrides: Record<string, unknown> = {}) => ({ preview_id: 'pv-original', user_id: 'u_new', side: 'buy', status: 'pending',
+  asset_id: 'gold', amount_thb: 1000.49, fee_thb: 17.25, qty: .049162, price_thb: 20000, unit: 'PAXG', you_pay_thb: 1000.49,
+  expires_at: Date.now() / 1000 + 120, ...overrides });
+const order = async () => act(async () => proto.setState({ tab: 'invest', view: 'buy', buyAmount: '1000.49', assetId: 'XAU', walletId: 'thb' }));
+
+it('manual review renders server fee, price and quantity even when the bundle changes', async () => {
+  const preview = serverPreview();
+  let market = data;
+  const fetcher = vi.fn(async (url: any) => Response.json(String(url).endsWith('/preview') ? preview : String(url).endsWith('/confirm') ? { status: 'confirmed' } : market));
+  const demo = installDemoData(proto, 'http://be', 'u_new', vi.fn(), fetcher);
+  await act(async () => demo.refresh()); await order();
+  await act(async () => proto.toReview());
+  market = { ...data, fees: { ...data.fees, min_fee_thb: 99 }, assets: { ...data.assets, XAU: { ...data.assets.XAU!, price_thb: 80000 } } };
+  await act(async () => demo.refresh());
+  expect(proto.renderVals().buy).toMatchObject({ amt: '฿983.24', fee: '฿17.25', total: '฿1,000.49', unitPrice: '1 PAXG = ฿20,000.00' });
+  expect(document.body.textContent).toContain('0.049162 PAXG');
+  expect(document.body.textContent).toContain('฿20,000.00');
+  await act(async () => proto.confirm());
+  expect(fetcher.mock.calls.filter(([u]) => String(u).endsWith('/preview'))).toHaveLength(1);
+  expect(fetcher.mock.calls.filter(([u]) => String(u).endsWith('/confirm')).map(([u]) => u)).toEqual(['http://be/trades/pv-original/confirm']);
+  expect(proto.state.lastBuy).toMatchObject({ fee: 17.25, total: 1000.49, qty: .049162 });
+});
+
+it('requires a new review and a separate tap after expiry', async () => {
+  const clock = vi.spyOn(Date, 'now');
+  const start = Date.now(); clock.mockReturnValue(start);
+  const fetcher = vi.fn(async (url: any) => Response.json(String(url).endsWith('/preview') ? serverPreview() : String(url).endsWith('/confirm') ? { status: 'confirmed' } : data));
+  const demo = installDemoData(proto, 'http://be', 'u_new', vi.fn(), fetcher);
+  try {
+    await act(async () => demo.refresh()); await order(); await act(async () => proto.toReview());
+    clock.mockReturnValue(start + 121000);
+    await act(async () => proto.confirm());
+    expect(proto.state.buyStep).toBe('amount');
+    expect(fetcher.mock.calls.filter(([u]) => String(u).endsWith('/preview'))).toHaveLength(1);
+    expect(fetcher.mock.calls.some(([u]) => String(u).endsWith('/confirm'))).toBe(false);
+    await act(async () => proto.toReview());
+    expect(fetcher.mock.calls.some(([u]) => String(u).endsWith('/confirm'))).toBe(false);
+    await act(async () => proto.confirm());
+    expect(proto.state.buyStep).toBe('done');
+  } finally { clock.mockRestore(); }
+});
+
+it.each(['preview_cancelled', 'preview_expired'])('server %s invalidates review without creating a replacement', async code => {
+  const fetcher = vi.fn(async (url: any) => String(url).endsWith('/confirm') ? Response.json({ detail: { code, message_en: code } }, { status: 409 }) : Response.json(String(url).endsWith('/preview') ? serverPreview() : data));
+  const demo = installDemoData(proto, 'http://be', 'u_new', vi.fn(), fetcher);
+  await act(async () => demo.refresh()); await order(); await act(async () => proto.toReview());
+  await act(async () => proto.confirm()); await act(async () => proto.confirm());
+  expect(proto.state.buyStep).toBe('amount');
+  expect(fetcher.mock.calls.filter(([u]) => String(u).endsWith('/preview'))).toHaveLength(1);
+  expect(fetcher.mock.calls.filter(([u]) => String(u).endsWith('/confirm'))).toHaveLength(1);
+});
+
+it('double tap sends one request and a response-loss retry retains the original ID even after expiry', async () => {
+  let rejectConfirm!: (e: Error) => void;
+  let confirms = 0;
+  const fetcher = vi.fn(async (url: any) => {
+    if (String(url).endsWith('/confirm')) {
+      confirms++;
+      if (confirms === 1) return new Promise<Response>((_resolve, reject) => { rejectConfirm = reject; });
+      return Response.json({ status: 'confirmed' });
+    }
+    return Response.json(String(url).endsWith('/preview') ? serverPreview({ expires_at: Date.now() / 1000 + 1 }) : data);
+  });
+  const demo = installDemoData(proto, 'http://be', 'u_new', vi.fn(), fetcher);
+  await act(async () => demo.refresh()); await order(); await act(async () => proto.toReview());
+  let first!: Promise<void>;
+  await act(async () => { first = proto.confirm(); void proto.confirm(); });
+  expect(confirms).toBe(1);
+  await act(async () => { rejectConfirm(new Error('Response lost')); await first; });
+  const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 2000);
+  try { await act(async () => proto.confirm()); } finally { clock.mockRestore(); }
+  expect(fetcher.mock.calls.filter(([u]) => String(u).endsWith('/confirm')).map(([u]) => u)).toEqual(['http://be/trades/pv-original/confirm', 'http://be/trades/pv-original/confirm']);
+  expect(fetcher.mock.calls.filter(([u]) => String(u).endsWith('/preview'))).toHaveLength(1);
+  expect(proto.state.buyStep).toBe('done');
+});
+
+it.each([{ buyAmount: '1000' }, { assetId: 'BTC' }])('changing and restoring order %j still requires review', async patch => {
+  const fetcher = vi.fn(async (url: any) => Response.json(String(url).endsWith('/preview') ? serverPreview() : data));
+  const demo = installDemoData(proto, 'http://be', 'u_new', vi.fn(), fetcher);
+  await act(async () => demo.refresh()); await order(); await act(async () => proto.toReview());
+  await act(async () => proto.setState(patch)); await order(); await act(async () => proto.confirm());
+  expect(proto.state.buyStep).toBe('amount');
+  expect(fetcher.mock.calls.some(([u]) => String(u).endsWith('/confirm'))).toBe(false);
+});
+
+it('does not review a late manual preview after the amount changed', async () => {
+  let resolvePreview!: (response: Response) => void;
+  const fetcher = vi.fn(async (url: any) => String(url).endsWith('/preview') ? new Promise<Response>(resolve => { resolvePreview = resolve; }) : Response.json(data));
+  const demo = installDemoData(proto, 'http://be', 'u_new', vi.fn(), fetcher);
+  await act(async () => demo.refresh()); await order();
+  let review!: Promise<void>;
+  await act(async () => { review = proto.toReview(); });
+  await act(async () => proto.setState({ buyAmount: '1000' }));
+  await act(async () => { resolvePreview(Response.json(serverPreview())); await review; });
+  expect(proto.state.buyStep).toBe('amount');
+  await act(async () => proto.confirm());
   expect(fetcher.mock.calls.some(([u]) => String(u).endsWith('/confirm'))).toBe(false);
 });
