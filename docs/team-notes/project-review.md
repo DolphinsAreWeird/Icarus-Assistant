@@ -2,7 +2,7 @@
 
 Reviewed 16 October 2026, Bangkok time. Checkout: `main`, commit `b2b879fc79979ad95e5df0a3d8bae9de6deef566`.
 
-The model team's own status summary is in [model/SUMMARY.md](model/SUMMARY.md).
+The model team's own status summary is in [model/SUMMARY.md](../../model/SUMMARY.md).
 
 ## Overall assessment
 
@@ -16,13 +16,13 @@ The commit summary was read first, followed by project Markdown before implement
 
 | Area | Responsibility | Main entry points |
 |---|---|---|
-| `frontend/` | Runs Oasis's HTML prototypes through a small React runtime; connects account state, assistant actions, purchase screens, cards, tour and voice | [main.ts](frontend/src/main.ts), [dc-runtime.ts](frontend/src/dc-runtime.ts), [backend-bridge.ts](frontend/src/backend-bridge.ts), [demo-data.ts](frontend/src/demo-data.ts) |
-| `voice/` | Node/Express server serving the app; ElevenLabs STT tokens/TTS, audio cache, interruption handling, U-topia glossary, U-Bot routing and optional backend proxy | [index.ts](voice/src/server/index.ts), [app.ts](voice/src/server/app.ts), `src/client/`, `src/shared/` |
-| `backend/` | FastAPI HTTP boundary, market/FX cache, history, fictional accounts, checked UI tools, trade previews and confirmation; two assistant engines | [main.py](backend/app/main.py), [model_service.py](backend/app/model_service.py), [loop.py](backend/app/assistant/loop.py), [trades.py](backend/app/trades.py) |
-| `model/` | Standalone bilingual conversation/retrieval system, validated data adapters, grounded calculation tools, historical data processing and experimental risk estimates | [START_HERE.md](model/START_HERE.md), [session.py](model/session.py), [assistant.py](model/assistant.py), [data_adapter.py](model/data_adapter.py) |
-| `qa/` | Browser golden paths, failure drills, risk register and hallway-test kit | [README.md](qa/README.md), [run.cjs](qa/e2e/run.cjs) |
-| `docs/` | Business plan, cost calculator, architecture, presentation figures/media and historical team notes | [business-plan.md](docs/business-plan.md), [cost_model.py](docs/cost_model.py), `media/`, `team-notes/` |
-| Root / `scripts/` | Windows/Bash launchers and single-container hosting | [run-demo.ps1](scripts/run-demo.ps1), [demo.sh](demo.sh), [Dockerfile](Dockerfile), [render.yaml](render.yaml) |
+| `frontend/` | Runs Oasis's HTML prototypes through a small React runtime; connects account state, assistant actions, purchase screens, cards, tour and voice | [main.ts](../../frontend/src/main.ts), [dc-runtime.ts](../../frontend/src/dc-runtime.ts), [backend-bridge.ts](../../frontend/src/backend-bridge.ts), [demo-data.ts](../../frontend/src/demo-data.ts) |
+| `voice/` | Node/Express server serving the app; ElevenLabs STT tokens/TTS, audio cache, interruption handling, U-topia glossary, U-Bot routing and optional backend proxy | [index.ts](../../voice/src/server/index.ts), [app.ts](../../voice/src/server/app.ts), `src/client/`, `src/shared/` |
+| `backend/` | FastAPI HTTP boundary, market/FX cache, history, fictional accounts, checked UI tools, trade previews and confirmation; two assistant engines | [main.py](../../backend/app/main.py), [model_service.py](../../backend/app/model_service.py), [loop.py](../../backend/app/assistant/loop.py), [trades.py](../../backend/app/trades.py) |
+| `model/` | Standalone bilingual conversation/retrieval system, validated data adapters, grounded calculation tools, historical data processing and experimental risk estimates | [START_HERE.md](../../model/START_HERE.md), [session.py](../../model/session.py), [assistant.py](../../model/assistant.py), [data_adapter.py](../../model/data_adapter.py) |
+| `qa/` | Browser golden paths, failure drills, risk register and hallway-test kit | [README.md](../../qa/README.md), [run.cjs](../../qa/e2e/run.cjs) |
+| `docs/` | Business plan, cost calculator, architecture, presentation figures/media and historical team notes | [business-plan.md](../../docs/business-plan.md), [cost_model.py](../../docs/cost_model.py), `media/`, `team-notes/` |
+| Root / `scripts/` | Windows/Bash launchers and single-container hosting | [run-demo.ps1](../../scripts/run-demo.ps1), [demo.sh](../../demo.sh), [Dockerfile](../../Dockerfile), [render.yaml](../../render.yaml) |
 
 Normal app flow: browser voice or typed text → U-topia/U-Bot router when relevant → Python `/chat` → checked actions/cards → frontend → Node TTS. A purchase changes only a simulated backend account after a confirmation request initiated by a tap. The model module itself has no execution endpoint.
 
@@ -35,7 +35,7 @@ Normal app flow: browser voice or typed text → U-topia/U-Bot router when relev
 | Docker / Render | Docker explicitly selects `legacy`: prepared answers, regex fast path, answer cache and provider hedging/failover |
 | `demo.sh` | Detects older provider settings to decide whether a model exists, but its real-model branch starts bare uvicorn without explicitly selecting the corresponding engine |
 
-Sources: [backend/app/main.py](backend/app/main.py), [scripts/run-demo.ps1](scripts/run-demo.ps1), [Dockerfile](Dockerfile), [demo.sh](demo.sh).
+Sources: [backend/app/main.py](../../backend/app/main.py), [scripts/run-demo.ps1](../../scripts/run-demo.ps1), [Dockerfile](../../Dockerfile), [demo.sh](../../demo.sh).
 
 The newer model's input grounding and bounded sessions do not automatically protect the hosted legacy path. Likewise, the hosted path's prepared-answer speed and failover should not be claimed for the Windows model launcher without measuring it. Confirm the selected engine through backend `/health` before any test or demonstration.
 
@@ -81,7 +81,7 @@ These are agent-owned fixes. None requires you to operate the system manually.
 - No complete presentation PDF/PPTX was found in `docs/`. Tour videos, architecture images and deck figures exist. The actual deck's visibility remains unknown.
 - The business dashboard combines simulated metrics with a live panel reading this browser's local event history. It does not aggregate server friction logs across visitors. This is a demonstrated UI, not yet a partner-wide analytics service. Its reader also refreshes only when event count changes, so the live view stops updating when the app's 400-event ring is full. Add a rollover regression as well as any future aggregation work. Evidence: `frontend/prototype/Icarus Business Dashboard.dc.html:125–179`; `frontend/prototype/Icarus Prototype.dc.html:657`; `voice/src/server/friction.ts`.
 - U-Bot is a prompt-and-link handoff requiring the user to sign in and paste. A real U-Bot API adapter cannot be validated without an actual API. This does not block the existing link-based demo.
-- Human Thai/financial-language review and unfamiliar-user hallway results are not recorded as complete. [HUMAN_REVIEW.md](model/evaluation/HUMAN_REVIEW.md) is still pending.
+- Human Thai/financial-language review and unfamiliar-user hallway results are not recorded as complete. [HUMAN_REVIEW.md](../../model/evaluation/HUMAN_REVIEW.md) is still pending.
 - Accounts/trades remain fictional and in memory. Broader ledger/payment/card features, durable shared state and production authentication are outside the implemented demo. Historical risk experiments are not current trading signals.
 - The business plan's personal-data locality claim needs qualification: full transcripts and identifiers are logged locally, and provider requests leave the app. Cost arithmetic can be checked locally; current external pricing, user-count claims and business uplift require separate evidence.
 

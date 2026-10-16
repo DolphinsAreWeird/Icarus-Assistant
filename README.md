@@ -12,7 +12,9 @@ Built for U-Hackathon 2026 (FLOW Summit, Bangkok, 15 to 16 Oct 2026), AI track. 
 
 ![The mascot's tour, left to right: hello; gold's year on the chart; no advice on "should I buy"; a 1,000 baht gold buy filled in and stopped at Confirm; an answer in Thai; a ride request handed to U-Bot, written for it](docs/media/tour-storyboard.png)
 
-[Watch the tour (57 s video)](docs/media/icarus-tour.mp4) · [as a GIF](docs/media/icarus-tour.gif). Recorded from the running app; the video has no sound, the captions are what the mascot says.
+[![Watch the 1-minute walkthrough](docs/media/walkthrough-poster.png)](docs/media/walkthrough.mp4)
+
+**[▶ Watch the 1-minute walkthrough](docs/media/walkthrough.mp4)** (1.3 MB). Recorded from the running app; no sound, the speech bubbles show what the mascot says.
 
 ## Try it in two minutes
 
@@ -103,7 +105,7 @@ It builds the app, starts the voice server and the backend, checks the backend's
 
 ## How the parts connect
 
-[`INTEGRATION.md`](INTEGRATION.md): the whole chain (microphone, app, U-Bot router, backend, speech), how to run all three parts together, what was checked end to end, and what the team still has to agree.
+[`how-the-parts-connect.md`](docs/team-notes/how-the-parts-connect.md): the whole chain (microphone, app, U-Bot router, backend, speech), how to run all three parts together, what was checked end to end, and what the team still has to agree.
 
 ## Business plan
 
@@ -131,3 +133,16 @@ python model/assistant.py --interactive --lang en --session demo
 ```
 
 Private `model/.env`, local conversations, generated reports, and downloaded/generated market data are ignored. Copy only the public `.env.example` template when setting up another machine.
+
+## Where things are
+
+| Folder | What is in it |
+|---|---|
+| [`frontend/`](frontend/) | The app (Oasis's design) and the mascot's tour |
+| [`voice/`](voice/) | The voice server: ElevenLabs speech in and out, and it serves the app |
+| [`backend/`](backend/) | The brain: prepared answers, live prices, trade previews, the AI |
+| [`model/`](model/) | Luka's grounded model prototype and its evaluation |
+| [`qa/`](qa/) | Browser tests, the question batteries, risks and failure drills |
+| [`docs/`](docs/) | [Business plan](docs/business-plan.md), [architecture](docs/architecture.html), the walkthrough video, and [team notes](docs/team-notes/) |
+| [`deploy/`](deploy/), [`Dockerfile`](Dockerfile), [`render.yaml`](render.yaml) | Hosting |
+
