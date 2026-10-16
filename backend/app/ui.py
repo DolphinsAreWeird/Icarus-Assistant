@@ -42,6 +42,12 @@ def app() -> dict:
 
 # ---------- 1. the closed set of actions ----------
 
+def in_app(asset: str) -> bool:
+    """True for assets that have their own page in the app. The others (more stocks and funds) we can show prices and
+    charts for, but the app has no screen for them, so we never ask it to open one."""
+    return asset in app()["assets"] and app()["assets"][asset].get("in_app", True)
+
+
 def _one_of(values):
     return lambda v: v in values
 
@@ -50,13 +56,13 @@ ACTIONS = {
     # type: {param: check}
     "navigate": {"to": lambda v: v in [s["to"] for s in app()["screens"].values()]},
     "back": {},
-    "open_asset": {"asset": lambda v: v in app()["assets"]},
+    "open_asset": {"asset": lambda v: in_app(v)},
     "set_period": {"period": lambda v: v in app()["periods"]},
     "set_filter": {"filter": lambda v: v in app()["filters"]},
     "toggle_freeze": {"value": lambda v: isinstance(v, bool)},
     "hide_balance": {"value": lambda v: isinstance(v, bool)},
     "highlight": {"element_id": lambda v: v in app()["elements"]},
-    "start_guide": {"asset": lambda v: v in app()["assets"]},
+    "start_guide": {"asset": lambda v: in_app(v)},
     "card": {"card_type": lambda v: v in CARD_TYPES, "data": lambda v: isinstance(v, dict)},
 }
 
@@ -154,6 +160,9 @@ def _navigate(state: UIState, screen: str) -> list[dict]:
 
 
 def _open_asset(state: UIState, asset: str) -> list[dict]:
+    if asset in app()["assets"] and not in_app(asset):
+        raise UIError("not_in_app", f"{app()['assets'].get(asset, {}).get('name', asset)} has no page in the app; "
+                                    "show its chart or tell its price instead")
     if state.screen == "asset" and state.asset == asset:
         return []
     state.screen, state.asset = "asset", asset

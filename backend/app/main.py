@@ -26,6 +26,7 @@ from app.model_service import ModelService, SessionsBusy
 ERRORS = {
     "unknown_user": ("We don't know that user.", "ไม่พบผู้ใช้นี้"),
     "unknown_asset": ("That asset isn't in the app.", "ไม่มีสินทรัพย์นี้ในแอป"),
+    "not_tradable": ("That one is for prices and charts only. This demo buys gold, Bitcoin and Ethereum.", "สินทรัพย์นี้ดูราคาและกราฟได้อย่างเดียว เดโมนี้ซื้อได้เฉพาะทองคำ บิตคอยน์ และอีเธอเรียม"),
     "no_model": ("The assistant isn't set up yet.", "ผู้ช่วยยังไม่พร้อมใช้งาน"),
     "rate_limited": ("Icarus is busy. Try again in a minute.", "Icarus ยุ่งอยู่ ลองใหม่อีกนาทีนะ"),
     "assistant_failed": ("Icarus couldn't answer just now. Try again.", "Icarus ตอบไม่ได้ตอนนี้ ลองอีกครั้งนะ"),

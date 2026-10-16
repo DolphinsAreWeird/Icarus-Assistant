@@ -11,7 +11,8 @@ import httpx
 from app.config import HTTP_TIMEOUT_S
 
 BINANCE = "https://api.binance.com"
-FRANKFURTER = "https://api.frankfurter.dev/v1"
+YAHOO = "https://query1.finance.yahoo.com/v8/finance/chart"
+FRANKFURTER ="https://api.frankfurter.dev/v1"
 ER_API = "https://open.er-api.com/v6/latest/USD"
 
 KLINES_LIMIT = 1000  # Binance's max candles per call
@@ -41,6 +42,18 @@ def fetch_klines(symbol: str, interval: str, start_ms: int) -> list[list]:
         if len(batch) < KLINES_LIMIT:
             return candles
         start_ms = batch[-1][6] + 1  # index 6 is the candle's close time
+
+
+def fetch_yahoo_chart(symbol: str, interval: str, range_: str) -> dict:
+    """One symbol's chart from Yahoo Finance (stocks and funds, in USD). Returns the `result[0]` block.
+    Yahoo has no official free API; this is the public chart endpoint, so callers must expect it to fail."""
+    d = httpx.get(f"{YAHOO}/{symbol}", params={"interval": interval, "range": range_}, timeout=HTTP_TIMEOUT_S,
+                  follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 (Icarus demo)"})
+    d.raise_for_status()
+    result = (d.json().get("chart") or {}).get("result")
+    if not result:
+        raise ValueError(f"yahoo: no data for {symbol}")
+    return result[0]
 
 
 def fetch_usd_thb() -> dict:

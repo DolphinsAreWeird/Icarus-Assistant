@@ -235,7 +235,7 @@ def test_buy_problems_come_back_as_data_with_no_card(cache, state):
     replies = [ask(bot, msg, snapshot=SNAPSHOT) for msg, *_ in steps]
     assert tool_results(fake, 1)[0]["data"] == {"ok": False, "reason": "not_enough_cash", "cash_thb": 5000.0}
     assert tool_results(fake, 3)[-1]["data"]["reason"] == "below_minimum"
-    assert tool_results(fake, 5)[-1]["reason"] == "no_data"
+    assert tool_results(fake, 5)[-1]["reason"] == "not_tradable"
     assert all(r.ui_actions == [] and r.debug["unbacked_numbers"] == [] for r in replies)
     assert [r.text for r in replies] == [say for *_, say in steps]
 
@@ -584,9 +584,9 @@ def test_chart_of_the_asset_on_screen_switches_the_real_chart(cache, state):
 
 
 def test_chart_refuses_assets_without_data(cache, state):
-    fake = FakeLLM([calls(("show_chart", {"asset_ids": ["AAPL"], "period": "1M"})), text("ok")])
-    reply = ask(Assistant(fake, state, cache), "apple chart", snapshot=SNAPSHOT)
-    assert reply.ui_actions == [] and tool_results(fake, 1)[0]["reason"] == "no_data"
+    fake = FakeLLM([calls(("show_chart", {"asset_ids": ["DOGE"], "period": "1M"})), text("ok")])
+    reply = ask(Assistant(fake, state, cache), "doge chart", snapshot=SNAPSHOT)
+    assert reply.ui_actions == [] and tool_results(fake, 1)[0]["reason"] == "bad_assets"
 
 
 def test_steps_card_comes_from_the_reviewed_file(cache, state):
@@ -623,7 +623,7 @@ def test_market_endpoint_gives_the_app_baht_prices(cache):
     api = TestClient(create_app(llm=FakeLLM([]), offline=True, poll=False))
     m = api.get("/market").json()
     assert m["currency"] == "THB"
-    assert set(m["assets"]) <= {"BTC", "ETH", "XAU"}  # app ids; no data for AAPL and TSLA
+    assert set(m["assets"]) <= {"BTC", "ETH", "XAU", "AAPL", "TSLA", "QQQ", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "BRK"}  # app ids
     gold = m["assets"]["XAU"]
     assert gold["price_thb"] > 50_000 and set(gold["change_pct"]) >= {"1D", "1W", "1M", "1Y"}
 

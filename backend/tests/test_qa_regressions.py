@@ -138,10 +138,9 @@ def test_dollar_screens_are_not_called_baht(cache, state):
 
 
 def test_history_of_an_asset_without_data_says_so(cache, state):
-    fake = FakeLLM([calls(("get_history", {"asset_id": "AAPL", "period": "1M"})), text("ok")])
-    ask(Assistant(fake, state, cache), "apple history", snapshot=SNAPSHOT)
-    data = tool_results(fake, 1)[0]["data"]
-    assert data["available"] is False and "no price history" in data["note"]
+    fake = FakeLLM([calls(("get_history", {"asset_id": "DOGE", "period": "1M"})), text("ok")])
+    ask(Assistant(fake, state, cache), "doge history", snapshot=SNAPSHOT)
+    assert "unknown asset" in json.dumps(tool_results(fake, 1))
 
 
 @pytest.mark.parametrize("value, en", [

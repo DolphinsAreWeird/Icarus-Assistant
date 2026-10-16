@@ -82,7 +82,7 @@ def test_common_requests_are_read_in_english_and_thai(text, here, kind, args):
 
 
 @pytest.mark.parametrize("text", [
-    "How is the S&P 500 doing?", "How is Tesla doing?", "What is the price of Apple?",
+    "How is the S&P 500 doing?",
     "Don't put 1000 baht in gold", "If I buy 1000 baht of gold", "What if I buy 1000 baht of gold",
     "Put 1000 baht in gold and buy bitcoin", "Show me gold. Then buy 1000 baht.", "Put 1.0001 baht in gold",
     "buy gold 1000", "buy 1000 baht", "Should I put 1000 baht in gold?", "gold?",

@@ -9,10 +9,14 @@ import time
 from datetime import UTC, datetime, timedelta
 
 from app.config import HISTORY_DAYS, HISTORY_DIR, SNAPSHOT_DIR
-from app.market.sources import fetch_klines, fetch_usd_thb_history
-from app.market.validate import fx_for_day, normalize_candles
+from app.market.sources import fetch_klines, fetch_usd_thb_history, fetch_yahoo_chart
+from app.market.validate import fx_for_day, normalize_candles, normalize_yahoo_candles
 
 FX_HISTORY_FILE = SNAPSHOT_DIR / "fx_history.json"
+
+
+# Our candle interval -> Yahoo's (interval, range). Stocks only trade on weekdays, so 7 days of hours is about 5 sessions.
+YAHOO_RANGES = {"1d": ("1d", "3y"), "1h": ("60m", "7d")}
 
 
 def history_file(asset_id: str, interval: str, history_dir=HISTORY_DIR):
@@ -53,6 +57,9 @@ def download_history(asset_id: str, asset: dict, fx: dict[str, float]) -> dict[s
         if asset["source"] == "binance":
             raw = fetch_klines(asset["symbol"], interval, int(start.timestamp() * 1000))
             rows = normalize_candles(raw, fx, int(time.time() * 1000))
+        elif asset["source"] == "yahoo":
+            chart = fetch_yahoo_chart(asset["symbol"], *YAHOO_RANGES[interval])
+            rows = normalize_yahoo_candles(chart, fx)
         else:
             step = timedelta(days=1) if interval == "1d" else timedelta(hours=1)
             rows = _fixed_rows(asset["price_usd"], fx, start, step, now)

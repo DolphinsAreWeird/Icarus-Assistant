@@ -108,10 +108,9 @@ def test_numbers_in_answers_are_the_data(client):
     assert ev["amount_thb"] == 1000 and ev["value_now_thb"] == pytest.approx(1000 * (1 + ev["change_pct"] / 100), abs=0.2)  # the % is rounded to 2 places
 
 
-def test_an_asset_without_data_says_so_honestly(client):
-    for q in ("how risky is apple", "what's the price of tesla", "what if I had put 1,000 baht in apple a year ago"):
-        r = say(client, q)
-        assert r["status"] == "data_unavailable" and "don't have" in r["text"] and "Apple" in r["text"] + "Apple"
+def test_a_view_only_asset_cannot_be_bought_and_says_so(client):
+    r = say(client, "buy 500 baht of tesla")
+    assert r["status"] == "data_unavailable" and "only buys gold, Bitcoin and Ethereum" in r["text"] and r["ui_actions"] == []
 
 
 def test_bad_goals_are_explained_not_crashed(client):
@@ -137,7 +136,7 @@ def test_topics_come_from_the_reviewed_words():
     assert friction.classify_topic("explain my balance") == "balance"
     assert friction.classify_topic("how is bitcoin doing") == "bitcoin"
     assert friction.classify_topic("ค่าธรรมเนียมคืออะไร") == "fee"
-    assert friction.classify_topic("zzz qqq") == "other"
+    assert friction.classify_topic("zzz www") == "other"
 
 
 def test_chat_is_logged_by_topic_never_by_text(client):
@@ -159,7 +158,7 @@ def test_confusion_refusals_and_unanswered_are_counted(client):
     s = client.get("/friction/summary").json()
     assert s["by_type"]["confusion"] == 2
     assert s["confusing"][0]["text"].endswith("asked about " + s["confusing"][0]["topic"]) and s["confusing"][0]["of_users"] == 1
-    say(client, "how risky is apple")                       # a question we can't answer
+    say(client, "buy 500 baht of tesla")                          # a request we can't do
     assert client.get("/friction/summary").json()["unanswered"] == 1
 
 

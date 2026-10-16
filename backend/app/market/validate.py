@@ -72,3 +72,43 @@ def normalize_candles(raw: list[list], fx_by_day: dict[str, float], now_ms: int)
         rate = fx_for_day(fx_by_day, t[:10])
         rows.append({"t": t, "close_usd": close_usd, "close_thb": round(close_usd * rate, 2)})
     return rows
+
+
+def _yahoo_closes(chart: dict) -> list[tuple[int, float]]:
+    """(unix time, close) for every bar with a real close. Yahoo leaves None for bars with no trades."""
+    stamps = chart.get("timestamp") or []
+    closes = (((chart.get("indicators") or {}).get("quote") or [{}])[0]).get("close") or []
+    return [(t, _positive(c)) for t, c in zip(stamps, closes) if c is not None]
+
+
+def normalize_yahoo_quote(chart: dict, asset_id: str, usd_thb: float, fetched_at: float) -> dict:
+    """Turn a Yahoo daily chart (range 5d) into our price entry. Change is the last price against the close before it."""
+    meta = chart["meta"]
+    price = _positive(meta["regularMarketPrice"])
+    bars = _yahoo_closes(chart)
+    if len(bars) < 2:
+        raise BadPrice(f"{asset_id}: not enough daily bars to find the change")
+    change = (price / bars[-2][1] - 1) * 100
+    if not -90 < change < 1000:
+        raise BadPrice(f"{asset_id}: 24h change {change:.1f}% looks wrong")
+    period = (meta.get("currentTradingPeriod") or {}).get("regular") or {}
+    market_open = bool(period) and period["start"] <= fetched_at <= period["end"]
+    return {
+        "asset_id": asset_id,
+        "price_usd": price,
+        "price_thb": round(price * usd_thb, 2),
+        "change_24h_pct": round(change, 2),
+        "as_of": ms_to_iso(int(meta["regularMarketTime"]) * 1000),
+        "source": "yahoo",
+        "market_open": market_open,
+        "fetched_at": fetched_at,
+    }
+
+
+def normalize_yahoo_candles(chart: dict, fx_by_day: dict[str, float]) -> list[dict]:
+    """Yahoo bars to [{t, close_usd, close_thb}], using each day's own FX rate."""
+    rows = []
+    for stamp, close in _yahoo_closes(chart):
+        t = ms_to_iso(int(stamp) * 1000)
+        rows.append({"t": t, "close_usd": close, "close_thb": round(close * fx_for_day(fx_by_day, t[:10]), 2)})
+    return rows

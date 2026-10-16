@@ -117,7 +117,7 @@ def _cut_thai(text: str, limit: int) -> str:
 
 
 # Names that keep their capital in the middle of a sentence ("gold" doesn't: the app says "gold" mid-sentence).
-NAMES = {"bitcoin", "ethereum", "tether", "paxos", "pax", "u-topia", "utopia", "icarus", "apple", "tesla", "home",
+NAMES = {"bitcoin", "ethereum", "tether", "paxos", "pax", "u-topia", "utopia", "icarus", "apple", "tesla", "microsoft", "nvidia", "alphabet", "google", "amazon", "meta", "berkshire", "nasdaq", "home",
          "invest", "portfolio", "wallets", "payments", "card", "buy", "confirm", "review", "swap", "send", "receive",
          "freeze", "top", "thai", "english"}
 
