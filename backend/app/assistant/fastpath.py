@@ -137,7 +137,18 @@ RULES = [
       rf"will {A} go (?:up|down)(?: today| tomorrow| this year| soon)?", rf"is {A} (?:better|safer) than {B}",
       rf"ควร(?:ซื้อ|ขาย|ลงทุน|ถือ)(?:ใน)?\s*(?:{A})?\s*(?:ตอนนี้|วันนี้)?\s*(?:ไหม|ดีไหม|หรือเปล่า|หรือยัง)?",
       rf"{A}\s*(?:น่าซื้อ|น่าลงทุน|ควรซื้อ|ควรขาย)\s*(?:ไหม|หรือเปล่า)?", r"(?:ซื้อ|ลงทุน)(?:อะไร|ตัวไหน)ดี|ตัวไหนดี",
-      rf"{A}\s*จะ(?:ขึ้น|ลง)\s*(?:ไหม|หรือเปล่า)?"], _one("advice")),
+      rf"{A}\s*จะ(?:ขึ้น|ลง)\s*(?:ไหม|หรือเปล่า)?",
+      # "I have 50,000 baht, what should I do with it?" and other ways of asking where to put money
+      r"(?:i have|i ve got|i got) \d+(?:\.\d{1,2})? baht (?:what should i do(?: with it)?|where should i put it|what should i buy|what do i do with it)",
+      r"what should i do with (?:my |this |the )?(?:money|cash|savings|it)(?: now| today)?",
+      r"where should i (?:put|invest) (?:my )?(?:money|cash|savings)(?: now| today)?",
+      r"how should i invest(?: my (?:money|cash|savings))?",
+      r"มีเงิน\s*\d+(?:\.\d{1,2})?\s*บาท\s*(?:ควร)?(?:ทำอะไรดี|ลงทุนอะไรดี|ซื้ออะไรดี)"], _one("advice")),
+    # a minus amount: ask again, never read it as a buy
+    ([r"(?:buy|purchase|get|put|invest|sell)(?: in)? -\d.*", r"(?:ซื้อ|ขาย|ลงทุน).*-\s*\d.*"], _const("bad_amount")),
+    # stocks are on the Invest screen to look at; the demo only buys gold, Bitcoin and Ethereum
+    ([r"(?:buy|purchase|get|sell|invest in)(?: \d+(?:\.\d{1,2})?(?: baht)?)?(?: (?:of|in|worth of))?(?: shares? of| stocks? of)? (?:tesla|apple|tsla|aapl)(?: shares?| stocks?)?(?: for \d+(?:\.\d{1,2})? baht)?",
+      r"(?:ซื้อ|ขาย|ลงทุน)\s*(?:หุ้น)?\s*(?:เทสลา|แอปเปิล|tesla|apple)\s*.*"], _const("stocks")),
     # buy and sell: an amount in baht, and an asset (or the asset page the user is on)
     ([rf"(?P<side>buy|purchase|get|put|invest) {AMOUNT}(?: worth)?(?: (?:of|in|into) {A})?",
       rf"(?P<side>buy|purchase|get) {A} (?:for|with) {AMOUNT}",
@@ -424,6 +435,12 @@ def run(intent: Intent, ctx, facts, lang: str, llm=None, user_text: str = "") ->
         return _trade_text(intent, result, lang), 0
     if kind == "advice":
         return advice_text(args.get("asset_id"), lang), 0
+    if kind == "bad_amount":
+        return ("จำนวนเงินต้องมากกว่าศูนย์นะ อยากใส่เท่าไหร่ดี" if th
+                else "Amounts start above zero. How much would you like to put in?"), 0
+    if kind == "stocks":
+        return ("หุ้นอย่าง Tesla และ Apple ดูได้ในหน้าลงทุน แต่ในเดโมนี้ฉันซื้อให้ได้แค่ทองคำ บิตคอยน์ และอีเธอเรียม" if th
+                else "Stocks like Tesla and Apple are on the Invest screen to look at; in this demo I can buy gold, Bitcoin and Ethereum."), 0
     if kind == "price":
         return price_text(facts, ctx, args["asset_id"], lang), 0
     if kind == "info":

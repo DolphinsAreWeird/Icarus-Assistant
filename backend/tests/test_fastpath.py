@@ -80,16 +80,27 @@ def test_common_requests_are_read_in_english_and_thai(text, here, kind, args):
 
 
 @pytest.mark.parametrize("text", [
-    "How is the S&P 500 doing?", "How is Tesla doing?", "Buy 1000 baht of Tesla", "What is the price of Apple?",
+    "How is the S&P 500 doing?", "How is Tesla doing?", "What is the price of Apple?",
     "Don't put 1000 baht in gold", "If I buy 1000 baht of gold", "What if I buy 1000 baht of gold",
     "Put 1000 baht in gold and buy bitcoin", "Show me gold. Then buy 1000 baht.", "Put 1.0001 baht in gold",
-    "Put -1000 baht in gold", "buy gold 1000", "buy 1000 baht", "Should I put 1000 baht in gold?", "gold?",
+    "buy gold 1000", "buy 1000 baht", "Should I put 1000 baht in gold?", "gold?",
     "bitcoin vs bitcoin", "freeze unfreeze...", "Confirm the purchase", "how is my money split",
     "Is gold more volatile than bitcoin?", "can you recommend a coin", "show me gold and bitcoin",
     "ซื้อทองคำ 1000 บาท แล้วซื้อบิทคอยน์", "ไม่ต้องซื้อทอง", "ถ้าทองลง ควรขายไหม",
 ])
 def test_anything_unclear_goes_to_the_model(text):
     assert parse(text) is None
+
+
+@pytest.mark.parametrize("text, kind", [
+    ("Put -1000 baht in gold", "bad_amount"), ("Buy -500 baht of gold", "bad_amount"),
+    ("Buy 1000 baht of Tesla", "stocks"), ("Buy 10 Tesla shares", "stocks"), ("Invest in Apple", "stocks"),
+    ("I have 50,000 baht, what should I do with it?", "advice"), ("Where should I put my money?", "advice"),
+])
+def test_minus_amounts_stocks_and_money_questions_never_reach_the_model(text, kind):
+    # A minus amount is asked again (never read as a buy), stocks are look-only in the demo, and
+    # "what should I do with my money" is advice: all answered in code, so the model can't get them wrong.
+    assert parse(text).kind == kind
 
 
 def test_normalize():

@@ -22,7 +22,16 @@ services:
         sync: false
       # Tried in this order; a slow or failing one hands over to the next (backend/app/assistant/llm.py).
       - key: LLM_CHAIN
-        value: "orion:Qwen 3.8-27B,gemini:gemini-3-flash-preview,gemini:gemini-3.1-flash-lite"
+        value: "orion:Qwen 3.8-27B,orion:Mango 1.5-9B,gemini:gemini-3.1-flash-lite,gemini:gemini-3-flash-preview"
+      # Ask the next model too if the first hasn't answered in 2.5 s; skip a failing one for a minute.
+      - key: LLM_HEDGE_MS
+        value: "2500"
+      - key: LLM_COOLDOWN_S
+        value: "60"
+      - key: ANSWER_CACHE_TTL_S
+        value: "300"
+      - key: FASTPATH
+        value: "1"
       - key: VOICE_ID_EN
         value: XiPS9cXxAVbaIWtGDHDh
       - key: VOICE_ID_TH
@@ -32,4 +41,4 @@ services:
       - key: LLM_MODEL
         value: gemini-3-flash-preview,gemini-3.1-flash-lite
       - key: LLM_TIMEOUT_S
-        value: "6"
+        value: "8"
