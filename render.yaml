@@ -13,10 +13,16 @@ services:
     envVars:
       - key: ELEVENLABS_API_KEY
         sync: false
+      # Orion (CMKL's gateway): the first model in the chain. A key that starts with sk-.
+      - key: ICARUS_LLM_API_KEY
+        sync: false
       - key: GEMINI_API_KEY
         sync: false
       - key: GROQ_API_KEY
         sync: false
+      # Tried in this order; a slow or failing one hands over to the next (backend/app/assistant/llm.py).
+      - key: LLM_CHAIN
+        value: "orion:Qwen 3.8-27B,gemini:gemini-3-flash-preview,gemini:gemini-3.1-flash-lite"
       - key: VOICE_ID_EN
         value: XiPS9cXxAVbaIWtGDHDh
       - key: VOICE_ID_TH
