@@ -1,0 +1,136 @@
+<!doctype html>
+<!-- How Icarus works, as one picture for the deck and the README.
+     Render: node docs/render-architecture.cjs  (writes docs/media/architecture.png) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How Icarus works</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@500;700&display=swap">
+<style>
+  :root { --pink: #C94F72; --rose: #F7D2DC; --blush: #FDE3EA; --paper: #FFF7F9; --ink: #4A2E36; --soft: #6E5560; --gold: #E9A83B; }
+  * { box-sizing: border-box; margin: 0; }
+  body { width: 1692px; height: 760px; background: var(--paper); font-family: Nunito, system-ui, sans-serif; color: var(--ink); position: relative; overflow: hidden;
+    background-image: radial-gradient(#F9DCE4 1.6px, transparent 1.7px); background-size: 30px 30px; }
+  .card { position: absolute; background: #FFFDFE; border: 2px solid var(--rose); border-radius: 28px; padding: 18px 20px 16px;
+    box-shadow: 0 10px 26px rgba(201, 79, 114, .13); }
+  .head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .badge { width: 50px; height: 50px; border-radius: 50%; background: var(--pink); display: flex; align-items: center; justify-content: center; flex: none;
+    box-shadow: 0 4px 10px rgba(201, 79, 114, .3); }
+  .badge svg { width: 27px; height: 27px; }
+  .num { position: absolute; top: -14px; left: -10px; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: #fff;
+    font: 600 18px/34px Fredoka, sans-serif; text-align: center; box-shadow: 0 3px 8px rgba(74, 46, 54, .3); }
+  h3 { font: 600 24px/1.15 Fredoka, sans-serif; color: var(--ink); }
+  p { font-size: 17px; line-height: 1.38; color: var(--soft); }
+  p b { color: var(--ink); font-weight: 700; }
+  .small { font-size: 15.5px; }
+  .brain { background: linear-gradient(160deg, #FDE3EA 0%, #FFF7F9 70%); border: 2.5px solid var(--pink); }
+  .mascot { position: absolute; width: 112px; height: 112px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(150, 60, 85, .25)); }
+  .row-label { position: absolute; font: 600 15px Fredoka, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pink); }
+  .pill { position: absolute; display: flex; align-items: center; gap: 14px; background: #FFFDFE; border: 2px dashed #EBB3C3; border-radius: 999px; padding: 12px 22px 12px 12px; }
+  .pill .badge { width: 44px; height: 44px; background: var(--gold); }
+  .pill p { font-size: 17px; }
+  .tag { display: inline-block; font: 600 13px Fredoka, sans-serif; color: var(--pink); background: var(--blush); border-radius: 999px; padding: 3px 10px; margin-top: 8px; }
+  svg.wires { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+
+<div style="position:absolute;left:14px;top:44px;width:1664px;height:712px">
+<!-- wires first, cards paint over them -->
+<svg class="wires" width="1664" height="712" viewBox="0 0 1664 712">
+  <defs>
+    <marker id="tip" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#C94F72"/></marker>
+    <symbol id="heart" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 5.3 3.1 1.7-1.9 3.2-3.1 5.3-3.1 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z" fill="#E97A9A"/></symbol>
+  </defs>
+  <g fill="none" stroke="#C94F72" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 11">
+    <!-- row A: 1 > 2 > 3 > 4 > 5 (cards 296 wide at lefts 0, 342, 684, 1026, 1368; middle y 92) -->
+    <path d="M300 104 L334 104" marker-end="url(#tip)"/>
+    <path d="M642 104 L676 104" marker-end="url(#tip)"/>
+    <path d="M984 104 L1018 104" marker-end="url(#tip)"/>
+    <path d="M1326 104 L1360 104" marker-end="url(#tip)"/>
+    <!-- the brain's bus down to its four helpers (centres 220, 628, 1036, 1444) -->
+    <path d="M832 214 L832 290"/>
+    <path d="M220 290 L1444 290"/>
+    <path d="M220 290 L220 344" marker-end="url(#tip)"/>
+    <path d="M628 290 L628 344" marker-end="url(#tip)"/>
+    <path d="M1036 290 L1036 344" marker-end="url(#tip)"/>
+    <path d="M1444 290 L1444 344" marker-end="url(#tip)"/>
+  </g>
+  <use href="#heart" x="820" y="278" width="24" height="24"/>
+</svg>
+
+<!-- row A: the conversation -->
+<div class="card" style="left:0;top:0;width:296px;height:214px">
+  <div class="num">1</div>
+  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg></div><h3>You ask</h3></div>
+  <p>Say it or type it, in <b>English or Thai</b>. Or tap anything on screen and ask what it means.</p>
+  <span class="tag">web app, phone or laptop</span>
+</div>
+
+<div class="card" style="left:342px;top:0;width:296px;height:214px">
+  <div class="num">2</div>
+  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></div><h3>Icarus listens</h3></div>
+  <p><b>ElevenLabs</b> Scribe v2 Realtime turns your voice into text as you speak.</p>
+  <span class="tag">ElevenLabs · Node voice server</span>
+</div>
+
+<div class="card brain" style="left:684px;top:0;width:296px;height:214px">
+  <div class="num">3</div>
+  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="#fff"><path d="M13.5 2 5 13.5h6L9.8 22 19 10h-6.2z"/></svg></div><h3>Icarus thinks</h3></div>
+  <p>Code works out <b>what you want</b> first (milliseconds), then picks the facts.</p>
+  <span class="tag">Python · FastAPI</span>
+  <img class="mascot" src="../frontend/public/mascot/bow/working.png" alt="" style="right:-30px;top:-46px;width:92px;height:92px">
+</div>
+
+<div class="card" style="left:1026px;top:0;width:296px;height:214px">
+  <div class="num">4</div>
+  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.6-2.2L4.6 15.6a1.6 1.6 0 0 1 2.4-2.1L9 15.5"/></svg></div><h3>Icarus shows</h3></div>
+  <p>One short sentence <b>out loud</b>, while it moves the screens, points and fills in the form.</p>
+  <span class="tag">TypeScript app · ElevenLabs voice</span>
+</div>
+
+<div class="card" style="left:1368px;top:0;width:296px;height:214px">
+  <div class="num">5</div>
+  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12.3 2.7 2.7L16.2 9.5"/></svg></div><h3>You confirm</h3></div>
+  <p>Icarus <b>never buys</b> for you. The amount, fee and total are on screen; you tap.</p>
+  <span class="tag">simulated purchase</span>
+</div>
+
+<div class="row-label" style="left:870px;top:240px">what Icarus thinks with</div>
+
+<!-- row B: what the brain uses (cards 360 wide at lefts 40, 448, 856, 1264) -->
+<div class="card" style="left:40px;top:352px;width:360px;height:210px">
+  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6.5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V5.5M4.5 12v6.5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V12"/></svg></div><h3>Prepared answers</h3></div>
+  <p class="small">Fact sheets for every asset and every user, <b>ready before you ask</b>, refreshed with each price. The 40 most-asked questions answered in English and Thai.</p>
+  <span class="tag">grows with every new question</span>
+</div>
+
+<div class="card" style="left:448px;top:352px;width:360px;height:210px">
+  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="#fff"><path d="M10 2.5 11.6 7.4 16.5 9 11.6 10.6 10 15.5 8.4 10.6 3.5 9 8.4 7.4z"/><path d="M17.5 13 18.4 15.6 21 16.5 18.4 17.4 17.5 20 16.6 17.4 14 16.5 16.6 15.6z"/></svg></div><h3>AI model chain</h3></div>
+  <p class="small">Only for new questions, to word one sentence. <b>Qwen 3.8-27B</b> on CMKL Orion (about 2 s). Slow or down? <b>Gemini</b> and <b>Groq</b> step in; the first answer wins.</p>
+</div>
+
+<div class="card" style="left:856px;top:352px;width:360px;height:210px">
+  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 18.5 9 12.5l4 3.5 7.5-9"/><path d="M15.5 7h5v5"/></svg></div><h3>Live data</h3></div>
+  <p class="small">Prices from <b>Binance</b>, the baht rate from <b>Frankfurter</b>. Every visitor gets their own demo account. Numbers only ever come from here.</p>
+</div>
+
+<div class="card" style="left:1264px;top:352px;width:360px;height:210px">
+  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 4.5 5.8v5.7c0 4.7 3.2 8.3 7.5 9.7 4.3-1.4 7.5-5 7.5-9.7V5.8z"/><path d="m8.8 12 2.3 2.3 4.3-4.6"/></svg></div><h3>House rules</h3></div>
+  <p class="small"><b>No buy or sell advice</b>, ever. Every number from data, never from the AI. Voice never approves anything: a tap does.</p>
+</div>
+
+<!-- row C: what goes out -->
+<div class="pill" style="left:40px;top:612px;width:772px">
+  <div class="badge"><svg viewBox="0 0 24 24" fill="#fff"><path d="M21.5 2.5 2.8 10.3l7 2.6 2.6 7z"/><path d="m21.5 2.5-11.7 10.4" stroke="#E9A83B" stroke-width="1.6"/></svg></div>
+  <p><b>Not finance?</b> Rides, flights, shopping: Icarus writes the request and hands it to <b>U-Bot</b>, U-topia’s own assistant.</p>
+</div>
+<div class="pill" style="left:852px;top:612px;width:772px">
+  <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V4"/></svg></div>
+  <p><b>For the business:</b> every question lands on a <b>friction map</b>, showing where new users get stuck.</p>
+</div>
+
+<img class="mascot" src="../frontend/public/mascot/bow/happy.png" alt="" style="left:1530px;top:222px;width:104px;height:104px;transform:scaleX(-1)">
+</div>
+</body>
+</html>
