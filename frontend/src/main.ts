@@ -3,12 +3,14 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { setMascotFallback } from './assets';
-import { backendFromLocation, installBackend, toPrototypeAction, type PrototypeLike } from './backend-bridge';
+import { DEFAULT_USER, backendFromLocation, installBackend, toPrototypeAction, type PrototypeLike } from './backend-bridge';
 import { hideInfoCard, showChartCard, showStepsCard, type ChartCardData, type StepsCardData } from './chat-cards';
 import { createDcApp, installHelmet } from './dc-runtime';
 import { hideHandoffCard, showHandoffCard } from './handoff-card';
 import { hideTradeCard, showTradeCard } from './trade-card';
 import { renderUbotMock } from './ubot-mock';
+import { withJudgeCopy } from './judge-copy';
+import { installTour, type TourInstance } from './tour';
 import { installUtopiaRouting, withUtopiaRouting, type PrototypeInstance } from './utopia-bridge';
 import { attachTts, installVoice } from './voice-bridge';
 import { installDemoData } from './demo-data';
@@ -41,10 +43,49 @@ function routePageLinks() {
 }
 
 /**
+ * Which backend answers. ?backend=<url> picks one (local runs). Otherwise the hosted demo's own (/brain on this
+ * address, announced by /api/health). ?backend=off: the prototype's scripted answers only.
+ */
+async function pickBackend(): Promise<{ url: string; userId: string } | null> {
+  if (PARAMS.get('backend') === 'off') return null;
+  const fromUrl = backendFromLocation(location.search);
+  if (fromUrl) return fromUrl;
+  const health = await fetch('/api/health').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  if (typeof health?.backend !== 'string') return null;
+  return { url: new URL(health.backend, location.href).href.replace(/\/+$/, ''), userId: visitorUser() };
+}
+
+/**
+ * On the hosted demo every visitor gets their own copy of the demo account (backend/app/state.py), so one judge's
+ * purchases never show up for the next. The id is kept in this browser so a reload keeps the same account.
+ */
+function visitorUser(): string {
+  let id = '';
+  try {
+    id = localStorage.getItem('icarus.visitor') ?? '';
+  } catch {
+    // storage blocked: a fresh account for this page view
+  }
+  if (!/^[a-z0-9]{10}$/.test(id)) {
+    id = Array.from(crypto.getRandomValues(new Uint8Array(10)), (b) => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
+    try {
+      localStorage.setItem('icarus.visitor', id);
+    } catch {
+      // fine: see above
+    }
+  }
+  return `${DEFAULT_USER}-${id}`;
+}
+
+/**
  * A small pill under the phone: what the voice stack is doing, and any problem. Information fades after 10 s so it
  * never covers a card; an error stays until clicked. It sits below the cards (z-index 8000 against their 9000+).
+ * Only with ?debug: visitors never see it (messages go to the console instead).
  */
 function createStatusPill(): (text: string, kind?: 'info' | 'error') => void {
+  if (!PARAMS.has('debug')) {
+    return (text, kind = 'info') => (kind === 'error' ? console.warn : console.info)(`[icarus] ${text}`);
+  }
   const pill = document.createElement('div');
   pill.style.cssText =
     'position:fixed;left:50%;bottom:10px;transform:translateX(-50%);max-width:92vw;padding:6px 14px;border-radius:999px;' +
@@ -81,13 +122,13 @@ async function main() {
     return;
   }
   routePageLinks();
-  const res = await fetch(PAGE_URL);
+  const [res, backend] = await Promise.all([fetch(PAGE_URL), IS_DASHBOARD ? null : pickBackend()]);
   if (!res.ok) throw new Error(`Could not load the page (${res.status}).`);
-  // With ?backend the fee follows the backend's rule (demo-data.ts), so the design's fixed "(1%)" label would be
+  // With a backend the fee follows the backend's rule (demo-data.ts), so the design's fixed "(1%)" label would be
   // wrong next to the amount. The amount on the screen is the backend's; the label just says what it is.
-  const html = backendFromLocation(location.search)
-    ? (await res.text()).replaceAll('Transaction fee (1%)', 'Transaction fee')
-    : await res.text();
+  // The side console speaks to visitors on their own, not to a presenter (judge-copy.ts).
+  const page = withJudgeCopy(await res.text(), { liveData: Boolean(backend) });
+  const html = backend ? page.replaceAll('Transaction fee (1%)', 'Transaction fee') : page;
 
   // Use the real mascot images if they are served next to the app. If not, draw placeholders.
   const hasMascots = await fetch('mascot/bow/hero.png', { method: 'HEAD' }).then((r) => r.ok && (r.headers.get('content-type') ?? '').startsWith('image/'), () => false);
@@ -128,11 +169,17 @@ async function main() {
         hideCard: hideHandoffCard,
       };
       installUtopiaRouting(utopia);
-      // ?backend: answers come from Luka and First's backend instead of the demo answers (backend-bridge.ts).
-      const backend = backendFromLocation(location.search);
+      // With a backend, answers come from Luka and First's backend instead of the demo answers (backend-bridge.ts).
       if (backend) {
         const demo = installDemoData(instance, backend.url, backend.userId, message => status(message, 'error'));
-        void demo.refresh().catch(error => status(`Demo account could not load: ${error.message}`, 'error'));
+        // Keep trying: on the hosted demo the backend may still be starting (or restarting after a deploy).
+        const loadAccount = (attempt: number): void => {
+          demo.refresh().catch((error: Error) => {
+            status(`Demo account could not load: ${error.message}`, 'error');
+            if (attempt < 60) window.setTimeout(() => loadAccount(attempt + 1), Math.min(10_000, 2_000 + attempt * 500));
+          });
+        };
+        loadAccount(0);
         installBackend({
           ...backend,
           getInstance: () => instance as PrototypeLike | null,
@@ -170,6 +217,21 @@ async function main() {
             }),
         });
       }
+      // The mascot's one-minute tour (tour.ts): offered on a first visit, and from the "Tour" pill any time.
+      const tourParam = PARAMS.get('tour');
+      installTour(
+        {
+          getInstance: () => instance as unknown as TourInstance | null,
+          getPhone,
+          showHandoff: (info) => showHandoffCard(info, { th: false, getPhone }),
+          hideCards: () => {
+            hideTradeCard();
+            hideInfoCard();
+            hideHandoffCard();
+          },
+        },
+        { offer: tourParam === '0' ? 'never' : tourParam === '1' ? 'always' : 'auto' },
+      );
       void describeServer().then((text) => status(backend ? `${text} Brain: backend at ${backend.url} (user ${backend.userId}).` : text));
     } else if (Date.now() - started > 5000) {
       clearInterval(wait);

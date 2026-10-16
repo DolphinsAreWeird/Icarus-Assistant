@@ -1,12 +1,35 @@
 # Icarus
 
-**Icarus: fly without falling.**
-
-An AI assistant that lives inside a finance app. It explains the screens, numbers and charts in plain words, and it can prepare actions like a trade, by text or by voice, in English or Thai.
+**Icarus: fly without falling.** A guide that lives inside a finance app. It explains the screens in plain words, moves through the app for you, and never buys without your tap. By voice or text, in English or Thai.
 
 > Robinhood built an AI for Robinhood. Icarus is the AI for every other finance app. It walks new users through the app in their own words, and tells the business where they got stuck.
 
-Built for U-Hackathon 2026 (FLOW Summit, Bangkok, 15 to 16 Oct 2026), AI track. The demo app is a U-topia style crypto and investing app.
+Built for U-Hackathon 2026 (FLOW Summit, Bangkok, 15 to 16 Oct 2026), AI track. Icarus plugs into any finance app; U-topia is the first partner. (Planning notes from the hackathon are in [`docs/team-notes/`](docs/team-notes/).)
+
+**Live demo: LIVE_DEMO_URL** (opens with a one-minute tour by the mascot; turn your sound on)
+
+![The mascot's tour, left to right: hello; gold's year on the chart; no advice on "should I buy"; a 1,000 baht gold buy filled in and stopped at Confirm; an answer in Thai; a ride request handed to U-Bot, written for it](docs/media/tour-storyboard.png)
+
+[Watch the tour (57 s video)](docs/media/icarus-tour.mp4) · [as a GIF](docs/media/icarus-tour.gif). Recorded from the live app; the video has no sound, the captions are what the mascot says.
+
+## Try it in two minutes
+
+1. **Watch the tour**, or tap **Tour** in the corner any time. The mascot shows everything below on the real screens.
+2. Open Icarus (the mascot button) and say or type **"Put 1,000 baht in gold."** Icarus fills in the buy screen, reads back the amount, fee and total, and stops at Confirm. You tap.
+3. **"How did bitcoin do this year?"** A chart, with the numbers from live data.
+4. **"Should I buy bitcoin?"** Icarus won't pick for you. It offers facts instead.
+5. **"ดูราคาทองคำ"** It speaks Thai too.
+6. **"Book me a ride to Siam Paragon."** Not a finance task: Icarus writes the request for U-Bot, U-topia's own assistant, and opens it.
+7. **The race:** in the side panel, buy 1,000 baht of gold by tapping through the app, then again by voice. A stopwatch times both.
+8. **The business view:** the dashboard shows what users asked and where they got stuck.
+
+**What is real:** live prices (Binance, Frankfurter for baht), ElevenLabs voice (Scribe v2 Realtime listening, Flash v2.5 and v4 Turbo speaking), the AI answers, and the U-Bot link. **What is demo:** the account (every visitor gets their own 5,000 baht), the fee rule (0.25%, at least 5 baht), and the purchases: no real money moves.
+
+## How it works
+
+![How Icarus works: you ask (voice or text, English or Thai); it listens (ElevenLabs Scribe); it thinks (code works out what you want first, the AI only finds the words); it shows (one sentence out loud while it moves the screens); you tap Confirm. It thinks with prepared answers, an AI model in the cloud with a backup, live data and house rules. Non-finance requests are written up for U-Bot, and every question feeds a friction map.](docs/media/architecture.png)
+
+Code does the work, the AI finds the words. The backend works out what the user wants and gets the numbers first (prepared fact sheets, refreshed with every price), so plain requests never wait for an AI: 8 everyday questions went from 42 s to 3 s in total (measured 16 Oct 2026). New questions get one short AI call, and a backup model answers if the first is slow; asked again within 5 minutes, they come back instantly. New questions are logged, so the most-asked ones become prepared answers. A 100-question battery (`backend/scripts/battery100.py`) checks the answers and the house rules. Drawn in [`docs/architecture.html`](docs/architecture.html).
 
 ## The problem
 

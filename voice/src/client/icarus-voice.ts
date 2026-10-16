@@ -32,11 +32,13 @@ import type {
   VoiceState,
 } from '../shared/types';
 import { VoiceApi, VoiceApiError, type VoiceApiPort } from './api';
+import { BargeInDetector } from './barge-in';
 import { ConfirmFlow, type TimerPort } from './confirm-flow';
 import { Emitter } from './emitter';
 import { browserSpeechFallback, type FallbackSpeaker } from './fallback-voice';
 import type { MicFrame, MicPort } from './mic';
 import { WebMic } from './mic';
+import { NoiseFloor } from './noise-floor';
 import { WebAudioOutput, type AudioOutput, type PlaybackHandle } from './player';
 import { VoiceStateMachine } from './state-machine';
 import { SttClient, type SttFinal, type SttPort } from './stt-client';
@@ -166,7 +168,11 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
   private readonly cfg: VoiceDefaults;
   private readonly deps: IcarusVoiceDeps;
   private readonly sm: VoiceStateMachine;
+  /** The room's background level. Barge-in and the VAD both measure loudness against it. */
+  private readonly floor: NoiseFloor;
   private readonly vad: EnergyVad;
+  /** Decides when the user's speech stops Icarus (barge-in.ts). */
+  private readonly barge: BargeInDetector;
   private readonly confirm: ConfirmFlow;
   private readonly userId: string;
   private readonly fallbackEnabled: boolean;
@@ -201,7 +207,6 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
   private timing: { turnId: number; finalAt: number; speechEndAt: number; fromMic: boolean; assistantMs: number | null; ttsFirstByteMs: number | null; cache: 'hit' | 'miss' | null; sent: boolean } | null = null;
 
   private utterance: { startedAt: number | null; firstPartialAt: number | null } = { startedAt: null, firstPartialAt: null };
-  private bargeLoudSince: number | null = null;
   private volumeStep = 0;
   private speedStep = 0;
   private lastActivityAt = 0;
@@ -228,13 +233,24 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
       (from, to, reason) => console.warn(`[icarus-voice] ignored illegal state change ${from} -> ${to} (${reason})`),
     );
 
-    this.vad = new EnergyVad({
-      hangoverMs: this.cfg.vad.hangoverMs,
-      onsetMs: this.cfg.bargeIn.onsetMs,
-      minRms: this.cfg.bargeIn.minRms,
-      ratio: this.cfg.bargeIn.energyRatio,
-      ratioWhileSpeaking: this.cfg.bargeIn.energyRatioWhileSpeaking,
+    const bargeCfg = this.cfg.bargeIn;
+    this.floor = new NoiseFloor({
+      percentile: bargeCfg.floorPercentile,
+      windowMs: bargeCfg.floorWindowMs,
+      initial: bargeCfg.floorInitial,
+      warmupMs: bargeCfg.floorWarmupMs,
     });
+    this.barge = new BargeInDetector(bargeCfg);
+    this.vad = new EnergyVad(
+      {
+        hangoverMs: this.cfg.vad.hangoverMs,
+        onsetMs: this.cfg.vad.onsetMs,
+        minRms: this.cfg.vad.minRms,
+        ratio: this.cfg.vad.energyRatio,
+        ratioWhileSpeaking: this.cfg.vad.energyRatioWhileSpeaking,
+      },
+      this.floor,
+    );
 
     this.confirm = new ConfirmFlow(
       {
@@ -535,6 +551,8 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
   private onMicFrame(frame: MicFrame): void {
     const now = this.deps.timers.now();
     const audible = this.isAudible();
+    // The room's level is learned from every frame: while listening and while Icarus talks (noise-floor.ts).
+    this.floor.push(frame.rms);
     const event = this.vad.push(frame.rms, now, audible);
     if (event === 'speech_start') {
       this.utterance.startedAt = this.vad.speechStartedAt;
@@ -544,10 +562,13 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
       this.utterance.startedAt = null;
     }
 
-    // Hybrid barge-in: loud enough, long enough, and much louder than Icarus's own echo.
-    // This watches loudness by itself, so it still works if the user was already mid-sentence.
-    if (audible && this.cfg.bargeIn.mode === 'hybrid') this.checkLoudBargeIn(frame.rms, now);
-    else this.bargeLoudSince = null;
+    // Barge-in, the loudness half (barge-in.ts): clearly above the room's level, for long enough. Loudness alone
+    // never stops Icarus: Scribe must also hear real words. Those usually arrive later (onSttPartial), but if they
+    // came first, this frame completes the rule. It also works if the user was already mid-sentence.
+    if (audible) {
+      const done = this.barge.frame(frame.rms, now, this.floor.value);
+      if (done) this.userBargesIn('energy', done.startedAt);
+    }
 
     if (this.mode === 'hands-free') {
       this.stt?.sendAudio(frame.pcm);
@@ -557,20 +578,6 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     } else {
       this.preRoll.push(frame.pcm);
       if (this.preRoll.length > PRE_ROLL_FRAMES) this.preRoll.shift();
-    }
-  }
-
-  private checkLoudBargeIn(rms: number, now: number): void {
-    if (rms <= this.vad.threshold(true)) {
-      this.bargeLoudSince = null;
-      return;
-    }
-    this.bargeLoudSince ??= now;
-    if (now - this.bargeLoudSince >= this.cfg.bargeIn.onsetMs) {
-      this.utterance.startedAt = this.bargeLoudSince; // when this interruption began
-      this.bargeLoudSince = null;
-      this.lastActivityAt = now;
-      this.bargeIn('energy');
     }
   }
 
@@ -617,9 +624,12 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     if (this.utterance.firstPartialAt === null) this.utterance.firstPartialAt = now;
     this.emit('partialTranscript', { text });
 
-    // Barge-in by transcript: Scribe heard words while Icarus is talking, and they are not Icarus's own voice.
-    if (this.isAudible() && text.trim().length >= this.cfg.bargeIn.minPartialChars && !this.isEcho(text)) {
-      this.bargeIn('transcript');
+    // Barge-in, the words half (barge-in.ts): real words while Icarus talks, not Icarus's own voice coming back.
+    // They stop Icarus only together with sustained loudness from the mic (onMicFrame). A filler, a word Scribe
+    // guessed from noise, or people chatting quietly nearby do not.
+    if (this.isAudible()) {
+      const verdict = this.barge.words(text, now);
+      if (verdict.interrupt) this.userBargesIn('transcript', verdict.startedAt);
     }
   }
 
@@ -650,6 +660,19 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
       this.emit('transcriptIgnored', { text: final.text, reason: verdict.reason, confidence: final.confidence });
       if (wasWaiting) this.afterSpeech();
       return;
+    }
+
+    // While Icarus talks, a spoken sentence counts only if it passes the barge-in rule: real words, with sustained
+    // loudness above the room's level. Otherwise it is background (people nearby, a TV, a cough Scribe turned into a
+    // word): Icarus keeps talking and the words are dropped. When Icarus is quiet, this rule does not apply.
+    if (final.source === 'voice' && this.isAudible()) {
+      const overIcarus = this.barge.words(final.text, this.deps.timers.now());
+      if (!overIcarus.interrupt) {
+        this.emit('transcriptIgnored', { text: final.text, reason: overIcarus.reason, confidence: final.confidence });
+        if (wasWaiting) this.afterSpeech();
+        return;
+      }
+      this.bargeIn('final', overIcarus.startedAt);
     }
 
     this.currentLang = final.language;
@@ -689,8 +712,9 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
   // =========================================================================
 
   private handleUtterance(final: FinalTranscript): void {
-    // Anything the user says while Icarus is talking stops Icarus first.
-    if (this.isAudible()) this.bargeIn(final.source === 'voice' ? 'final' : null);
+    // Typed text (and the test page's simulated speech) stops Icarus first. A spoken final already passed the
+    // barge-in rule in processFinal, so Icarus is quiet by now.
+    if (this.isAudible()) this.bargeIn(null);
 
     // 1. A money preview is waiting for an answer.
     if (this.confirm.phase) {
@@ -844,6 +868,8 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     this.playback = pb;
     this.lastSpeech = { text: speech.text, endedAt: null };
     this.lastSpoken = { text: speech.text, lang: speech.language };
+    // A new line: what the mic heard before it (the user's own question, say) cannot interrupt it.
+    this.barge.begin(speech.text);
     this.lastActivityAt = this.deps.timers.now();
     void this.runPlayback(pb, speech, turnId);
     return done;
@@ -964,15 +990,27 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     if (pb.started) this.emit('speakingEnd', { reason });
   }
 
-  /** The user talked over Icarus. Stop at once and listen. */
-  private bargeIn(source: VoiceEvents['bargeIn']['source'] | null): void {
+  /**
+   * The barge-in rule passed on a mic frame or a partial transcript: the user is talking over Icarus, mid-sentence.
+   * `startedAt` is their first loud frame, which is also when this utterance began.
+   */
+  private userBargesIn(source: 'energy' | 'transcript', startedAt: number): void {
+    this.utterance.startedAt = startedAt;
+    this.lastActivityAt = this.deps.timers.now();
+    this.bargeIn(source, startedAt);
+  }
+
+  /**
+   * Stop at once and listen. Callers have already decided: the barge-in rule passed (mic), or the user pressed
+   * push-to-talk or typed. `startedAt`: the user's first loud frame, if known (for the `ms` number).
+   */
+  private bargeIn(source: VoiceEvents['bargeIn']['source'] | null, startedAt: number | null = null): void {
     if (!this.isAudible()) return;
     const now = this.deps.timers.now();
-    // Measure from the first loud mic frame. A transcript can arrive before the loudness check is sure.
-    const startedAt = this.bargeLoudSince ?? this.utterance.startedAt ?? this.utterance.firstPartialAt;
-    this.bargeLoudSince = null;
+    const began = startedAt ?? this.utterance.startedAt ?? this.utterance.firstPartialAt;
+    this.barge.reset();
     this.stopPlayback('interrupted'); // a stopped read-back never unlocks "confirm"
-    if (source) this.emit('bargeIn', { source, ms: startedAt === null ? null : Math.round(now - startedAt) });
+    if (source) this.emit('bargeIn', { source, ms: began === null ? null : Math.round(now - began) });
     if (!this.confirm.phase) this.setState('listening', 'barge_in');
   }
 

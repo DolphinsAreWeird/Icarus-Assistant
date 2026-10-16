@@ -221,6 +221,24 @@ function plainReply(text: string, source: string): PrototypeReply {
   return { text, speech: text, emotion: 'thinking', speak: true, ui_actions: [], sources: [source], suggestions: [], offer: null };
 }
 
+// When the backend can't answer, what still works, offered instead of a dead end (plain requests need no AI).
+const STILL_WORKS = {
+  en: { text: "Sorry, I can't answer that one right now. I can still show prices, open an asset or set up a buy for you.",
+    chips: ['How is gold doing?', 'Show me gold', 'Put 1,000 baht in gold'] },
+  // THAI REVIEW
+  th: { text: 'ขอโทษนะ ตอนนี้ตอบเรื่องนี้ไม่ได้ แต่ยังดูราคา เปิดหน้าสินทรัพย์ หรือเตรียมรายการซื้อให้ได้นะ',
+    chips: ['ทองวันนี้เป็นยังไง', 'ดูทองคำ', 'ซื้อทองคำ 1000 บาท'] },
+} as const;
+
+/**
+ * Whether the prototype's own scripted answer may stand in for the backend's. Only a plain screen move: its answers
+ * with numbers come from the design's sample data (dollars, a different account), which would contradict the screen,
+ * and its "didn't catch that" is a dead end.
+ */
+export function scriptedAnswerIsSafe(text: string): boolean {
+  return !/[$฿€£¥]|\d|baht|บาท|percent|เปอร์เซ็นต์/i.test(text) && !/didn.t catch|ไม่เข้าใจ|ฟังไม่ทัน/i.test(text);
+}
+
 export interface BackendBridgeOptions {
   url: string;
   userId: string;
@@ -256,20 +274,24 @@ export function installBackend(o: BackendBridgeOptions): boolean {
     if (o.ready && !o.ready()) return plainReply(lang === 'th' ? 'รอโหลดบัญชีสาธิตก่อน แล้วลองอีกครั้ง' : 'Wait for the demo account to load, then try again.', 'Demo account loading');
     const proto = o.getInstance();
     const voice = proto?.state?.asst === 'voice';
-    // When the backend cannot answer (down, no model, busy, too slow), use the prototype's own scripted answer, with
-    // a source that says so, instead of a dead end on stage. Without the prototype, say what went wrong.
+    // When the backend cannot answer (down, no model, busy, too slow): a plain screen move from the prototype's own
+    // scripted answers, labelled; anything else gets an honest reply with three things that still work, never the
+    // design's sample numbers. Without the prototype, say what went wrong.
     const fallback = async (why: string, message: string): Promise<PrototypeReply> => {
+      console.info(`[icarus] the backend did not answer (${why})`);
       if (typeof proto?.demoRespond === 'function') {
         try {
           // A tapped element ("explain this") gets the prototype's own explanation, as in its demo mode.
           const demo = (await (ctx?.focus && typeof proto.rExplain === 'function' ? proto.rExplain(ctx.focus, lang === 'th') : proto.demoRespond(text, rawCtx))) as PrototypeReply | null;
-          if (demo && typeof demo.text === 'string') {
-            console.info(`[icarus] the backend did not answer (${why}); using the prototype's scripted answer`);
+          if (demo && typeof demo.text === 'string' && scriptedAnswerIsSafe(demo.text)) {
             return { ...demo, sources: [...(demo.sources ?? []), 'Scripted demo answer'] };
           }
         } catch {
-          // fall through to the plain message
+          // fall through to the honest reply
         }
+        const still = STILL_WORKS[lang];
+        // No "Based on" line: the reason is for developers (the console above), not for a visitor.
+        return { ...plainReply(still.text, why), emotion: 'curious', sources: [], suggestions: [...still.chips] };
       }
       return plainReply(message, why);
     };

@@ -197,8 +197,8 @@ describe('showcase: a buy goes through the app\'s own screens, and the backend n
     expect(toPrototypeReply({ text: 't', ui_actions: [TRADE_CARD] }, 'en').trade).not.toBeNull();
   });
 
-  it('uses the prototype\'s own demo answer, labelled, when the backend has no model, is down, or errors', async () => {
-    const demoRespond = vi.fn(async (q: string) => ({ text: `demo: ${q}`, speech: `demo: ${q}`, emotion: 'happy', speak: true, ui_actions: [], sources: ['Price feed'], suggestions: [], offer: null }));
+  it('when the backend has no model, is down, or errors: a plain screen move from the prototype, labelled', async () => {
+    const demoRespond = vi.fn(async () => ({ text: 'Opening gold for you.', speech: 'Opening gold for you.', emotion: 'happy', speak: true, ui_actions: [{ type: 'open_asset', asset: 'XAU' }], sources: [], suggestions: [], offer: null }));
     const proto: PrototypeLike = { ...fakeProto(), demoRespond };
     for (const fetchImpl of [
       vi.fn(async () => jsonResponse(503, { detail: { code: 'no_model', message_en: "The assistant isn't set up yet.", message_th: 'x' } })),
@@ -207,9 +207,22 @@ describe('showcase: a buy goes through the app\'s own screens, and the backend n
       let backend: ((q: string, ctx: unknown) => Promise<PrototypeReply>) | null = null;
       (window as unknown as { Icarus: unknown }).Icarus = { setBackend: (fn: typeof backend) => (backend = fn) };
       installBackend({ url: 'http://be', userId: 'u_new', getInstance: () => proto, showTrade: vi.fn(), hideCards: () => undefined, fetchImpl: fetchImpl as unknown as typeof fetch });
-      const reply = await backend!('what is this red number?', { screen: 'home' });
-      expect(reply.text).toBe('demo: what is this red number?');
+      const reply = await backend!('show me gold', { screen: 'home' });
+      expect(reply.text).toBe('Opening gold for you.');
       expect(reply.sources.at(-1)).toBe('Scripted demo answer');
+    }
+  });
+
+  it('never stands in with the design\'s sample numbers or a dead end: an honest reply with what still works', async () => {
+    for (const text of ['Your total balance is $28,399.67.', 'That is 1,000 baht.', 'I didn\'t catch that. You can say things like “show me gold”.']) {
+      const proto: PrototypeLike = { ...fakeProto(), demoRespond: vi.fn(async () => ({ text, speech: text, emotion: 'happy', speak: true, ui_actions: [], sources: [], suggestions: [], offer: null })) };
+      let backend: ((q: string, ctx: unknown) => Promise<PrototypeReply>) | null = null;
+      (window as unknown as { Icarus: unknown }).Icarus = { setBackend: (fn: typeof backend) => (backend = fn) };
+      installBackend({ url: 'http://be', userId: 'u_new', getInstance: () => proto, showTrade: vi.fn(), hideCards: () => undefined, fetchImpl: vi.fn(async () => jsonResponse(502, { detail: { code: 'assistant_failed' } })) as unknown as typeof fetch });
+      const reply = await backend!('what is this?', { screen: 'home' });
+      expect(reply.text).toContain("can't answer that one right now");
+      expect(reply.text).not.toMatch(/\$|28,399/);
+      expect(reply.suggestions).toEqual(['How is gold doing?', 'Show me gold', 'Put 1,000 baht in gold']);
     }
   });
 });

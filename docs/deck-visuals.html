@@ -1,0 +1,181 @@
+<!doctype html>
+<!-- Charts and the ecosystem map for the pitch deck, in the app's style. Render with docs/render-deck-visuals.cjs.
+     Numbers: the speed test (backend, 16 Oct 2026) and docs/business-plan.md (made by docs/cost_model.py). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Icarus deck visuals</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@500;700&display=swap">
+<style>
+  :root { --pink: #C94F72; --deep: #A8385A; --rose: #F7D2DC; --blush: #FDE3EA; --ink: #4A2E36; --soft: #6E5560; --gold: #E9A83B; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: transparent; font-family: Nunito, system-ui, sans-serif; color: var(--ink); }
+  .viz { position: relative; margin: 0 0 40px; }
+  .legend { display: flex; gap: 26px; font-size: 26px; font-weight: 700; color: #4A2E36; }
+  .legend i { display: inline-block; width: 22px; height: 22px; border-radius: 4px; margin-right: 8px; vertical-align: -2px; }
+  .n { font: 600 18px Fredoka, sans-serif; color: var(--ink); }
+  /* speed */
+  #speed { width: 1180px; padding: 6px 0; }
+  .srow { display: grid; grid-template-columns: 380px 1fr; align-items: center; gap: 20px; height: 78px; border-bottom: 1px solid #F3DCE3; }
+  .srow .q { font-size: 26px; font-weight: 700; color: var(--ink); text-align: right; }
+  .bars { display: flex; flex-direction: column; gap: 5px; }
+  .bar { height: 22px; border-radius: 11px; display: flex; align-items: center; }
+  .bar span { font: 600 22px Fredoka, sans-serif; margin-left: calc(100% + 10px); white-space: nowrap; }
+  .before { background: #F4B9C9; } .before span { color: #7A5563; }
+  .after { background: var(--pink); min-width: 10px; } .after span { color: #9E3354; }
+  /* columns */
+  .cols { position: relative; display: flex; align-items: flex-end; gap: 46px; border-bottom: 2px solid #E9C3CF; padding: 0 20px; }
+  .group { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .pair { display: flex; align-items: flex-end; gap: 10px; }
+  .col { width: 72px; border-radius: 10px 10px 0 0; position: relative; }
+  .stack { width: 72px; display: flex; flex-direction: column; justify-content: flex-end; border-radius: 10px 10px 0 0; overflow: hidden; }
+  .cap { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; font: 600 24px Fredoka, sans-serif; color: #5E4550; }
+  .xl { position: absolute; font-size: 24px; font-weight: 700; color: #5E4550; text-align: center; width: 230px; }
+  .mult { font: 600 40px Fredoka, sans-serif; color: #9E3354; margin-bottom: 30px; }
+  .target { position: absolute; left: 0; right: 0; border-top: 3px dashed var(--gold); }
+  .target b { position: absolute; left: 14px; top: -40px; font: 600 26px Fredoka, sans-serif; color: #8A5A0E; }
+  /* ecosystem */
+  #eco { width: 1600px; height: 700px; position: relative; }
+  .hub { position: absolute; left: 650px; top: 170px; width: 300px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .spoke { position: absolute; width: 400px; display: flex; gap: 18px; align-items: flex-start; }
+  .spoke.right { flex-direction: row-reverse; text-align: right; }
+  .disc { width: 84px; height: 84px; border-radius: 50%; background: var(--pink); display: flex; align-items: center; justify-content: center; flex: none; box-shadow: 0 8px 20px rgba(201, 79, 114, .25); }
+  .disc.gold { background: var(--gold); } .disc.ghost { background: #fff; border: 3px dashed var(--pink); box-shadow: none; }
+  .disc svg { width: 40px; height: 40px; }
+  .spoke h3 { font: 600 26px/1.15 Fredoka, sans-serif; color: var(--ink); }
+  .spoke p { font-size: 17.5px; line-height: 1.4; color: var(--soft); margin-top: 4px; }
+  .spoke p b { color: var(--ink); }
+  .status { display: inline-block; margin-top: 8px; font: 600 14px Fredoka, sans-serif; letter-spacing: .4px; padding: 3px 12px; border-radius: 999px; }
+  .live { background: var(--pink); color: #fff; } .next { border: 2px solid var(--pink); color: var(--deep); background: #fff; }
+</style>
+</head>
+<body>
+
+<!-- 1. speed: seconds to answer, before and now -->
+<div class="viz" id="speed">
+  <div class="legend" style="justify-content:flex-end;margin-bottom:10px"><span><i style="background:#F4B9C9"></i>before: the AI decided every step</span><span><i style="background:#C94F72"></i>now: code first</span></div>
+</div>
+
+<!-- 2. value: what a partner pays and what it gets back, THB a month -->
+<div class="viz" id="value" style="width:1160px;height:640px">
+  <div class="legend" style="position:absolute;left:20px;top:0"><span><i style="background:#F7D2DC"></i>we charge</span><span><i style="background:#C94F72"></i>fewer support contacts</span><span><i style="background:#E9A83B"></i>more first deposits</span></div>
+  <div class="cols" id="valueCols" style="position:absolute;left:0;right:0;top:110px;height:420px"></div>
+</div>
+
+<!-- 3. margin: our margin as more apps join -->
+<div class="viz" id="margin" style="width:760px;height:600px">
+  <div class="cols" id="marginCols" style="position:absolute;left:0;right:0;top:60px;height:420px;gap:60px;padding:0 40px"></div>
+</div>
+
+<!-- 4. ecosystem: layers 1 (hub), 2 (live today), 3 (next) -->
+<div class="viz" id="eco">
+  <svg width="1600" height="700" viewBox="0 0 1600 700" style="position:absolute;left:0;top:0" data-eco="2">
+    <g fill="none" stroke="#C94F72" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 11">
+      <path d="M700 260 Q560 150 470 110"/><path d="M900 260 Q1040 150 1130 110"/>
+      <path d="M700 420 Q560 520 470 560"/><path d="M900 420 Q1040 520 1130 560"/>
+    </g>
+  </svg>
+  <svg width="1600" height="700" viewBox="0 0 1600 700" style="position:absolute;left:0;top:0" data-eco="3">
+    <g fill="none" stroke="#C94F72" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 12" opacity=".7">
+      <path d="M650 340 L470 340"/><path d="M950 340 L1130 340"/>
+    </g>
+  </svg>
+
+  <div class="hub" data-eco="1">
+    <svg width="210" height="300" viewBox="0 0 210 300">
+      <rect x="6" y="6" width="198" height="288" rx="38" fill="#FFF7F9" stroke="#F2B9C9" stroke-width="10"/>
+      <rect x="72" y="22" width="66" height="16" rx="8" fill="#4A2E36"/>
+    </svg>
+    <img src="../frontend/public/mascot/bow/hero.png" alt="" style="position:absolute;top:70px;width:160px;height:160px;object-fit:contain">
+    <h3 style="font:600 28px/1.15 Fredoka,sans-serif;margin-top:10px">The U-topia app</h3>
+    <p style="font-size:18px;color:#6E5560;margin-top:4px">with Icarus inside</p>
+  </div>
+
+  <div class="spoke" data-eco="2" style="left:40px;top:40px">
+    <div class="disc gold"><svg viewBox="0 0 24 24" fill="#fff"><path d="M21.5 2.5 2.8 10.3l7 2.6 2.6 7z"/></svg></div>
+    <div><h3>U-Bot</h3><p>Rides, flights, shopping: Icarus <b>writes the request</b> for U-Bot, and you review and pay in <b>U-topia Pay</b>.</p><span class="status live">in the demo</span></div>
+  </div>
+  <div class="spoke right" data-eco="2" style="left:1160px;top:40px">
+    <div class="disc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></div>
+    <div><h3>Thai and English voice</h3><p>U-topia’s users ask out loud, in their own language, with <b>ElevenLabs</b> voices.</p><span class="status live">in the demo</span></div>
+  </div>
+  <div class="spoke" data-eco="2" style="left:40px;top:500px">
+    <div class="disc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg></div>
+    <div><h3>U-topia’s own words</h3><p>Explains <b>U-Coin, U-Wallet, U-Center</b> and the rest in plain words, inside the app.</p><span class="status live">in the demo</span></div>
+  </div>
+  <div class="spoke right" data-eco="2" style="left:1160px;top:500px">
+    <div class="disc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V4"/></svg></div>
+    <div><h3>A friction map</h3><p>U-topia’s product team sees <b>what users ask and where they get stuck</b>, screen by screen.</p><span class="status live">in the demo</span></div>
+  </div>
+  <div class="spoke" data-eco="3" style="left:40px;top:290px">
+    <div class="disc ghost"><svg viewBox="0 0 24 24" fill="none" stroke="#C94F72" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></div>
+    <div><h3>U-Bot, one tap</h3><p>A U-Bot link that opens with the request <b>already typed</b>: one small change on U-Bot’s side.</p><span class="status next">next</span></div>
+  </div>
+  <div class="spoke right" data-eco="3" style="left:1160px;top:290px">
+    <div class="disc ghost"><svg viewBox="0 0 24 24" fill="none" stroke="#C94F72" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></svg></div>
+    <div><h3>Next to Topi AI</h3><p>Topi serves traders on Telegram. Icarus serves <b>first-week users</b> inside the app.</p><span class="status next">next</span></div>
+  </div>
+</div>
+
+<script>
+  const fmt = (n) => n.toLocaleString('en-US');
+  // 1. speed
+  const rows = [
+    ['How is gold doing?', 3.3, 0.05], ['Buy 1,000 baht of gold', 8.5, 0.01], ['What is Bitcoin?', 5.1, 0.01],
+    ['Show me Ethereum', 8.3, 0.03], ['Should I buy Bitcoin now?', 1.9, 0.02], ['ทองวันนี้เป็นยังไง', 9.0, 0.01],
+    ['Compare gold and bitcoin', 2.6, 0.02], ['How is the S&P 500 doing?', 3.5, 3.1],
+  ];
+  const max = 10, w = 560;
+  const speed = document.getElementById('speed');
+  for (const [q, b, a] of rows) {
+    const r = document.createElement('div');
+    r.className = 'srow';
+    r.innerHTML = `<div class="q">${q}</div><div class="bars"><div class="bar before" style="width:${(b / max) * w}px"><span>${b} s</span></div>` +
+      `<div class="bar after" style="width:${Math.max(10, (a / max) * w)}px"><span>${a < 0.1 ? '0.0' + Math.round(a * 100) : a} s${a > 1 ? ' (new: AI words it)' : ''}</span></div></div>`;
+    speed.append(r);
+  }
+  // 2. value (business-plan.md, "listprice" and "value" tables)
+  const groups = [
+    ['Pilot', '10,000 users', 49000, 32250, 9000, '0.8'],
+    ['Launch', '50,000 users', 100000, 161250, 45000, '2.1'],
+    ['U-topia (claimed)', '130,000 users', 260000, 419250, 117000, '2.1'],
+    ['Scale', '300,000 users', 550000, 967500, 270000, '2.2'],
+  ];
+  const vmax = 1300000, vh = 370;
+  const vc = document.getElementById('valueCols');
+  for (const [name, users, price, support, deposits, times] of groups) {  // times: as the plan prints it
+    const g = document.createElement('div');
+    g.className = 'group';
+    g.style.position = 'relative';
+    const value = support + deposits;
+    g.innerHTML = `<div class="mult">${times}×</div><div class="pair">` +
+      `<div class="col" style="height:${(price / vmax) * vh}px;background:#F7D2DC"><div class="cap" style="top:-26px">${fmt(Math.round(price / 1000))}k</div></div>` +
+      `<div class="stack" style="height:${(value / vmax) * vh}px"><div style="height:${(deposits / value) * 100}%;background:#E9A83B"></div><div style="height:${(support / value) * 100}%;background:#C94F72"></div></div>` +
+      `</div><div class="xl" style="bottom:-72px;left:50%;transform:translateX(-50%)"><b style="color:#4A2E36">${name}</b><br>${users}</div>`;
+    vc.append(g);
+  }
+  vc.style.justifyContent = 'space-around';
+  // 3. margin (business-plan.md, "portfolios" table)
+  const apps = [['U-topia alone', 7], ['+1 app, 30k users', 19], ['+3 apps, 30k each', 33]];
+  const mc = document.getElementById('marginCols');
+  const mh = 340, mmax = 40;
+  for (const [name, pct] of apps) {
+    const g = document.createElement('div');
+    g.className = 'group';
+    g.style.position = 'relative';
+    g.innerHTML = `<div class="mult" style="font-size:40px">${pct}%</div><div class="col" style="width:96px;height:${(pct / mmax) * mh}px;background:linear-gradient(180deg,#D9668A,#C94F72)"></div>` +
+      `<div class="xl" style="bottom:-74px;left:50%;transform:translateX(-50%);width:200px"><b style="color:#4A2E36">${name}</b></div>`;
+    mc.append(g);
+  }
+  mc.style.justifyContent = 'space-around';
+  const t = document.createElement('div');
+  t.className = 'target';
+  t.style.bottom = `${(20 / mmax) * mh}px`;
+  t.innerHTML = '<b>our 20% target</b>';
+  mc.append(t);
+  // ?eco=N: show one layer of the ecosystem map
+  const eco = new URLSearchParams(location.search).get('eco');
+  if (eco) for (const el of document.querySelectorAll('[data-eco]')) el.style.visibility = el.dataset.eco === eco ? 'visible' : 'hidden';
+</script>
+</body>
+</html>

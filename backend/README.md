@@ -42,7 +42,7 @@ python -m unittest discover -s model/tests -q
 
 The sections below describe the existing market pipeline and the optional legacy assistant.
 
-Owners: Luka and First. Plan: [../plan-data-pipeline.md](../plan-data-pipeline.md).
+Owners: Luka and First. Plan: [docs/team-notes/plan-data-pipeline.md](../docs/team-notes/plan-data-pipeline.md).
 
 ## Setup
 

@@ -1,0 +1,44 @@
+# Render Blueprint for the hosted demo (render.com > New > Blueprint > this repo). One web service from the Dockerfile.
+# Render asks for the three keys when the Blueprint is created; they live only in Render's settings.
+# Starter plan: the service never sleeps, so a judge never waits for a cold start.
+services:
+  - type: web
+    name: icarus
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      # Orion (CMKL's gateway): the first model in the chain. A key that starts with sk-.
+      - key: ICARUS_LLM_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      # Tried in this order; a slow or failing one hands over to the next (backend/app/assistant/llm.py).
+      - key: LLM_CHAIN
+        value: "orion:Qwen 3.8-27B,orion:Mango 1.5-9B,gemini:gemini-3.1-flash-lite,gemini:gemini-3-flash-preview"
+      # Ask the next model too if the first hasn't answered in 2.5 s; skip a failing one for a minute.
+      - key: LLM_HEDGE_MS
+        value: "2500"
+      - key: LLM_COOLDOWN_S
+        value: "60"
+      - key: ANSWER_CACHE_TTL_S
+        value: "300"
+      - key: FASTPATH
+        value: "1"
+      - key: VOICE_ID_EN
+        value: XiPS9cXxAVbaIWtGDHDh
+      - key: VOICE_ID_TH
+        value: mYcpTKg1oj1H5CtzUZNO
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: LLM_MODEL
+        value: gemini-3-flash-preview,gemini-3.1-flash-lite
+      - key: LLM_TIMEOUT_S
+        value: "8"

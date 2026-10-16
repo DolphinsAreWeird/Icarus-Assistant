@@ -1,0 +1,151 @@
+<!doctype html>
+<!-- How Icarus works, drawn with symbols instead of boxes, for the deck and the README. Big type: it has to read on
+     a slide shown at laptop size.
+     Render: PLAYWRIGHT=/path/to/node_modules/playwright node docs/render-architecture.cjs
+     It writes docs/media/architecture.png (whole picture) and architecture-1/2/3.png (transparent layers that the
+     deck reveals one after the other). ?layer=1|2|3 shows one layer only. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How Icarus works</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@600;700;800&display=swap">
+<style>
+  :root { --pink: #C94F72; --deep: #9E3354; --paper: #FFF7F9; --ink: #4A2E36; --soft: #5E4550; --gold: #E9A83B; }
+  * { box-sizing: border-box; margin: 0; }
+  body { width: 1692px; height: 760px; background: var(--paper); font-family: Nunito, system-ui, sans-serif; color: var(--ink); position: relative; overflow: hidden; }
+  body.layers { background: transparent; }
+  .layer { position: absolute; left: 0; top: 0; width: 1692px; height: 760px; }
+  .node { position: absolute; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .disc { width: 100px; height: 100px; border-radius: 50%; background: var(--pink); display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 24px rgba(201, 79, 114, .28); }
+  .disc svg { width: 50px; height: 50px; }
+  .num { font: 600 20px Fredoka, sans-serif; color: var(--pink); margin-top: 12px; }
+  h3 { font: 600 34px/1.1 Fredoka, sans-serif; color: var(--ink); }
+  p { font-size: 23px; line-height: 1.32; font-weight: 600; color: var(--soft); margin-top: 6px; }
+  p b { color: var(--ink); font-weight: 800; }
+  .tag { font: 600 19px Fredoka, sans-serif; color: var(--deep); margin-top: 6px; }
+  .label { position: absolute; font: 600 19px Fredoka, sans-serif; letter-spacing: 2px; text-transform: uppercase; color: var(--deep); }
+  .exit { position: absolute; display: flex; align-items: center; gap: 14px; }
+  .exit .mini { width: 50px; height: 50px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; flex: none; }
+  .exit .mini svg { width: 26px; height: 26px; }
+  .exit p { margin: 0; font-size: 24px; color: var(--ink); }
+</style>
+</head>
+<body>
+
+<!-- ===== layer 1: the conversation, five steps (centres 170, 508, 846, 1184, 1522) ===== -->
+<div class="layer" data-layer="1">
+  <svg width="1692" height="760" viewBox="0 0 1692 760" style="position:absolute;left:0;top:0">
+    <defs><marker id="tip" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#C94F72"/></marker></defs>
+    <g fill="none" stroke="#C94F72" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 11">
+      <path d="M236 60 L436 60" marker-end="url(#tip)"/>
+      <path d="M574 60 L752 60" marker-end="url(#tip)"/>
+      <path d="M940 60 L1118 60" marker-end="url(#tip)"/>
+      <path d="M1250 60 L1416 60" marker-end="url(#tip)"/>
+    </g>
+  </svg>
+  <div class="node" style="left:30px;top:10px;width:280px">
+    <div class="disc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg></div>
+    <div class="num">1</div><h3>You ask</h3>
+    <p>By voice or text, <b>English or Thai</b>.</p>
+  </div>
+  <div class="node" style="left:368px;top:10px;width:280px">
+    <div class="disc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></div>
+    <div class="num">2</div><h3>It listens</h3>
+    <p>Speech becomes text.</p>
+    <div class="tag">ElevenLabs</div>
+  </div>
+  <div class="node" style="left:686px;top:0;width:320px">
+    <div style="width:160px;height:160px;border-radius:50%;background:#fff;border:5px solid var(--pink);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 30px rgba(201,79,114,.25)">
+      <img src="../frontend/public/mascot/bow/working.png" alt="" style="width:130px;height:130px;object-fit:contain">
+    </div>
+    <div class="num">3</div><h3>It thinks</h3>
+    <p><b>Code works out what you want</b>, then gets the numbers.</p>
+    <div class="tag">Python · FastAPI</div>
+  </div>
+  <div class="node" style="left:1044px;top:10px;width:280px">
+    <div class="disc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/><path d="M12 6.5v5m-2.5-2.5h5" stroke-width="1.8"/></svg></div>
+    <div class="num">4</div><h3>It shows</h3>
+    <p>One sentence <b>out loud</b> while it moves the screens.</p>
+    <div class="tag">TypeScript · ElevenLabs</div>
+  </div>
+  <div class="node" style="left:1382px;top:22px;width:280px">
+    <div style="height:76px;padding:0 28px;border-radius:38px;background:var(--ink);color:#fff;display:flex;align-items:center;gap:10px;font:600 28px Fredoka,sans-serif;box-shadow:0 10px 24px rgba(74,46,54,.3)">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Confirm</div>
+    <div class="num" style="margin-top:24px">5</div><h3>You tap</h3>
+    <p><b>Only your tap buys.</b> Voice can't.</p>
+  </div>
+</div>
+
+<!-- ===== layer 2: what it thinks with (centres 210, 634, 1058, 1482) ===== -->
+<div class="layer" data-layer="2">
+  <svg width="1692" height="760" viewBox="0 0 1692 760" style="position:absolute;left:0;top:0">
+    <defs><marker id="tip2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#C94F72"/></marker></defs>
+    <g fill="none" stroke="#C94F72" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 11">
+      <path d="M846 348 L846 376"/>
+      <path d="M210 376 L1482 376"/>
+      <path d="M210 376 L210 404" marker-end="url(#tip2)"/>
+      <path d="M634 376 L634 404" marker-end="url(#tip2)"/>
+      <path d="M1058 376 L1058 404" marker-end="url(#tip2)"/>
+      <path d="M1482 376 L1482 404" marker-end="url(#tip2)"/>
+    </g>
+    <g transform="translate(170 414)">
+      <path d="M0 14 v52 c0 8 18 14 40 14 s40-6 40-14 V14" fill="#F48FB1"/>
+      <path d="M0 40 c0 8 18 14 40 14 s40-6 40-14" fill="none" stroke="#fff" stroke-width="3"/>
+      <ellipse cx="40" cy="14" rx="40" ry="14" fill="#C94F72"/>
+    </g>
+    <g transform="translate(584 420)">
+      <path d="M22 70 h62 a22 22 0 0 0 2-44 a30 30 0 0 0-57-6 a24 24 0 0 0-7 50z" fill="#C94F72"/>
+      <path d="M52 30 l5 13 13 5-13 5-5 13-5-13-13-5 13-5z" fill="#fff"/>
+    </g>
+    <g transform="translate(1012 418)">
+      <rect x="0" y="0" width="92" height="66" rx="10" fill="#C94F72"/>
+      <path d="M14 48 l18-17 13 10 20-22 13 9" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M34 76 h24" stroke="#C94F72" stroke-width="6" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(1446 414)">
+      <path d="M36 0 L72 13 v25 c0 22-15 37-36 44 C15 75 0 60 0 38 V13z" fill="#C94F72"/>
+      <path d="m21 39 10 10 20-21" fill="none" stroke="#fff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </svg>
+  <div class="label" style="left:872px;top:340px">what it thinks with</div>
+  <div class="node" style="left:30px;top:506px;width:360px">
+    <h3>Prepared answers</h3>
+    <p>Ready <b>before you ask</b>. New questions are logged, so more get added.</p>
+  </div>
+  <div class="node" style="left:454px;top:506px;width:360px">
+    <h3>AI in the cloud</h3>
+    <p>Words new answers. A <b>backup model</b> steps in if it's slow.</p>
+  </div>
+  <div class="node" style="left:878px;top:506px;width:360px">
+    <h3>Live data</h3>
+    <p>Prices, the baht rate and <b>your account</b>.</p>
+  </div>
+  <div class="node" style="left:1302px;top:506px;width:360px">
+    <h3>House rules</h3>
+    <p><b>No buy or sell advice.</b> Numbers only from data.</p>
+  </div>
+</div>
+
+<!-- ===== layer 3: what goes out ===== -->
+<div class="layer" data-layer="3">
+  <div class="exit" style="left:80px;top:690px;width:760px">
+    <div class="mini"><svg viewBox="0 0 24 24" fill="#fff"><path d="M21.5 2.5 2.8 10.3l7 2.6 2.6 7z"/></svg></div>
+    <p><b>Not finance?</b> Icarus writes the request for <b>U-Bot</b>.</p>
+  </div>
+  <div class="exit" style="left:900px;top:690px;width:760px">
+    <div class="mini"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V4"/></svg></div>
+    <p><b>Every question</b> lands on the friction map.</p>
+  </div>
+</div>
+
+<script>
+  // ?layer=N shows one layer on a transparent page (for the deck's step-by-step reveal).
+  const n = new URLSearchParams(location.search).get('layer');
+  if (n) {
+    document.body.classList.add('layers');
+    for (const l of document.querySelectorAll('.layer')) l.style.display = l.dataset.layer === n ? '' : 'none';
+  }
+</script>
+</body>
+</html>

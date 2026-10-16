@@ -20,6 +20,7 @@ class FakeVoice implements VoiceLike {
   spoken: Array<{ text: string; language?: string }> = [];
   startCalls = 0;
   stopCalls = 0;
+  stopSpeakingCalls = 0;
   language = '';
   private finishSpeech: (() => void) | null = null;
   on(event: string, handler: (p: never) => void) {
@@ -36,7 +37,7 @@ class FakeVoice implements VoiceLike {
     this.spoken.push({ text, ...(opts.language ? { language: opts.language } : {}) });
     return new Promise<'finished'>((resolve) => { this.finishSpeech = () => resolve('finished'); });
   }
-  stopSpeaking() { this.finishSpeech?.(); }
+  stopSpeaking() { this.stopSpeakingCalls++; this.finishSpeech?.(); }
   /** The line ended by itself. */
   endSpeech() { this.finishSpeech?.(); }
 }
@@ -128,6 +129,31 @@ describe('paired with our voice stack', () => {
     await sleep(900); // the prototype's demo assistant answers after a short delay
     expect(voice.spoken.length).toBeGreaterThanOrEqual(2); // and the answer goes out through OUR speech
     expect(voice.spoken.at(-1)?.text.length).toBeGreaterThan(5);
+  });
+
+  it('while Icarus talks, the prototype is not listening: sounds and words from the mic cannot cut it off here', async () => {
+    // Only the voice module may stop Icarus for speech, and only for real, sustained speech (voice/src/client/barge-in.ts).
+    await act(async () => icarus().startVoice());
+    await sleep(20);
+    expect(host.textContent).toContain('tap me to interrupt'); // the greeting is playing
+    const stopsBefore = voice.stopSpeakingCalls; // (opening the voice window clears any earlier line once)
+    await act(async () => voice.emit('partialTranscript', { text: 'so I told him' }));
+    await act(async () => voice.emit('finalTranscript', { text: 'so I told him we should leave' }));
+    await sleep(700);
+    expect(voice.stopSpeakingCalls).toBe(stopsBefore);
+    expect(voice.spoken).toHaveLength(1); // nothing was answered
+    expect(host.textContent).toContain('tap me to interrupt'); // still speaking
+  });
+
+  it('tapping the mascot stops Icarus at once', async () => {
+    await act(async () => icarus().startVoice());
+    await sleep(20);
+    const mascot = host.querySelector('[data-ui-id="icarus.voice_dock"] [aria-label="Icarus"]')?.parentElement;
+    expect(mascot, 'the mascot in the voice window').toBeTruthy();
+    const stopsBefore = voice.stopSpeakingCalls;
+    await act(async () => mascot?.click());
+    expect(voice.stopSpeakingCalls).toBe(stopsBefore + 1);
+    expect(host.textContent).not.toContain('tap me to interrupt');
   });
 
   it('lets the voice module handle commands like "stop" (the prototype never sees them)', async () => {

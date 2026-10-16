@@ -70,6 +70,15 @@ def tool_results(fake, call_index):
     return [json.loads(m["content"]) for m in fake.calls[call_index]["messages"] if m["role"] == "tool"]
 
 
+@pytest.fixture(autouse=True)
+def model_loop_only(monkeypatch):
+    """These tests script the model's part, so every question must reach the model's tool loop.
+    Without this, the prepared answers or the fast path would answer 15 of them before the model
+    (put 1,000 baht in gold, cancel that, show me gold, how do I buy?, hello, ...).
+    The shortcuts have their own tests in test_fastpath.py."""
+    monkeypatch.setenv("FASTPATH", "0")
+
+
 @pytest.fixture
 def cache(tmp_path):
     snap = tmp_path / "prices.json"

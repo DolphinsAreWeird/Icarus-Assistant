@@ -1,0 +1,10 @@
+{
+  "voiceId": "XiPS9cXxAVbaIWtGDHDh",
+  "model": "eleven_flash_v2_5",
+  "speed": 1,
+  "text": "That's your call, so I won't pick for you. I can show you how gold's price has moved, or explain what it is.",
+  "outputFormat": "pcm_24000",
+  "sampleRate": 24000,
+  "bytes": 292014,
+  "createdAt": "2026-10-16T02:40:47.933Z"
+}

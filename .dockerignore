@@ -1,0 +1,23 @@
+# Keep the image small and free of secrets.
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+frontend/dist
+voice/dist
+voice/.audio-cache
+voice/logs
+voice/auditions
+model/results
+model/data/raw
+model/data/market
+model/data/forecasts
+.git
+.claude
+.worktrees
+*.log
+.demo-*.log
+.DS_Store
