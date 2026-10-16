@@ -215,6 +215,7 @@ async function main() {
       installTour(
         {
           getInstance: () => instance as unknown as TourInstance | null,
+          getPhone,
           showHandoff: (info) => showHandoffCard(info, { th: false, getPhone }),
           hideCards: () => {
             hideTradeCard();

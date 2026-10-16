@@ -9,6 +9,7 @@
 
 import { buyReadback, type PrototypeLike } from './backend-bridge';
 import type { HandoffInfo } from './handoff-card';
+import { createGuide, type GuideHost } from './tour-guide';
 import { buildUbotPrompt } from '../../voice/src/shared/ubot-prompt';
 
 type Lang = 'en' | 'th';
@@ -45,6 +46,8 @@ export interface TourInstance {
 
 export interface TourDeps {
   getInstance: () => TourInstance | null;
+  /** The phone screen, so the mascot knows where to fly. */
+  getPhone: () => Element | null;
   showHandoff: (info: HandoffInfo) => void;
   /** Hide every floating card (trade, chart, steps, U-Bot). */
   hideCards: () => void;
@@ -66,6 +69,7 @@ interface Step {
   answer: (inst: TourInstance) => Reply;
   /** After the answer has been spoken. */
   after?: (deps: TourDeps) => void;
+  pointAfter?: () => Element | null;
 }
 
 const BUY: Action[] = [
@@ -122,6 +126,8 @@ export const STEPS: Step[] = [
       reason: 'commerce',
       prompt: buildUbotPrompt(RIDE, 'commerce', 'en', { screen: 'Gold page', asset: 'Gold' }),
     }),
+    /** What the mascot points at once `after` has run. */
+    pointAfter: () => document.getElementById('icarus-handoff'),
   },
 ];
 
@@ -165,6 +171,7 @@ function button(text: string, primary: boolean): HTMLButtonElement {
 export function installTour(deps: TourDeps, opts: { offer: 'auto' | 'always' | 'never' } = { offer: 'auto' }): { play: () => Promise<void> } {
   let playing = false;
   let stopping = false;
+  const guide = createGuide(deps.getPhone);
 
   // ---- "Tour" pill, top right ----
   const pill = button('▶  Tour', true);
@@ -236,7 +243,10 @@ export function installTour(deps: TourDeps, opts: { offer: 'auto' | 'always' | '
         asst: 'closed', closing: false, voice: null, lang: 'en', hideBal: false, frozen: false,
       }, done));
       await wait(400);
-      inst.startVoice(); // opens the voice window and says HELLO
+      // The mascot flies in and stands by the balance while it says hello.
+      guide.start(inst as unknown as GuideHost);
+      window.setTimeout(() => guide.pointAt('home.balance'), 900);
+      inst.startVoice(); // opens the (hidden) voice window and says HELLO
       await answered(inst);
 
       for (const [i, step] of STEPS.entries()) {
@@ -250,7 +260,11 @@ export function installTour(deps: TourDeps, opts: { offer: 'auto' | 'always' | '
         await wait(500);
         inst.simulate(step.ask);
         await answered(inst);
-        if (!stopping) step.after?.(deps);
+        if (!stopping && step.after) {
+          step.after(deps);
+          await wait(350);
+          guide.pointAt(step.pointAfter?.() ?? null);
+        }
         await wait(step.after ? 3500 : 600); // time to read the U-Bot card
       }
 
@@ -258,11 +272,13 @@ export function installTour(deps: TourDeps, opts: { offer: 'auto' | 'always' | '
         progress(total);
         if (inst.state.lang !== 'en') inst.setLang('en');
         await wait(200);
+        guide.pointAt(null);
         inst.say(BYE, 'excited');
         await answered(inst);
-        await wait(400);
+        if (!stopping) await guide.goHome(); // into the Icarus button, where it lives
       }
     } finally {
+      guide.stop();
       inst.backend = saved.backend;
       inst.startRec = saved.startRec;
       inst.greeting = saved.greeting;
