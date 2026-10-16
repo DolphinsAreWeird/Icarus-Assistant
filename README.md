@@ -8,6 +8,8 @@ Built for U-Hackathon 2026 (FLOW Summit, Bangkok, 15 to 16 Oct 2026), AI track. 
 
 **Live demo: no public URL yet.** No deployment has been verified, so none is linked here. Run it locally (see [Showcase](#showcase-run-everything-with-one-command)); the app opens with a one-minute tour by the mascot, so turn your sound on. Hosting config exists but is untested on a real host: a [`Dockerfile`](Dockerfile) and [`render.yaml`](render.yaml) for Render, and a Vercel guide in [`docs/hosting-vercel.md`](docs/hosting-vercel.md).
 
+**Keys a host needs:** `ELEVENLABS_API_KEY` (voice) and `ICARUS_LLM_API_KEY` (the Orion AI gateway, a key starting with `sk-`). `GEMINI_API_KEY` is optional: without it the backend uses Orion only. The [`Dockerfile`](Dockerfile) runs everything in one container on port 8787; [`deploy/huggingface/`](deploy/huggingface/) builds the same from this repo (Hugging Face needs a PRO plan for Docker Spaces).
+
 ![The mascot's tour, left to right: hello; gold's year on the chart; no advice on "should I buy"; a 1,000 baht gold buy filled in and stopped at Confirm; an answer in Thai; a ride request handed to U-Bot, written for it](docs/media/tour-storyboard.png)
 
 [Watch the tour (57 s video)](docs/media/icarus-tour.mp4) · [as a GIF](docs/media/icarus-tour.gif). Recorded from the running app; the video has no sound, the captions are what the mascot says.

@@ -103,10 +103,17 @@ export const LIVE_DATA_COPY: ReadonlyArray<readonly [string, string]> = [
   ['1 BTC = $67,420.15', '1 BTC ≈ {{ btcThb }}'],
 ];
 
+// The business dashboard: the race's names, and a fee example that matches the app (the fee is inside the total).
+export const DASHBOARD_COPY: ReadonlyArray<readonly [string, string]> = [
+  ["{label:'Scenario A time',value:ft(tA)},{label:'Scenario B time',value:ft(tB)}", "{label:'Race 1 · by hand',value:ft(tA)},{label:'Race 2 · with Icarus',value:ft(tB)}"],
+  ["Many users ask whether the 1% fee is taken on top of the amount.", "Many users ask whether the fee is taken on top of the amount."],
+  ["“Do I pay ฿1,000 or ฿1,010?”", "“Is the fee on top of my ฿1,000?”"],
+];
+
 const apply = (html: string, pairs: ReadonlyArray<readonly [string, string]>) =>
   pairs.reduce((out, [from, to]) => out.split(from).join(to), html);
 
 export function withJudgeCopy(html: string, options: { liveData?: boolean } = {}): string {
-  const polished = apply(apply(html, JUDGE_COPY), PRODUCT_POLISH);
+  const polished = apply(apply(apply(html, JUDGE_COPY), PRODUCT_POLISH), DASHBOARD_COPY);
   return options.liveData ? apply(polished, LIVE_DATA_COPY) : polished;
 }

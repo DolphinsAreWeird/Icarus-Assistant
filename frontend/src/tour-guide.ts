@@ -36,7 +36,10 @@ const SOFT = '#F7D2DC';
 const INK = '#4A2E36';
 const FONT = 'Fredoka,Mali,system-ui,sans-serif';
 const POSES = ['curious', 'excited', 'flying', 'happy', 'hero', 'star', 'working'] as const;
-const img = (pose: string) => `mascot/bow/${pose}.png`;
+// flying.png has a see-through body (its fill was cut out with the background, through gaps in the outline), so the
+// page shows through the mascot: fly with the filled star pose instead.
+const FILLED: Record<string, string> = { flying: 'star' };
+const img = (pose: string) => `mascot/bow/${FILLED[pose] ?? pose}.png`;
 const MOOD: Record<string, string> = { happy: 'happy', excited: 'excited', curious: 'curious', thinking: 'working' };
 const TRICKS = ['hop', 'wiggle', 'spin', 'hop', 'bounce'] as const;
 
@@ -58,7 +61,7 @@ body.ic-touring [data-screen-label="Phone"] div[style*="z-index: 36"][style*="po
 .ic-g { position: fixed; left: 0; top: 0; pointer-events: none; }
 .ic-g-mascot { z-index: 9450; will-change: transform; }
 .ic-g-bob { animation: icBob 1.9s ease-in-out infinite; width: 100%; height: 100%; position: relative; }
-.ic-g-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity .22s ease;
+.ic-g-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
   filter: drop-shadow(0 10px 16px rgba(150,60,85,.3)); }
 .ic-g-hop { animation: icHop .65s cubic-bezier(.3,.7,.4,1); } .ic-g-spin { animation: icSpin .8s cubic-bezier(.45,0,.3,1); }
 .ic-g-wiggle { animation: icWiggle .8s ease-in-out; } .ic-g-bounce { animation: icBounce .55s ease-out; }
@@ -233,7 +236,8 @@ export function createGuide(getPhone: () => Element | null): Guide {
     return document.querySelector(`[data-ui-id="${cssEscape(t)}"]`);
   };
 
-  /** Change pose with a quick cross-fade, and not more often than every 260 ms (no flicker). */
+  /** Change pose at once (the pictures are preloaded), not more often than every 260 ms. No cross-fade: halfway
+   * through one, both pictures are half transparent and the mascot looks see-through. */
   function setPose(name: string, now: number, force = false) {
     if (name === poseName || (!force && now - poseAt < 260)) return;
     poseName = name;
