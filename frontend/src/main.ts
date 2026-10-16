@@ -13,7 +13,10 @@ import { withJudgeCopy } from './judge-copy';
 import { installTour, type TourInstance } from './tour';
 import { installUtopiaRouting, withUtopiaRouting, type PrototypeInstance } from './utopia-bridge';
 import { attachTts, installVoice } from './voice-bridge';
+import { installCardGuard } from './card-guard';
 import { installDemoData } from './demo-data';
+import { createCardChips } from './card-chips';
+import { backendNudge, installIdleNudge } from './idle-nudge';
 
 // Oasis's export has two pages that link to each other by file name. ?page=dashboard picks the second.
 const PAGES: Record<string, string> = {
@@ -181,26 +184,32 @@ async function main() {
         };
         loadAccount(0);
         demo.startAutoRefresh();
+        const showChart = (card: Record<string, unknown>, lang: 'en' | 'th') => showChartCard(card as unknown as ChartCardData, { lang, getPhone });
+        const showSteps = (card: Record<string, unknown>, lang: 'en' | 'th') =>
+          showStepsCard(card as unknown as StepsCardData, {
+            lang,
+            getPhone,
+            // "Show me" runs the backend's own pointing actions on the prototype.
+            runActions: (actions) =>
+              (window as unknown as { Icarus?: { runActions?: (a: unknown[]) => void } }).Icarus?.runActions?.(
+                actions.map(toPrototypeAction).filter((a): a is Record<string, unknown> => a !== null),
+              ),
+          });
+        // Closed a chart or steps card? A small chip under Icarus's message brings it back (card-chips.ts).
+        const cardChips = createCardChips({ chart: showChart, steps: showSteps });
+        cardChips.install(instance as never);
         installBackend({
           ...backend,
           getInstance: () => instance as PrototypeLike | null,
           ready: demo.ready,
+          cardChip: cardChips.register,
           wrap: (ask) => withUtopiaRouting(utopia, ask),
           hideCards: () => {
             hideTradeCard();
             hideInfoCard();
           },
-          showChart: (card, lang) => showChartCard(card as unknown as ChartCardData, { lang, getPhone }),
-          showSteps: (card, lang) =>
-            showStepsCard(card as unknown as StepsCardData, {
-              lang,
-              getPhone,
-              // "Show me" runs the backend's own pointing actions on the prototype.
-              runActions: (actions) =>
-                (window as unknown as { Icarus?: { runActions?: (a: unknown[]) => void } }).Icarus?.runActions?.(
-                  actions.map(toPrototypeAction).filter((a): a is Record<string, unknown> => a !== null),
-                ),
-            }),
+          showChart,
+          showSteps,
           showTrade: (card, lang) =>
             showTradeCard(card, {
               lang,
@@ -217,6 +226,11 @@ async function main() {
               },
             }),
         });
+      }
+      installCardGuard(instance as never); // a frozen card blocks buying (after the demo-data adapter: outermost)
+      // Stuck for 15 s on a money screen? Icarus quietly offers help (rules on the backend, no model; silent).
+      if (backend) {
+        installIdleNudge(instance as never, { fetchNudge: backendNudge(backend.url, backend.userId), getPhone });
       }
       // The mascot's one-minute tour (tour.ts): offered on a first visit, and from the "Tour" pill any time.
       const tourParam = PARAMS.get('tour');

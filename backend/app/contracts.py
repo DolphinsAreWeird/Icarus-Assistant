@@ -71,6 +71,16 @@ class NudgeRequest(BaseModel):
     idle_s: float = 0
 
 
+class EventRequest(BaseModel):
+    """An event the app saw that the backend can't: a screen view, a help tap, a task started or abandoned."""
+    user_id: str = Field(default="demo-user", pattern=r"^[a-zA-Z0-9_-]{1,64}$")
+    session_id: str = Field(default="", pattern=r"^[a-zA-Z0-9_-]{0,64}$")
+    type: str = Field(min_length=1, max_length=40)
+    screen: str | None = Field(default=None, max_length=40)
+    topic: str | None = Field(default=None, max_length=60)
+    lang: Literal["en", "th"] | None = None
+
+
 class SourceRef(BaseModel):
     result_id: str
     tool: str

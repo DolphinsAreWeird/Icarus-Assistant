@@ -158,3 +158,26 @@ numbers are the buy minimum and the user's cash.
 Rules (first match wins): frozen card · wrong wallet · below the minimum · more than the cash · empty amount · ready to
 review · waiting on review · Payments dead end · Card. Other screens get nothing. There is no KYC nudge because the app
 has no KYC screen: add a rule keyed on its screen name in `app/nudge.py` when it exists. Tests: `tests/test_nudge.py`.
+
+## Plain questions, and the friction map
+
+**Plain questions** are answered instantly from data, in baht, in English and Thai, with no model call (`app/insights.py`, the
+tools in `app/tools.py`, the triggers in `app/demo_intents.py`). They describe the past or do arithmetic; none predicts or advises.
+
+| Ask | Tool | What you get |
+|---|---|---|
+| "what's the price of bitcoin", "ราคาทอง" | `tell_price` | live price in baht and the 24h change |
+| "how much cash do I have", "how is my money split" | `get_balance` | cash, portfolio value, shares, fees this month |
+| "how risky is bitcoin" | `get_risk` | usual daily move, worst month, biggest fall (3 years of history) |
+| "what if I had put 1,000 baht in gold a year ago" | `what_if` | what it would be worth now. Past result, fees excluded |
+| "to save 50,000 baht by June" | `goal_math` | the monthly amount, rounded up so the goal is met. No interest |
+
+An asset with no data (Apple, Tesla) gets an honest "I don't have that yet". The same tools are offered to the legacy engine's model.
+The history needs `model/data/market/`: run `python model/prepare_market_data.py --assets btc eth gold --start 2024-01 --end 2026-09` once.
+
+**The friction map** (`app/friction.py`). The backend logs on its own: every question (by *topic*, never the text), confusion
+("what does X mean"), refusals, questions it couldn't answer, previews and completed purchases, and nudges issued. The app can add
+its own with `POST /events` (`task_started`, `task_abandoned`, `screen_view`, `help_requested`, `tap_explain`, `nudge_shown`).
+`GET /friction/summary` returns the top questions and confusing terms with denominators ("3 of 10 users asked about fee"), counts by
+screen, the purchase funnel, refusals and the unanswered count. Users are a short hash of the id. In memory (5,000 events);
+`FRICTION_LOG_FILE=path` also appends to a file; `POST /friction/reset` clears it.
