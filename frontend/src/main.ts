@@ -172,7 +172,14 @@ async function main() {
       // With a backend, answers come from Luka and First's backend instead of the demo answers (backend-bridge.ts).
       if (backend) {
         const demo = installDemoData(instance, backend.url, backend.userId, message => status(message, 'error'));
-        void demo.refresh().catch(error => status(`Demo account could not load: ${error.message}`, 'error'));
+        // Keep trying: on the hosted demo the backend may still be starting (or restarting after a deploy).
+        const loadAccount = (attempt: number): void => {
+          demo.refresh().catch((error: Error) => {
+            status(`Demo account could not load: ${error.message}`, 'error');
+            if (attempt < 60) window.setTimeout(() => loadAccount(attempt + 1), Math.min(10_000, 2_000 + attempt * 500));
+          });
+        };
+        loadAccount(0);
         installBackend({
           ...backend,
           getInstance: () => instance as PrototypeLike | null,

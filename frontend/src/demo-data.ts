@@ -90,7 +90,13 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
   };
   proto.renderVals = () => {
     const view = original.renderVals!();
-    if (!bundle) return view;
+    if (!bundle) {
+      // Until the account loads, show no numbers rather than the design's sample ones (dollars, another account).
+      view.totalBal = view.cryptoBal = view.spendBal = '฿ …';
+      view.assetRows = view.assetRows.map((a: any) => ({ ...a, price: '…', change: '' }));
+      view.txList = [];
+      return view;
+    }
     const pf = proto.pfSummary(), current = bundle.assets[proto.state.assetId], stats = proto.chartStats(proto.state.assetId, proto.state.period);
     const calc = proto.calc(proto.state.assetId, Number(proto.state.buyAmount), 'thb');
     view.totalBal = proto.state.hideBal ? '••••••' : money(proto.state.thbBal + pf.value);
