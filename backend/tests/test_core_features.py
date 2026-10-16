@@ -208,6 +208,9 @@ def test_logging_can_never_break_anything(tmp_path):
 
 
 def test_the_demo_bundle_has_a_page_for_every_asset_with_gold_last(client):
+    for data_id in ("aapl", "nvda", "qqq"):  # prices.json is rewritten by other runs; don't depend on what it holds
+        client.app.state.cache.prices.setdefault(data_id, {"asset_id": data_id, "price_usd": 100.0, "price_thb": 3300.0, "change_24h_pct": 0.5,
+                                                          "as_of": "2026-10-15T20:00:00+00:00", "source": "yahoo", "fetched_at": 0, "from_snapshot": True})
     bundle = client.get("/demo/state/u_new").json()
     assert list(bundle["assets"])[-1] == "XAU" and {"BTC", "ETH", "AAPL", "NVDA", "QQQ", "XAU"} <= set(bundle["assets"])
     assert all(a["price_thb"] > 0 and a["charts"] for a in bundle["assets"].values()) and set(bundle["holdings"]) == set(bundle["assets"])
