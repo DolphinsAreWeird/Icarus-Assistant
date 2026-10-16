@@ -38,6 +38,6 @@ it('renders the race rows in the console with the highlight and no template left
   expect(document.body.innerHTML).not.toMatch(/\{\{|undefined/);
   const starts = [...document.querySelectorAll<HTMLElement>('div')].filter((d) => d.textContent === 'Start' && d.style.animation.includes('icPulse'));
   expect(starts).toHaveLength(2);
-  const racing = starts[0].parentElement as HTMLElement;
+  const racing = starts[0]!.parentElement as HTMLElement;
   expect(racing.style.background).toBeTruthy();
 });

@@ -154,9 +154,9 @@ RULES = [
       r"มีเงิน\s*\d+(?:\.\d{1,2})?\s*บาท\s*(?:ควร)?(?:ทำอะไรดี|ลงทุนอะไรดี|ซื้ออะไรดี)"], _advice),
     # a minus amount: ask again, never read it as a buy
     ([r"(?:buy|purchase|get|put|invest|sell)(?: in)? -\d.*", r"(?:ซื้อ|ขาย|ลงทุน).*-\s*\d.*"], _const("bad_amount")),
-    # stocks are on the Invest screen to look at; the demo only buys gold, Bitcoin and Ethereum
-    ([r"(?:buy|purchase|get|sell|invest in)(?: \d+(?:\.\d{1,2})?(?: baht)?)?(?: (?:of|in|worth of))?(?: shares? of| stocks? of)? (?:"+_VIEW_ONLY+r")(?: shares?| stocks?)?(?: for \d+(?:\.\d{1,2})? baht)?",
-      r"(?:ซื้อ|ขาย|ลงทุน)\s*(?:หุ้น)?\s*(?:"+_VIEW_ONLY+r")\s*.*"], _const("stocks")),
+    # assets the demo can show but not buy (none right now; set "tradable": false in assets.json): say so in code
+    *([([r"(?:buy|purchase|get|sell|invest in)(?: \d+(?:\.\d{1,2})?(?: baht)?)?(?: (?:of|in|worth of))?(?: shares? of| stocks? of)? (?:"+_VIEW_ONLY+r")(?: shares?| stocks?)?(?: for \d+(?:\.\d{1,2})? baht)?",
+       r"(?:ซื้อ|ขาย|ลงทุน)\s*(?:หุ้น)?\s*(?:"+_VIEW_ONLY+r")\s*.*"], _const("stocks"))] if _VIEW_ONLY else []),
     # buy and sell: an amount in baht, and an asset (or the asset page the user is on)
     ([rf"(?P<side>buy|purchase|get|put|invest) {AMOUNT}(?: worth)?(?: (?:of|in|into) {A})?",
       rf"(?P<side>buy|purchase|get) {A} (?:for|with) {AMOUNT}",

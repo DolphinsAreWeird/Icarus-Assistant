@@ -170,7 +170,7 @@ export function buyReadback(actions: Array<Record<string, unknown>>, ctx: Protot
 }
 
 // What the prototype can open, so a wrong id from the backend never reaches it (it would blank the whole app).
-const ASSET_IDS = new Set(['BTC', 'ETH', 'XAU', 'AAPL', 'TSLA']);
+const ASSET_IDS = new Set(['BTC', 'ETH', 'XAU', 'AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA', 'BRK', 'QQQ']);
 const FILTERS = new Set(['All', 'Crypto', 'Stocks', 'Gold']);
 const PERIODS = new Set(['1D', '1W', '1M', '3M', '1Y', 'ALL']);
 const TABS = new Set(['home', 'wallets', 'invest', 'payments', 'card']);

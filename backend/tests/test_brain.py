@@ -227,7 +227,7 @@ def test_buy_problems_come_back_as_data_with_no_card(cache, state):
     # one grounded request per turn (I03); each reply's figures must be backed by that turn's tool data
     steps = [("buy 9000 baht of bitcoin", "BTC", 9000, "You have 5,000 baht."),
              ("buy 50 baht of bitcoin", "BTC", 50, "The minimum is 100 baht."),
-             ("buy 500 baht of apple", "AAPL", 500, "That one can't be bought here yet.")]
+             ("buy 500 baht of apple", "AAPL", 500, "I have no price for that one right now.")]
     fake = FakeLLM([x for _, asset, amount, say in steps
                     for x in (calls(("prepare_trade", {"asset_id": asset, "side": "buy", "amount_thb": amount})),
                               text(say))])
@@ -235,7 +235,7 @@ def test_buy_problems_come_back_as_data_with_no_card(cache, state):
     replies = [ask(bot, msg, snapshot=SNAPSHOT) for msg, *_ in steps]
     assert tool_results(fake, 1)[0]["data"] == {"ok": False, "reason": "not_enough_cash", "cash_thb": 5000.0}
     assert tool_results(fake, 3)[-1]["data"]["reason"] == "below_minimum"
-    assert tool_results(fake, 5)[-1]["reason"] == "not_tradable"
+    assert tool_results(fake, 5)[-1]["data"]["reason"] == "no_price"  # the test cache has no Apple price
     assert all(r.ui_actions == [] and r.debug["unbacked_numbers"] == [] for r in replies)
     assert [r.text for r in replies] == [say for *_, say in steps]
 

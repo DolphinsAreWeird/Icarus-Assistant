@@ -96,7 +96,6 @@ def test_anything_unclear_goes_to_the_model(text):
 
 @pytest.mark.parametrize("text, kind", [
     ("Put -1000 baht in gold", "bad_amount"), ("Buy -500 baht of gold", "bad_amount"),
-    ("Buy 1000 baht of Tesla", "stocks"), ("Buy 10 Tesla shares", "stocks"), ("Invest in Apple", "stocks"),
     ("I have 50,000 baht, what should I do with it?", "advice"), ("Where should I put my money?", "advice"),
 ])
 def test_minus_amounts_stocks_and_money_questions_never_reach_the_model(text, kind):
