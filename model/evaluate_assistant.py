@@ -3,6 +3,8 @@ import argparse
 from datetime import datetime,timezone
 import json
 import statistics
+from contextlib import nullcontext
+from unittest.mock import patch
 from icarus_core import ROOT,read_json
 from session import ConversationSession
 
@@ -46,7 +48,9 @@ def latency_summary(results):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--live",action="store_true",help="Make quota-consuming Orion requests")
+    parser.add_argument("--live",action="store_true",help="Run the full assistant; routes using Orion consume quota")
+    parser.add_argument("--no-network", action="store_true", help="Exercise full local routes with all gateway calls blocked")
+    parser.add_argument("--today", default="2026-10-15", help="Fixed evaluation date for reproducibility")
     parser.add_argument("--limit",type=int,default=4)
     parser.add_argument("--ids",nargs="*")
     parser.add_argument("--snapshot",help="Optional app snapshot for current-price/displayed-chart scenarios")
@@ -70,23 +74,24 @@ def main():
         cases = cases[:args.limit]
     results = []
     for case in cases:
-        session = ConversationSession(profile_id=case["profile"], language=case["lang"])
-        turns = [session.ask(message, offline=not args.live, data_adapter=adapter, screen_context=screen_context)
-                 for message in case.get("turns", [case.get("message", "")])]
+        session = ConversationSession(profile_id=case["profile"], language=case["lang"], today=args.today)
+        with patch("assistant.request", side_effect=RuntimeError("NETWORK_DISABLED_BY_EVALUATOR")) if args.no_network else nullcontext():
+            turns = [session.ask(message, offline=not (args.live or args.no_network), data_adapter=adapter, screen_context=screen_context)
+                     for message in case.get("turns", [case.get("message", "")])]
         result = turns[-1]
-        checks = structural_checks(case, result, live=args.live)
+        checks = structural_checks(case, result, live=args.live or args.no_network)
         row = {"case":case,"checks":checks,"result":result,"turn_results":turns,"human_review":"pending",
                "semantic_quality":"unscored"}
         results.append(row)
         print(json.dumps({"id":case["id"],"checks":checks,"seconds":result["elapsed_seconds"],
                           "text":result["text"],"limitations":result["limitations"]},ensure_ascii=False),flush=True)
     name = "assistant" if args.suite == "demo" else "assistant_" + args.suite
-    target = ROOT / "results" / (name + ("_live.json" if args.live else "_offline.json"))
+    target = ROOT / "results" / (name + ("_local.json" if args.no_network else "_live.json" if args.live else "_offline.json"))
     target.parent.mkdir(exist_ok=True)
     run_at = datetime.now(timezone.utc)
     summary = latency_summary(results)
     print(json.dumps({"latency_summary": summary}), flush=True)
-    content = json.dumps({"run_at":run_at.isoformat(),"live":args.live,"suite":args.suite,
+    content = json.dumps({"run_at":run_at.isoformat(),"live":args.live and not args.no_network,"network_disabled":args.no_network,"suite":args.suite,
                           "latency_summary":summary,"results":results},ensure_ascii=False,indent=2)
     target.write_text(content,encoding="utf-8")
     target.with_name(target.stem + "_" + run_at.strftime("%Y%m%dT%H%M%S%fZ") + ".json").write_text(content,encoding="utf-8")
