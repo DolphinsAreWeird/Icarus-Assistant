@@ -36,7 +36,10 @@ const SOFT = '#F7D2DC';
 const INK = '#4A2E36';
 const FONT = 'Fredoka,Mali,system-ui,sans-serif';
 const POSES = ['curious', 'excited', 'flying', 'happy', 'hero', 'star', 'working'] as const;
-const img = (pose: string) => `mascot/bow/${pose}.png`;
+// flying.png has a see-through body (its fill was cut out with the background, through gaps in the outline), so the
+// page shows through the mascot: fly with the filled star pose instead.
+const FILLED: Record<string, string> = { flying: 'star' };
+const img = (pose: string) => `mascot/bow/${FILLED[pose] ?? pose}.png`;
 const MOOD: Record<string, string> = { happy: 'happy', excited: 'excited', curious: 'curious', thinking: 'working' };
 const TRICKS = ['hop', 'wiggle', 'spin', 'hop', 'bounce'] as const;
 
