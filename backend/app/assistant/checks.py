@@ -12,16 +12,26 @@ TOLERANCE = 0.03         # "about 142,700" for 142,712.36 is fine
 
 SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
 CARD_TEXT_MAX = 160  # Thai has no full stops, so cap the length instead
+REPLY_TEXT_MAX = 300
+
+
+def _cap(text: str, limit: int) -> str:
+    if len(text) <= limit:
+        return text
+    cut = text.rfind(" ", 0, limit)
+    return text[: cut if cut > 0 else limit].rstrip(" ,")
 
 
 def first_sentence(text: str) -> str:
     """The first sentence, for replies that come with a chart or steps card: the card has the rest,
     and the voice shouldn't read the steps out."""
-    first = SENTENCE_END.split(text.strip(), maxsplit=1)[0]
-    if len(first) > CARD_TEXT_MAX:
-        cut = first.rfind(" ", 0, CARD_TEXT_MAX)
-        first = first[: cut if cut > 0 else CARD_TEXT_MAX].rstrip(" ,")
-    return first
+    return _cap(SENTENCE_END.split(text.strip(), maxsplit=1)[0], CARD_TEXT_MAX)
+
+
+def first_sentences(text: str, n: int = 2) -> str:
+    """At most n sentences: answers stay short even when the model rambles."""
+    parts = SENTENCE_END.split(text.strip(), maxsplit=n)
+    return _cap(" ".join(parts[:n]) if len(parts) > n else text.strip(), REPLY_TEXT_MAX)
 
 
 def detect_language(text: str, fallback: str = "en") -> str:

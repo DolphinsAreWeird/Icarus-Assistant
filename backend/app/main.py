@@ -1,6 +1,7 @@
 """HTTP API. Run from backend/:  .venv/bin/uvicorn app.main:app --port 8000"""
 import threading
 import os
+import time
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
@@ -9,7 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import knowledge
 from app.assistant.llm import ChatModel, LLMError, RateLimited
-from app.assistant.loop import Assistant, UnknownUser
+from app.assistant.loop import Assistant, NoModel, UnknownUser
+from app.assistant.memo import QuestionLog
 from app.config import OFFLINE, POLL_INTERVAL_S
 from app.contracts import ChatReply, ChatRequest, ConfirmRequest, ErrorBody, PreviewRequest
 from app.market.cache import PriceCache
@@ -62,18 +64,31 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
         assistant = ModelService(state, cache, offline=model_offline, model=os.getenv("ICARUS_LLM_MODEL"))
     else:
         llm = llm if llm is not None else make_llm()
-        assistant = Assistant(llm, state, cache) if llm else None
+        # Without a model the prepared answers and the fast path still work; the rest says "no_model".
+        assistant = Assistant(llm, state, cache, log=QuestionLog.from_env())
     stop_polling = threading.Event()
+    first_poll = threading.Event()
 
     def poller():
         while not stop_polling.is_set():
             try:
                 cache.refresh()
+                if isinstance(assistant, Assistant):
+                    assistant.prices_changed()  # the fact packs follow the prices
             except Exception:
                 # Keep the last good bundle; one source failure must not kill polling.
                 import logging
                 logging.getLogger(__name__).exception("Market refresh failed")
+            first_poll.set()
             stop_polling.wait(POLL_INTERVAL_S)
+
+    def prewarm():
+        """After the first prices, answer the prepared questions once, so the first visitor isn't slower."""
+        first_poll.wait(timeout=20)
+        started = time.perf_counter()
+        answered = assistant.prewarm()
+        print(f"[prewarm] {answered} prepared questions answered in {time.perf_counter() - started:.2f} s, "
+              "no model calls", flush=True)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -82,6 +97,10 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
         if poll and not offline:
             thread = threading.Thread(target=poller, daemon=True)
             thread.start()
+        else:
+            first_poll.set()
+        if poll and isinstance(assistant, Assistant):
+            threading.Thread(target=prewarm, daemon=True).start()
         try:
             yield
         finally:
@@ -101,6 +120,7 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
         return {"offline": offline, "engine": engine,
                 "assistant": ("model/offline-preview" if model_offline else "model/gateway") if engine == "model"
                              else f"{llm.provider}/{llm.model}" if llm else "not set up",
+                "llm_cooling": llm.cooling() if engine == "legacy" and hasattr(llm, "cooling") else {},
                 "fx": cache.fx,
                 "prices": {k: v["freshness"] for k, v in cache.get_all().items()}}
 
@@ -146,6 +166,8 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
             return assistant.chat(req)
         except UnknownUser:
             fail(404, "unknown_user")
+        except NoModel:
+            fail(503, "no_model")
         except RateLimited:
             fail(429, "rate_limited")
         except SessionsBusy:
