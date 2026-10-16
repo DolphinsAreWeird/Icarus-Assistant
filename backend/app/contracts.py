@@ -63,6 +63,14 @@ class ChatRequest(BaseModel):
         return d
 
 
+class NudgeRequest(BaseModel):
+    """The app asks: this user has been idle on this screen, is there something useful to say?"""
+    user_id: str = "demo-user"
+    lang: Literal["en", "th"] | None = None
+    snapshot: dict = Field(default_factory=dict)   # the app's getContext() (plus card_frozen)
+    idle_s: float = 0
+
+
 class SourceRef(BaseModel):
     result_id: str
     tool: str

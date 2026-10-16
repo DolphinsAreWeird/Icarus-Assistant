@@ -129,12 +129,16 @@ def to_app_asset(asset_id: str | None) -> str | None:
 def state_from_snapshot(snapshot: dict | None, screen_id: str | None = None,
                         asset: str | None = None) -> UIState:
     """Build the starting state from the app's snapshot (or our ScreenContext fields)."""
-    snap = snapshot or {}
+    snap = snapshot if isinstance(snapshot, dict) else {}  # it comes from a browser: never trust its shape
     screen = snap.get("screen") or screen_id or "home"
+    if not isinstance(screen, str):
+        screen = "home"
     screen = OLD_SCREEN_NAMES.get(screen, screen)
-    if screen == "buy" and "review" in str(snap.get("label", "")):
+    if screen == "buy" and "review" in str(snap.get("label", "")).lower():
         screen = "buy_review"
-    app_asset = to_app_asset((snap.get("asset") or {}).get("id") or asset) or "XAU"
+    snap_asset = snap.get("asset")
+    asset_id = (snap_asset.get("id") if isinstance(snap_asset, dict) else None) or asset
+    app_asset = to_app_asset(asset_id if isinstance(asset_id, str) else None) or "XAU"
     return UIState(screen=screen, asset=app_asset)
 
 

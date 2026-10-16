@@ -312,7 +312,7 @@ def test_explain_uses_the_numbers_on_screen_and_highlights(cache, state):
     reply = ask(Assistant(fake, state, cache), "What does this line mean?", snapshot=snap)
     result = tool_results(fake, 1)[0]
     assert result["data"]["numbers"]["change_pct"] == 3.4
-    assert result["data"]["numbers"]["currency"] == "THB"  # the app sends everything in baht now
+    assert result["data"]["numbers"]["currency"] == "USD"  # this snapshot has dollar fields (price_usd): never call it baht
     assert result["data"]["numbers"]["say"]["change"] == "up about 3.4%"
     assert result["source"]["provider"] == "app screen (demo data)"
     assert reply.ui_actions == [{"type": "highlight", "element_id": "asset.chart"}]
@@ -329,7 +329,7 @@ def test_explain_without_the_app_uses_our_history(cache, state):
 def test_portfolio_answers_about_what_the_app_shows(cache, state):
     fake = FakeLLM([calls(("get_portfolio", {})), text("80% is in Bitcoin.")])
     ask(Assistant(fake, state, cache), "how is my money split", snapshot=SNAPSHOT)
-    assert tool_results(fake, 1)[0]["data"] == SNAPSHOT["portfolio"]
+    assert tool_results(fake, 1)[0]["data"] == {"currency": "USD", **SNAPSHOT["portfolio"]}
 
 
 def test_prices_use_app_asset_ids(cache, state):
@@ -598,3 +598,11 @@ def test_trade_replies_are_not_trimmed(cache, state):
                     text("Here's your preview. The fee is 5 baht. Tap Confirm on the card.")])
     reply = ask(Assistant(fake, state, cache), "buy gold 1000", snapshot=SNAPSHOT)
     assert reply.text.endswith("Tap Confirm on the card.")
+
+
+def test_a_frozen_card_blocks_a_buy_up_front(cache, state):
+    fake = FakeLLM([calls(("prepare_trade", {"asset_id": "XAU", "side": "buy", "amount_thb": 1000})),
+                    text("Your card is frozen, so I can't set up a buy. Unfreeze it first.")])
+    reply = ask(Assistant(fake, state, cache), "Put 1,000 baht in gold", snapshot={**SNAPSHOT, "card_frozen": True})
+    assert reply.ui_actions == []
+    assert tool_results(fake, 1)[0]["reason"] == "card_frozen"

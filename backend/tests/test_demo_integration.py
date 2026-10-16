@@ -102,3 +102,16 @@ def test_fee_rounding_matches_model_at_half_cent(client):
     fee = client.post("/chat", json={"text": "/fee 2002", "user_id": "u_new"}).json()
     model_fee = fee["evidence"][0]["data"]["data"]["fee"]
     assert preview["fee_thb"] == 5.01 == float(model_fee)
+
+
+def test_a_frozen_card_blocks_buying_through_icarus_too():
+    snap = {"screen": "home", "label": "Home", "language": "en", "card_frozen": True,
+            "asset": {"id": "XAU", "name": "Gold", "price_thb": 139000, "change_24h_pct": 0.2}, "period": "1M"}
+    with TestClient(create_app(engine="model", offline=True, poll=False, model_offline=True)) as client:
+        frozen = client.post("/chat", json={"text": "Put 1,000 baht in gold", "user_id": "u_new", "snapshot": snap}).json()
+        assert frozen["ui_actions"] == [] and "frozen" in frozen["text"]
+        assert "บัตร" in client.post("/chat", json={"text": "ซื้อทอง 1,000 บาท", "user_id": "u_new",
+                                                    "snapshot": {**snap, "language": "th"}, "lang": "th"}).json()["text"]
+        normal = client.post("/chat", json={"text": "Put 1,000 baht in gold", "user_id": "u_new",
+                                            "snapshot": {**snap, "card_frozen": False}}).json()
+        assert normal["ui_actions"], "a card that is not frozen can still buy"

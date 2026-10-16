@@ -19,6 +19,7 @@ from app import knowledge, ui
 from app.assistant import fastpath
 from app.assistant.checks import (asks_for_advice, detect_language, first_sentence, first_sentences, mentioned_assets,
                                   unbacked_numbers)
+from app.assistant.guard import guard_text
 from app.assistant.llm import ChatModel, parse_arguments
 from app.assistant.memo import AnswerCache, QuestionLog, reusable, standalone
 from app.assistant.normalize import normalize
@@ -64,11 +65,13 @@ def said_by_tools(results: list[tuple[str, str]], lang: str) -> str | None:
 
 
 def trim(history: list) -> None:
-    """Drop old messages, but always start at a user message so tool calls stay paired."""
+    """Drop the oldest turns (each starts at a user message, so tool calls stay paired).
+    The newest turn is never dropped, even if it alone is longer than MAX_HISTORY."""
     while len(history) > MAX_HISTORY:
-        del history[0]
-        while history and history[0]["role"] != "user":
-            del history[0]
+        users = [i for i, m in enumerate(history) if m["role"] == "user"]
+        if len(users) < 2:
+            return
+        del history[:users[1]]
 
 
 class Assistant:
@@ -252,6 +255,7 @@ class Assistant:
             text = first_sentence(text)  # the card shows the details; say just the headline
         elif "trade_preview" not in cards:
             text = first_sentences(text, 2)  # never long; a trade keeps its "tap Confirm"
+        text, broke_rule = guard_text(text, ctx.lang)  # advice or "it's bought" never reaches the user, whichever route wrote it
         for action in ctx.ui_actions:  # last gate: only the closed set ever leaves the backend
             ui.validate(action)
         envelopes = list(ctx.results.values()) + list(extra)
@@ -261,7 +265,7 @@ class Assistant:
             ui_actions=ctx.ui_actions,
             sources=[SourceRef(result_id=e["result_id"], tool=e["tool"], **e["source"]) for e in envelopes],
             debug=turn | {"finish_reason": None} | debug | {
-                "screen_after": ctx.ui_state.screen, "asset_after": ctx.ui_state.asset,
+                "screen_after": ctx.ui_state.screen, "asset_after": ctx.ui_state.asset, "guard": broke_rule,
                 "unbacked_numbers": unbacked_numbers(text, envelopes, req.text),
                 "latency_ms": round((time.perf_counter() - started) * 1000)},
         )
