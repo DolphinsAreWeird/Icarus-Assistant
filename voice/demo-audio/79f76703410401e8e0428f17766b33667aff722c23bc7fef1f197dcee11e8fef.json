@@ -1,10 +1,10 @@
 {
-  "voiceId": "mYcpTKg1oj1H5CtzUZNO",
+  "voiceId": "XiPS9cXxAVbaIWtGDHDh",
   "model": "eleven_flash_v2_5",
   "speed": 1,
   "text": "Hi, I'm Icarus. Ask me about anything on your screen.",
   "outputFormat": "pcm_24000",
   "sampleRate": 24000,
-  "bytes": 133746,
-  "createdAt": "2026-10-16T06:07:21.200Z"
+  "bytes": 173872,
+  "createdAt": "2026-10-16T06:47:03.110Z"
 }
