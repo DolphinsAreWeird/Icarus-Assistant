@@ -64,9 +64,9 @@ def test_guard_leaves_normal_replies_alone(fine):
 
 def test_legacy_engine_never_sends_advice_or_a_done_claim(cache, state):
     for i, bad in enumerate(("You should buy gold now, it will almost certainly rise.", "Done, I bought 1000 baht of gold for you.")):
-        reply = ask(Assistant(FakeLLM([text(bad)]), state, cache), "hi", snapshot=SNAPSHOT, session=f"g{i}")
+        reply = ask(Assistant(FakeLLM([text(bad)]), state, cache), "give me your honest read on the gold market outlook", snapshot=SNAPSHOT, session=f"g{i}")
         assert reply.text != bad and reply.debug["guard"] in ("advice", "done")
-    ok = ask(Assistant(FakeLLM([text("Gold is a metal.")]), state, cache), "hi", snapshot=SNAPSHOT, session="ok")
+    ok = ask(Assistant(FakeLLM([text("Gold is a metal.")]), state, cache), "give me your honest read on the gold market outlook", snapshot=SNAPSHOT, session="ok")
     assert ok.text == "Gold is a metal." and ok.debug["guard"] is None
 
 
