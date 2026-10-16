@@ -55,12 +55,12 @@ export const PRODUCT_POLISH: ReadonlyArray<readonly [string, string]> = [
 ];
 
 export const LIVE_DATA_COPY: ReadonlyArray<readonly [string, string]> = [
-  ['Demo prices · not live', 'Live prices, in baht'],
-  ['Prices shown are demo data, not live market prices.', 'Prices are live, in baht; the account is a demo.'],
+  ['Demo prices · not live', '{{ pricesHeader }}'],
+  ['Prices shown are demo data, not live market prices.', '{{ pricesNote }}'],
   // the asset page's change pill: the backend's change is over the 1D chart the app shows, so say 1D, not 24h
   ['{{ asset.change24 }}<span style="font-weight:400;opacity:.8">24h</span>', '{{ asset.change24 }}<span style="font-weight:400;opacity:.8">1D</span>'],
   ['Prices are demo data. The final quantity may differ slightly when the order fills.',
-    'Prices are live; the account is a demo. The final quantity may differ slightly when the order fills.'],
+    '{{ buyNote }}'],
   // the swap starts from the THB wallet the demo account really has (demo-data.ts fills the numbers)
   ['background:#26A17B;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">₮<',
     'background:#C94F72;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">฿<'],

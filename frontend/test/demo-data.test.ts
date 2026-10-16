@@ -35,8 +35,8 @@ it('renders backend THB prices and cash, uses exact chart points and one fee rul
   expect(view.totalBal).toBe('฿15,000.00');
   expect(view.assetRows.map((a: any) => a.id)).toEqual(['BTC', 'ETH', 'XAU']);
   expect(view.asset.price).toBe('฿10,000.00');
-  // Holdings are valued at live prices; nothing claims a return the account doesn't have.
-  expect(view.pfChange).toBe('Value at live prices');
+  // Holdings are valued at the backend's prices; nothing claims a return the account doesn't have.
+  expect(view.pfChange).toBe('Value at last known prices'); // the fixture prices are offline, so not called live
   expect(view.pfChange).not.toMatch(/return|%/);
   expect(proto.getContext()).toMatchObject({ currency: 'THB', screen_revision: 'screen-1', display_version: 'chart-XAU' });
   const first = proto.getContext().screen_revision;

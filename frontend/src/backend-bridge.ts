@@ -15,6 +15,7 @@
 import { withReadbackFields } from '../../voice/src/shared/backend-card';
 import { buildReadback, parsePreview } from '../../voice/src/shared/readback';
 import { STRINGS } from '../../voice/src/config/strings';
+import { agedFreshness } from './demo-data';
 
 export const DEFAULT_BACKEND_URL = 'http://localhost:8000';
 
@@ -126,9 +127,19 @@ export function toChatRequest(text: string, ctx: PrototypeContext | undefined, o
   };
 }
 
-/** "get_prices · binance + frankfurter (live)", once each. */
+/** "get_prices · binance + frankfurter (live at 09:00)", once each. */
 function sourceLabels(sources: Array<Record<string, unknown>> = []): string[] {
-  const labels = sources.map((s) => `${String(s.tool ?? 'data')} · ${String(s.provider ?? '')}${s.freshness && s.freshness !== 'n/a' ? ` (${String(s.freshness)})` : ''}`);
+  // A reply is a snapshot that stays in the chat, so a "live" source says when it was live ("live at 09:00"), never a
+  // bare "live" that would still read as current an hour later. A recent as_of past the threshold makes it "delayed".
+  // A much older as_of on a source the server called live is not trusted either way (the model path's as_of includes
+  // the day-granular FX date), so it keeps the server's verdict, stamped with the reply time.
+  const now = Date.now();
+  const at = new Date(now).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const fresh = (s: Record<string, unknown>) => {
+    if (s.freshness !== 'live') return String(s.freshness);
+    return agedFreshness('live', s.as_of as string | undefined, now, now).state === 'live' ? `live at ${at}` : 'delayed';
+  };
+  const labels = sources.map((s) => `${String(s.tool ?? 'data')} · ${String(s.provider ?? '')}${s.freshness && s.freshness !== 'n/a' ? ` (${fresh(s)})` : ''}`);
   return [...new Set(labels)];
 }
 
