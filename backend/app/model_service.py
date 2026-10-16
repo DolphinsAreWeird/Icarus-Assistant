@@ -150,7 +150,12 @@ class ModelService:
         try:
             previous = deepcopy(session.__dict__)
             try:
-                session.language, session.today = language, today
+                session.language = language
+                # Luka's session keeps the date behind set_calculation_date (today is read-only there).
+                if hasattr(session, "set_calculation_date"):
+                    session.set_calculation_date(today)
+                else:
+                    session.today = today
                 intent_reply = handle_intent(req, self.state, self.cache, user_id, language)
                 if intent_reply is not None:
                     return intent_reply
