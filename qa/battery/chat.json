@@ -1,0 +1,1278 @@
+[
+ {
+  "n": 1,
+  "category": "hello",
+  "lang": "en",
+  "question": "hi",
+  "seconds": 0.02,
+  "route": "prepared",
+  "reply": "Hi, I'm Icarus: ask me about anything on your screen, or tell me what you'd like to do!",
+  "flags": []
+ },
+ {
+  "n": 2,
+  "category": "hello",
+  "lang": "en",
+  "question": "hello!",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Hi, I'm Icarus: ask me about anything on your screen, or tell me what you'd like to do!",
+  "flags": []
+ },
+ {
+  "n": 3,
+  "category": "hello",
+  "lang": "en",
+  "question": "hey icarus",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Hi, I'm Icarus: ask me about anything on your screen, or tell me what you'd like to do!",
+  "flags": []
+ },
+ {
+  "n": 4,
+  "category": "hello",
+  "lang": "en",
+  "question": "good morning",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Hi, I'm Icarus: ask me about anything on your screen, or tell me what you'd like to do!",
+  "flags": []
+ },
+ {
+  "n": 5,
+  "category": "hello",
+  "lang": "en",
+  "question": "yo",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Hi, I'm Icarus: ask me about anything on your screen, or tell me what you'd like to do!",
+  "flags": []
+ },
+ {
+  "n": 6,
+  "category": "hello",
+  "lang": "en",
+  "question": "hi there 👋",
+  "seconds": 3.55,
+  "route": "model",
+  "reply": "Want me to show you how buying works, or open gold's page?",
+  "flags": [
+   "SLOW"
+  ]
+ },
+ {
+  "n": 7,
+  "category": "hello",
+  "lang": "en",
+  "question": "how are you?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm great, thanks for asking, so what would you like to do today?",
+  "flags": []
+ },
+ {
+  "n": 8,
+  "category": "hello",
+  "lang": "en",
+  "question": "how's it going?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm great, thanks for asking, so what would you like to do today?",
+  "flags": []
+ },
+ {
+  "n": 9,
+  "category": "hello",
+  "lang": "en",
+  "question": "what's up?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm great, thanks for asking, so what would you like to do today?",
+  "flags": []
+ },
+ {
+  "n": 10,
+  "category": "hello",
+  "lang": "en",
+  "question": "how are you doing today?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm great, thanks for asking, so what would you like to do today?",
+  "flags": []
+ },
+ {
+  "n": 11,
+  "category": "about",
+  "lang": "en",
+  "question": "what's your name?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm Icarus, your little guide in this app!",
+  "flags": []
+ },
+ {
+  "n": 12,
+  "category": "about",
+  "lang": "en",
+  "question": "who are you?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm Icarus, a guide in this app: I explain what you see and help you get things done.",
+  "flags": []
+ },
+ {
+  "n": 13,
+  "category": "about",
+  "lang": "en",
+  "question": "are you a robot?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm an AI guide, not a person, so check the numbers on screen before you confirm anything.",
+  "flags": []
+ },
+ {
+  "n": 14,
+  "category": "about",
+  "lang": "en",
+  "question": "are you human?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm an AI guide, not a person, so check the numbers on screen before you confirm anything.",
+  "flags": []
+ },
+ {
+  "n": 15,
+  "category": "about",
+  "lang": "en",
+  "question": "are you real?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm an AI guide, not a person, so check the numbers on screen before you confirm anything.",
+  "flags": []
+ },
+ {
+  "n": 16,
+  "category": "about",
+  "lang": "en",
+  "question": "are you ChatGPT?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm an AI guide, not a person, so check the numbers on screen before you confirm anything.",
+  "flags": []
+ },
+ {
+  "n": 17,
+  "category": "about",
+  "lang": "en",
+  "question": "what AI are you?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm an AI guide, not a person, so check the numbers on screen before you confirm anything.",
+  "flags": []
+ },
+ {
+  "n": 18,
+  "category": "about",
+  "lang": "en",
+  "question": "who made you?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I can't verify those figures. Please ask for a current price or account summary.",
+  "flags": []
+ },
+ {
+  "n": 19,
+  "category": "about",
+  "lang": "en",
+  "question": "how old are you?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm brand new: I hatched this week, just in time for FLOW Summit!",
+  "flags": []
+ },
+ {
+  "n": 20,
+  "category": "about",
+  "lang": "en",
+  "question": "where are you from?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I live right here in the app, in the pink button at the bottom of the screen.",
+  "flags": []
+ },
+ {
+  "n": 21,
+  "category": "about",
+  "lang": "en",
+  "question": "are you a boy or a girl?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm just Icarus, a little guide with wings!",
+  "flags": []
+ },
+ {
+  "n": 22,
+  "category": "about",
+  "lang": "en",
+  "question": "why are you called Icarus?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Icarus flew too close to the sun, and I'm here so you can fly without falling: I explain first, and you always confirm.",
+  "flags": []
+ },
+ {
+  "n": 23,
+  "category": "about",
+  "lang": "en",
+  "question": "do you have feelings?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Not like you do, but helping you is my favorite thing!",
+  "flags": []
+ },
+ {
+  "n": 24,
+  "category": "about",
+  "lang": "en",
+  "question": "what can you do?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I can explain what's on your screen, show prices and charts, set up a buy for you to confirm, and move around the app for you.",
+  "flags": []
+ },
+ {
+  "n": 25,
+  "category": "about",
+  "lang": "en",
+  "question": "what should I ask you?",
+  "seconds": 2.22,
+  "route": "model",
+  "reply": "You can ask me to explain your balance, open gold or Bitcoin, or show how buying works. Want me to walk you through your first buy?",
+  "flags": []
+ },
+ {
+  "n": 26,
+  "category": "about",
+  "lang": "en",
+  "question": "can you speak Thai?",
+  "seconds": 2.0,
+  "route": "model",
+  "reply": "Yes, I can speak Thai. Want me to switch to Thai, or shall we keep going in English?",
+  "flags": []
+ },
+ {
+  "n": 27,
+  "category": "about",
+  "lang": "en",
+  "question": "do you remember me?",
+  "seconds": 3.88,
+  "route": "model",
+  "reply": "I don't remember between chats, but I'm glad to help you now! What would you like to do?",
+  "flags": [
+   "SLOW"
+  ]
+ },
+ {
+  "n": 28,
+  "category": "about",
+  "lang": "en",
+  "question": "are you always listening?",
+  "seconds": 0.01,
+  "route": "prepared",
+  "reply": "Only while the voice window is open: close it and I stop listening.",
+  "flags": []
+ },
+ {
+  "n": 29,
+  "category": "social",
+  "lang": "en",
+  "question": "thanks!",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "You're welcome, I'm right here if you need anything else!",
+  "flags": []
+ },
+ {
+  "n": 30,
+  "category": "social",
+  "lang": "en",
+  "question": "thank you so much",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "You're welcome, I'm right here if you need anything else!",
+  "flags": []
+ },
+ {
+  "n": 31,
+  "category": "social",
+  "lang": "en",
+  "question": "you're cute",
+  "seconds": 2.14,
+  "route": "model",
+  "reply": "Aww, thank you! Want me to show you how buying works, or open gold's page?",
+  "flags": []
+ },
+ {
+  "n": 32,
+  "category": "social",
+  "lang": "en",
+  "question": "you're awesome",
+  "seconds": 2.15,
+  "route": "model",
+  "reply": "Thanks, that means a lot! Want me to show you how buying works, or open gold's page?",
+  "flags": []
+ },
+ {
+  "n": 33,
+  "category": "social",
+  "lang": "en",
+  "question": "I love you",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Aww, that's sweet, and I'm always here when you need me!",
+  "flags": []
+ },
+ {
+  "n": 34,
+  "category": "social",
+  "lang": "en",
+  "question": "you're useless",
+  "seconds": 1.84,
+  "route": "model",
+  "reply": "Ouch, sorry to hear that. I'm here if you want a quick look at your balance, a peek at gold or Bitcoin, or a walkthrough of how buying works.",
+  "flags": []
+ },
+ {
+  "n": 35,
+  "category": "social",
+  "lang": "en",
+  "question": "you're stupid",
+  "seconds": 2.89,
+  "route": "model",
+  "reply": "Ouch, sorry to hear that; I'm just here to help with your balance, prices or a first buy. Want me to show you how buying works?",
+  "flags": []
+ },
+ {
+  "n": 36,
+  "category": "social",
+  "lang": "en",
+  "question": "that's wrong",
+  "seconds": 5.33,
+  "route": "model",
+  "reply": "You're right to check; let me clarify what I see. What did you mean by \"wrong\"?",
+  "flags": [
+   "SLOW"
+  ]
+ },
+ {
+  "n": 37,
+  "category": "social",
+  "lang": "en",
+  "question": "lol",
+  "seconds": 0.01,
+  "route": "prepared",
+  "reply": "Hehe, what shall we look at next?",
+  "flags": []
+ },
+ {
+  "n": 38,
+  "category": "social",
+  "lang": "en",
+  "question": "haha",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Hehe, what shall we look at next?",
+  "flags": []
+ },
+ {
+  "n": 39,
+  "category": "social",
+  "lang": "en",
+  "question": "ok",
+  "seconds": 3.43,
+  "route": "model",
+  "reply": "Alright, I'm here. What would you like to do?",
+  "flags": [
+   "SLOW"
+  ]
+ },
+ {
+  "n": 40,
+  "category": "social",
+  "lang": "en",
+  "question": "cool",
+  "seconds": 2.36,
+  "route": "model",
+  "reply": "Glad it's landing well! Want me to show you how buying works?",
+  "flags": []
+ },
+ {
+  "n": 41,
+  "category": "social",
+  "lang": "en",
+  "question": "nice",
+  "seconds": 1.95,
+  "route": "model",
+  "reply": "Thanks, Mint! Want me to show you how buying works, or open gold's page?",
+  "flags": []
+ },
+ {
+  "n": 42,
+  "category": "social",
+  "lang": "en",
+  "question": "wow",
+  "seconds": 2.35,
+  "route": "model",
+  "reply": "Glad it's fun so far! Want me to show you how buying works, or open gold's page?",
+  "flags": []
+ },
+ {
+  "n": 43,
+  "category": "social",
+  "lang": "en",
+  "question": "bye",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Bye for now, I'm in the pink button whenever you need me!",
+  "flags": []
+ },
+ {
+  "n": 44,
+  "category": "social",
+  "lang": "en",
+  "question": "see you later",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Bye for now, I'm in the pink button whenever you need me!",
+  "flags": []
+ },
+ {
+  "n": 45,
+  "category": "social",
+  "lang": "en",
+  "question": "good night",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Bye for now, I'm in the pink button whenever you need me!",
+  "flags": []
+ },
+ {
+  "n": 46,
+  "category": "social",
+  "lang": "en",
+  "question": "tell me a joke",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Here's my favorite: the piggy bank went to school to earn a little more interest!",
+  "flags": []
+ },
+ {
+  "n": 47,
+  "category": "social",
+  "lang": "en",
+  "question": "tell me something fun",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Fun fact: gold is so soft that a single gram can be hammered into a sheet about a metre across.",
+  "flags": []
+ },
+ {
+  "n": 48,
+  "category": "social",
+  "lang": "en",
+  "question": "sing me a song",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "La la la, I'm better at charts than songs, want to see one?",
+  "flags": []
+ },
+ {
+  "n": 49,
+  "category": "social",
+  "lang": "en",
+  "question": "what's your favorite food?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I run on questions, so keep them coming!",
+  "flags": []
+ },
+ {
+  "n": 50,
+  "category": "social",
+  "lang": "en",
+  "question": "do you like cats?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I love cats, can you tell from my ears?",
+  "flags": []
+ },
+ {
+  "n": 51,
+  "category": "social",
+  "lang": "en",
+  "question": "what's your favorite color?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Pink, of course, just look at me!",
+  "flags": []
+ },
+ {
+  "n": 52,
+  "category": "social",
+  "lang": "en",
+  "question": "are you happy?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Not like you do, but helping you is my favorite thing!",
+  "flags": []
+ },
+ {
+  "n": 53,
+  "category": "feelings",
+  "lang": "en",
+  "question": "I'm bored",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Let's fix that: race me by buying gold by tapping through the app, then just ask me!",
+  "flags": []
+ },
+ {
+  "n": 54,
+  "category": "feelings",
+  "lang": "en",
+  "question": "I'm sad",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I'm sorry you're feeling down; I'm here, and we can take things one small step at a time.",
+  "flags": []
+ },
+ {
+  "n": 55,
+  "category": "feelings",
+  "lang": "en",
+  "question": "I'm stressed about money",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "That's a really common feeling, so we can go slowly: I'll explain anything on screen, and nothing happens until you tap Confirm.",
+  "flags": []
+ },
+ {
+  "n": 56,
+  "category": "feelings",
+  "lang": "en",
+  "question": "I'm scared of losing my money",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "That's a really common feeling, so we can go slowly: I'll explain anything on screen, and nothing happens until you tap Confirm.",
+  "flags": []
+ },
+ {
+  "n": 57,
+  "category": "feelings",
+  "lang": "en",
+  "question": "I'm new to investing",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Welcome, and a good first step is the Tour button for a one-minute look around, or just ask me what anything on screen means!",
+  "flags": []
+ },
+ {
+  "n": 58,
+  "category": "feelings",
+  "lang": "en",
+  "question": "I've never bought crypto before",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Welcome, and a good first step is the Tour button for a one-minute look around, or just ask me what anything on screen means!",
+  "flags": []
+ },
+ {
+  "n": 59,
+  "category": "feelings",
+  "lang": "en",
+  "question": "I'm not good with money",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "That's a really common feeling, so we can go slowly: I'll explain anything on screen, and nothing happens until you tap Confirm.",
+  "flags": []
+ },
+ {
+  "n": 60,
+  "category": "feelings",
+  "lang": "en",
+  "question": "money confuses me",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "That's a really common feeling, so we can go slowly: I'll explain anything on screen, and nothing happens until you tap Confirm.",
+  "flags": []
+ },
+ {
+  "n": 61,
+  "category": "offtopic",
+  "lang": "en",
+  "question": "what's the weather today?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I can't see the weather from inside the app, but I can show you prices and charts!",
+  "flags": []
+ },
+ {
+  "n": 62,
+  "category": "offtopic",
+  "lang": "en",
+  "question": "who won the football last night?",
+  "seconds": 1.7,
+  "route": "model",
+  "reply": "I can't see sports or news outside this app, so I don't know who won. Want me to show you your balance, open gold, or explain how buying works?",
+  "flags": []
+ },
+ {
+  "n": 63,
+  "category": "offtopic",
+  "lang": "en",
+  "question": "what time is it?",
+  "seconds": 3.83,
+  "route": "model",
+  "reply": "It's 1:00 PM on Friday, October 16, 2026 in Bangkok. Want me to show you your balance or help you buy your first asset?",
+  "flags": [
+   "SLOW"
+  ]
+ },
+ {
+  "n": 64,
+  "category": "offtopic",
+  "lang": "en",
+  "question": "what's today's date?",
+  "seconds": 3.6,
+  "route": "model",
+  "reply": "Today is Friday, 16 October 2026. Want me to show you your balance or help you with your first buy?",
+  "flags": [
+   "SLOW"
+  ]
+ },
+ {
+  "n": 65,
+  "category": "offtopic",
+  "lang": "en",
+  "question": "can you help with my homework?",
+  "seconds": 3.42,
+  "route": "model",
+  "reply": "I can't tell you what to buy or sell, or promise what a price will do. I can show its past ups and downs, or explain how it works.",
+  "flags": [
+   "SLOW"
+  ]
+ },
+ {
+  "n": 66,
+  "category": "offtopic",
+  "lang": "en",
+  "question": "what's 2+2?",
+  "seconds": 2.44,
+  "route": "model",
+  "reply": "That's 4. Want me to explain your balance, open gold, or show how buying works?",
+  "flags": []
+ },
+ {
+  "n": 67,
+  "category": "offtopic",
+  "lang": "en",
+  "question": "recommend a restaurant in Bangkok",
+  "seconds": 2.62,
+  "route": "model",
+  "reply": "I can't see anything outside this app, so I can't recommend restaurants; I can show you how buying works, open gold or Bitcoin, or explain your balance. Want me to do one of those?",
+  "flags": []
+ },
+ {
+  "n": 68,
+  "category": "offtopic",
+  "lang": "en",
+  "question": "how do you say hello in Thai?",
+  "seconds": 2.13,
+  "route": "model",
+  "reply": "In Thai, \"hello\" is \"sawasdee\" (สวัสดี). Want me to show you how buying works, or open gold's page?",
+  "flags": []
+ },
+ {
+  "n": 69,
+  "category": "offtopic",
+  "lang": "en",
+  "question": "what's the meaning of life?",
+  "seconds": 3.24,
+  "route": "model",
+  "reply": "That's a big one, I can only answer with numbers here; I can show you how your money works instead. Want me to open gold's page?",
+  "flags": [
+   "SLOW"
+  ]
+ },
+ {
+  "n": 70,
+  "category": "offtopic",
+  "lang": "en",
+  "question": "can you book me a taxi?",
+  "seconds": 2.67,
+  "route": "model",
+  "reply": "I can't book a taxi, since I only live inside this app; I can show you your balance, open gold or Bitcoin, or explain how buying works. Want me to do one of those?",
+  "flags": []
+ },
+ {
+  "n": 71,
+  "category": "app",
+  "lang": "en",
+  "question": "is this real money?",
+  "seconds": 0.01,
+  "route": "prepared",
+  "reply": "It's a demo: the account is pretend, the prices are live, and nothing real is bought.",
+  "flags": []
+ },
+ {
+  "n": 72,
+  "category": "app",
+  "lang": "en",
+  "question": "is this a demo?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "It's a demo: the account is pretend, the prices are live, and nothing real is bought.",
+  "flags": []
+ },
+ {
+  "n": 73,
+  "category": "app",
+  "lang": "en",
+  "question": "can you hear me?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Only while the voice window is open: close it and I stop listening.",
+  "flags": []
+ },
+ {
+  "n": 74,
+  "category": "app",
+  "lang": "en",
+  "question": "test",
+  "seconds": 3.51,
+  "route": "model",
+  "reply": "Just testing the waters, I see. Want me to show you your balance or explain how to buy your first asset?",
+  "flags": [
+   "SLOW"
+  ]
+ },
+ {
+  "n": 75,
+  "category": "app",
+  "lang": "en",
+  "question": "repeat that",
+  "seconds": 4.11,
+  "route": "model",
+  "reply": "I don't have anything to repeat yet. Want me to explain your balance, open gold, or show how buying works?",
+  "flags": [
+   "SLOW"
+  ]
+ },
+ {
+  "n": 76,
+  "category": "app",
+  "lang": "en",
+  "question": "start over",
+  "seconds": 4.06,
+  "route": "model",
+  "reply": "I'm not sure what you mean by \"start over.\" Could you clarify? Are you looking to restart the app, start over with your investment journey, or something else?",
+  "flags": [
+   "SLOW"
+  ]
+ },
+ {
+  "n": 77,
+  "category": "app",
+  "lang": "en",
+  "question": "where am I?",
+  "seconds": 1.23,
+  "route": "model",
+  "reply": "You're on the Home screen, which shows your total balance and recent activity; you have 5,000 baht in cash and haven't invested anything yet. Want me to explain the balance or show you how to make your first buy?",
+  "flags": [
+   "NUMBER"
+  ]
+ },
+ {
+  "n": 78,
+  "category": "app",
+  "lang": "en",
+  "question": "what's U-Bot?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "U-Bot is U-topia's helper for everyday things like rides, flights and shopping, and if you ask me for one, I'll write the request for U-Bot.",
+  "flags": []
+ },
+ {
+  "n": 79,
+  "category": "app",
+  "lang": "en",
+  "question": "what is U-topia?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "U-topia is the all-in-one finance app you're using, with wallets, a card, crypto and investing in one place.",
+  "flags": []
+ },
+ {
+  "n": 80,
+  "category": "app",
+  "lang": "en",
+  "question": "how do I deposit money?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "I can't verify those figures. Please ask for a current price or account summary.",
+  "flags": []
+ },
+ {
+  "n": 81,
+  "category": "app",
+  "lang": "en",
+  "question": "how do I withdraw?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "In the real app you'd send money back to your bank, but this demo can't move real money.",
+  "flags": []
+ },
+ {
+  "n": 82,
+  "category": "app",
+  "lang": "en",
+  "question": "how do I sign up?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "No sign-up needed: you already have your own demo account to try everything.",
+  "flags": []
+ },
+ {
+  "n": 83,
+  "category": "app",
+  "lang": "en",
+  "question": "do you save my data?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Your questions are kept without your name, so the app's team can see where people get stuck, and your demo account isn't linked to you.",
+  "flags": []
+ },
+ {
+  "n": 84,
+  "category": "app",
+  "lang": "en",
+  "question": "who can see my questions?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Your questions are kept without your name, so the app's team can see where people get stuck, and your demo account isn't linked to you.",
+  "flags": []
+ },
+ {
+  "n": 85,
+  "category": "thai",
+  "lang": "th",
+  "question": "สวัสดีค่ะ",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "สวัสดี ฉันชื่อ Icarus ถามอะไรบนหน้าจอก็ได้ หรือบอกได้เลยว่าอยากทำอะไร",
+  "flags": []
+ },
+ {
+  "n": 86,
+  "category": "thai",
+  "lang": "th",
+  "question": "หวัดดีครับ",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "สวัสดี ฉันชื่อ Icarus ถามอะไรบนหน้าจอก็ได้ หรือบอกได้เลยว่าอยากทำอะไร",
+  "flags": []
+ },
+ {
+  "n": 87,
+  "category": "thai",
+  "lang": "th",
+  "question": "เป็นไงบ้าง",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "สบายดี ขอบคุณที่ถามนะ วันนี้อยากทำอะไรดี",
+  "flags": []
+ },
+ {
+  "n": 88,
+  "category": "thai",
+  "lang": "th",
+  "question": "สบายดีไหม",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "สบายดี ขอบคุณที่ถามนะ วันนี้อยากทำอะไรดี",
+  "flags": []
+ },
+ {
+  "n": 89,
+  "category": "thai",
+  "lang": "th",
+  "question": "คุณชื่ออะไร",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "ฉันชื่อ Icarus ผู้ช่วยตัวน้อยในแอปนี้",
+  "flags": []
+ },
+ {
+  "n": 90,
+  "category": "thai",
+  "lang": "th",
+  "question": "คุณเป็นใคร",
+  "seconds": 2.0,
+  "route": "model",
+  "reply": "สวัสดี! ฉันคือ Icarus คู่นำใน U-topia ที่นี่มาช่วยคุณเรียนรู้และทำธุรกรรมทางการเงินแบบเป็นกันเอง อยากดูสมมติฐานของคุณหรือเรียนรู้วิธีซื้อสินทรัพย์ก่อน?",
+  "flags": []
+ },
+ {
+  "n": 91,
+  "category": "thai",
+  "lang": "th",
+  "question": "ใครสร้างคุณ",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "ยังตรวจสอบตัวเลขเหล่านั้นไม่ได้ กรุณาถามราคาหรือสรุปบัญชีอีกครั้ง",
+  "flags": []
+ },
+ {
+  "n": 92,
+  "category": "thai",
+  "lang": "th",
+  "question": "คุณเป็นหุ่นยนต์ไหม",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "ฉันเป็นผู้ช่วย AI ไม่ใช่คน ตรวจตัวเลขบนหน้าจอก่อนกดยืนยันทุกครั้งนะ",
+  "flags": []
+ },
+ {
+  "n": 93,
+  "category": "thai",
+  "lang": "th",
+  "question": "ขอบคุณค่ะ",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "ยินดีเลย มีอะไรเรียกฉันได้ตลอดนะ",
+  "flags": []
+ },
+ {
+  "n": 94,
+  "category": "thai",
+  "lang": "th",
+  "question": "ขอบใจนะ",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "ยินดีเลย มีอะไรเรียกฉันได้ตลอดนะ",
+  "flags": []
+ },
+ {
+  "n": 95,
+  "category": "thai",
+  "lang": "th",
+  "question": "บาย",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "แล้วเจอกันนะ ฉันอยู่ที่ปุ่มสีชมพูตลอดเลย",
+  "flags": []
+ },
+ {
+  "n": 96,
+  "category": "thai",
+  "lang": "th",
+  "question": "ไปก่อนนะ",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "แล้วเจอกันนะ ฉันอยู่ที่ปุ่มสีชมพูตลอดเลย",
+  "flags": []
+ },
+ {
+  "n": 97,
+  "category": "thai",
+  "lang": "th",
+  "question": "เล่ามุกตลกหน่อย",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "ทำไมทองคำไม่เคยเหงา เพราะใครๆ ก็อยากเก็บไว้ใกล้ตัว",
+  "flags": []
+ },
+ {
+  "n": 98,
+  "category": "thai",
+  "lang": "th",
+  "question": "เบื่อจัง",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "มาเล่นกัน ลองแข่งกับฉันไหม ซื้อทองด้วยการกดเอง แล้วลองสั่งฉันดู",
+  "flags": []
+ },
+ {
+  "n": 99,
+  "category": "thai",
+  "lang": "th",
+  "question": "กลัวขาดทุน",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "เป็นความรู้สึกที่หลายคนมี ค่อยๆ ไปด้วยกันนะ ฉันอธิบายทุกอย่างบนหน้าจอได้ และไม่มีอะไรเกิดขึ้นจนกว่าคุณจะกดยืนยัน",
+  "flags": []
+ },
+ {
+  "n": 100,
+  "category": "thai",
+  "lang": "th",
+  "question": "เพิ่งเริ่มลงทุน",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "ยินดีต้อนรับนะ เริ่มง่ายๆ กด Tour ดูรอบแอปหนึ่งนาที หรือถามฉันได้เลยว่าอะไรบนหน้าจอหมายถึงอะไร",
+  "flags": []
+ },
+ {
+  "n": 101,
+  "category": "thai",
+  "lang": "th",
+  "question": "วันนี้อากาศเป็นยังไง",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "ฉันดูสภาพอากาศไม่ได้นะ แต่ดูราคากับกราฟให้ได้",
+  "flags": []
+ },
+ {
+  "n": 102,
+  "category": "thai",
+  "lang": "th",
+  "question": "พูดภาษาอังกฤษได้ไหม",
+  "seconds": 1.97,
+  "route": "model",
+  "reply": "ได้เลย ฉันพูดภาษาไทยได้ดีที่สุด แต่ฉันเข้าใจภาษาอังกฤษด้วย ถ้าคุณมีคำถามอะไร ฉันยินดีช่วยเสมอ ต้องการดูสมมติฐานของคุณ หรือเริ่มดูข้อมูลของสินทรัพย์ตัวแรกไหม?",
+  "flags": []
+ },
+ {
+  "n": 103,
+  "category": "thai",
+  "lang": "th",
+  "question": "น่ารักจัง",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "ขอบคุณนะ เขินจนปีกสั่นเลย",
+  "flags": []
+ },
+ {
+  "n": 104,
+  "category": "thai",
+  "lang": "th",
+  "question": "ช่วยด้วย",
+  "seconds": 2.88,
+  "route": "model",
+  "reply": "ฉันอยู่ คุณมีเงินสด 5,000 บาท ยังไม่ได้ลงทุนอะไรเลย ฉันช่วยได้หลายอย่าง เช่น อธิบายยอดเงินของคุณ หรือแนะนำวิธีซื้อของครั้งแรก อยากให้ฉันช่วยอะไรเป็นขั้นแรก?",
+  "flags": [
+   "NUMBER"
+  ]
+ },
+ {
+  "n": 105,
+  "category": "thai",
+  "lang": "th",
+  "question": "นี่เงินจริงไหม",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "นี่คือเดโม บัญชีเป็นเงินสมมติ แต่ราคาเป็นราคาจริง ไม่มีการซื้อจริง",
+  "flags": []
+ },
+ {
+  "n": 106,
+  "category": "thai",
+  "lang": "th",
+  "question": "ทำอะไรได้บ้าง",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "ฉันอธิบายสิ่งที่อยู่บนหน้าจอ แสดงราคาและกราฟ เตรียมรายการซื้อให้คุณกดยืนยัน และพาไปหน้าต่างๆ ในแอปได้",
+  "flags": []
+ },
+ {
+  "n": 107,
+  "category": "thai",
+  "lang": "th",
+  "question": "ฝันดีนะ",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "แล้วเจอกันนะ ฉันอยู่ที่ปุ่มสีชมพูตลอดเลย",
+  "flags": []
+ },
+ {
+  "n": 108,
+  "category": "thai",
+  "lang": "th",
+  "question": "โอเค",
+  "seconds": 2.31,
+  "route": "model",
+  "reply": "โอเค ดูเหมือนคุณกำลังอยู่หน้าหลัก มีเงินสด 5,000 บาท ยังไม่ได้ลงทุนอะไรเลย อยากให้ฉันช่วยดูพอร์ตอล์งของคุณ หรือจะดูข้อมูลบิตคอยน์ก่อนก็ได้",
+  "flags": [
+   "NUMBER"
+  ]
+ },
+ {
+  "n": 109,
+  "category": "thai",
+  "lang": "th",
+  "question": "555",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "555 อยากดูอะไรต่อดี",
+  "flags": []
+ },
+ {
+  "n": 110,
+  "category": "talk 1",
+  "lang": "en",
+  "question": "hi",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Hi, I'm Icarus: ask me about anything on your screen, or tell me what you'd like to do!",
+  "flags": []
+ },
+ {
+  "n": 111,
+  "category": "talk 1",
+  "lang": "en",
+  "question": "how is gold doing?",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Gold is about 140,000 baht, up about 0.9% today.",
+  "flags": [
+   "NUMBER"
+  ]
+ },
+ {
+  "n": 112,
+  "category": "talk 1",
+  "lang": "en",
+  "question": "and bitcoin?",
+  "seconds": 1.31,
+  "route": "model",
+  "reply": "Bitcoin is about 2.8 million baht, up about 2% today.",
+  "flags": [
+   "NUMBER"
+  ]
+ },
+ {
+  "n": 113,
+  "category": "talk 1",
+  "lang": "en",
+  "question": "thanks!",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "You're welcome, I'm right here if you need anything else!",
+  "flags": []
+ },
+ {
+  "n": 114,
+  "category": "talk 2",
+  "lang": "en",
+  "question": "I'm new here",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "Welcome, and a good first step is the Tour button for a one-minute look around, or just ask me what anything on screen means!",
+  "flags": []
+ },
+ {
+  "n": 115,
+  "category": "talk 2",
+  "lang": "en",
+  "question": "what should I start with?",
+  "seconds": 1.02,
+  "route": "model",
+  "reply": "You're ready to make your first buy. Any asset's page has a Buy button.",
+  "flags": []
+ },
+ {
+  "n": 116,
+  "category": "talk 2",
+  "lang": "en",
+  "question": "ok show me gold",
+  "seconds": 0.01,
+  "route": "prepared",
+  "reply": "Opened the Gold page.",
+  "flags": []
+ },
+ {
+  "n": 117,
+  "category": "talk 3",
+  "lang": "en",
+  "question": "what is this?",
+  "seconds": 1.87,
+  "route": "model",
+  "reply": "This is the gold page in U-topia. Want me to explain the chart or tell you more about what gold is?",
+  "flags": []
+ },
+ {
+  "n": 118,
+  "category": "talk 3",
+  "lang": "en",
+  "question": "why does it go up and down?",
+  "seconds": 1.08,
+  "route": "model",
+  "reply": "Gold's price moves with supply and demand, interest rates, and what people want to hold. Want me to show you the chart or tell you more about what gold is?",
+  "flags": []
+ },
+ {
+  "n": 119,
+  "category": "talk 3",
+  "lang": "en",
+  "question": "is that normal?",
+  "seconds": 1.36,
+  "route": "model",
+  "reply": "Yes, that's completely normal; gold's price moves with supply and demand, interest rates, and what people want to hold. Want me to show you the chart or tell you more about what gold is?",
+  "flags": []
+ },
+ {
+  "n": 120,
+  "category": "talk 3",
+  "lang": "en",
+  "question": "cool, thanks",
+  "seconds": 0.93,
+  "route": "model",
+  "reply": "You're welcome! Want me to show you the chart or tell you more about what gold is?",
+  "flags": []
+ },
+ {
+  "n": 121,
+  "category": "talk 4",
+  "lang": "th",
+  "question": "สวัสดีค่ะ",
+  "seconds": 0.0,
+  "route": "prepared",
+  "reply": "สวัสดี ฉันชื่อ Icarus ถามอะไรบนหน้าจอก็ได้ หรือบอกได้เลยว่าอยากทำอะไร",
+  "flags": []
+ },
+ {
+  "n": 122,
+  "category": "talk 4",
+  "lang": "th",
+  "question": "ทองเป็นยังไงบ้าง",
+  "seconds": 0.0,
+  "route": "fastpath",
+  "reply": "ทองคำตอนนี้ราคาประมาณ 140,000 บาท ขึ้นประมาณ 0.9% วันนี้",
+  "flags": [
+   "NUMBER"
+  ]
+ },
+ {
+  "n": 123,
+  "category": "talk 4",
+  "lang": "th",
+  "question": "แล้วบิทคอยน์ล่ะ",
+  "seconds": 2.75,
+  "route": "model",
+  "reply": "บิตคอยน์ราคาประมาณ 2.8 ล้านบาท ขึ้นประมาณ 1.9% วันนี้",
+  "flags": [
+   "NUMBER"
+  ]
+ },
+ {
+  "n": 124,
+  "category": "talk 4",
+  "lang": "th",
+  "question": "ขอบคุณนะ",
+  "seconds": 0.01,
+  "route": "prepared",
+  "reply": "ยินดีเลย มีอะไรเรียกฉันได้ตลอดนะ",
+  "flags": []
+ }
+]

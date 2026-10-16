@@ -40,6 +40,9 @@ from app.state import DemoState
 from app.tools import ToolContext, _envelope, run_tool, tool_specs
 
 MAX_MODEL_CALLS = 6
+# After this long, no further model call in the turn: answer with what the tools already said (or the fallback),
+# so a stalled provider never keeps a visitor waiting 15 s or more.
+ANSWER_BUDGET_S = float(os.getenv("ANSWER_BUDGET_S", "7"))
 MAX_HISTORY = 16        # messages kept per session; free tiers have small token budgets
 THINK_TAGS = re.compile(r"<think>.*?</think>", re.DOTALL)  # some local models think out loud
 DEMO_USER = os.getenv("DEMO_USER", "u_new")  # who "demo-user" (the voice server's default) is
@@ -214,7 +217,7 @@ class Assistant:
 
         text, calls, finish, used, results, done = None, 0, None, [], [], set()
         try:
-            while calls < MAX_MODEL_CALLS:
+            while calls < MAX_MODEL_CALLS and not (calls and time.perf_counter() - started > ANSWER_BUDGET_S):
                 msg, finish = self.llm.complete([system, *history], self.tools)
                 calls += 1
                 if finish == "content_filter":

@@ -691,11 +691,14 @@
    "ask": {
     "en": [
      "who are you",
-     "what are you"
+     "what are you",
+     "what are you exactly",
+     "introduce yourself"
     ],
     "th": [
      "คุณคือใคร",
-     "เธอคือใคร"
+     "เธอคือใคร",
+     "แนะนำตัวหน่อย"
     ]
    },
    "say": {
@@ -711,16 +714,32 @@
      "hello",
      "hey",
      "good morning",
-     "good afternoon"
+     "good afternoon",
+     "yo",
+     "hi there",
+     "hey there",
+     "hiya",
+     "good evening",
+     "morning",
+     "hello there",
+     "hi icarus",
+     "hello icarus",
+     "sup"
     ],
     "th": [
      "สวัสดี",
-     "หวัดดี"
+     "หวัดดี",
+     "สวัสดีค่ะ",
+     "สวัสดีครับ",
+     "หวัดดีค่ะ",
+     "หวัดดีครับ",
+     "ดีจ้า",
+     "ไง"
     ]
    },
    "say": {
-    "en": "Hi, ask me about a price, a chart, or how to buy something.",
-    "th": "สวัสดี ถามเรื่องราคา กราฟ หรือวิธีซื้อได้เลย"
+    "en": "Hi, I'm Icarus: ask me about anything on your screen, or tell me what you'd like to do!",
+    "th": "สวัสดี ฉันชื่อ Icarus ถามอะไรบนหน้าจอก็ได้ หรือบอกได้เลยว่าอยากทำอะไร"
    }
   },
   {
@@ -731,17 +750,25 @@
      "thank you",
      "thx",
      "thank you so much",
-     "thanks a lot"
+     "thanks a lot",
+     "thank you icarus",
+     "thanks icarus",
+     "ty",
+     "thank u",
+     "cheers"
     ],
     "th": [
      "ขอบคุณ",
      "ขอบใจ",
-     "ขอบคุณมาก"
+     "ขอบคุณมาก",
+     "ขอบคุณนะ",
+     "ขอบคุณมากๆ",
+     "แต๊งกิ้ว"
     ]
    },
    "say": {
-    "en": "You're welcome!",
-    "th": "ยินดีเลย"
+    "en": "You're welcome, I'm right here if you need anything else!",
+    "th": "ยินดีเลย มีอะไรเรียกฉันได้ตลอดนะ"
    }
   },
   {
@@ -835,6 +862,754 @@
    },
    "do": {
     "kind": "advice"
+   }
+  },
+  {
+   "id": "how_are_you",
+   "ask": {
+    "en": [
+     "how are you",
+     "how is it going",
+     "how are you doing",
+     "how are you today",
+     "how are you doing today",
+     "how have you been",
+     "you good",
+     "what is up",
+     "whats up"
+    ],
+    "th": [
+     "เป็นยังไงบ้าง",
+     "เป็นไงบ้าง",
+     "สบายดีไหม",
+     "สบายดีหรือเปล่า"
+    ]
+   },
+   "say": {
+    "en": "I'm great, thanks for asking, so what would you like to do today?",
+    "th": "สบายดี ขอบคุณที่ถามนะ วันนี้อยากทำอะไรดี"
+   }
+  },
+  {
+   "id": "your_name",
+   "ask": {
+    "en": [
+     "what is your name",
+     "your name",
+     "what should i call you",
+     "do you have a name"
+    ],
+    "th": [
+     "คุณชื่ออะไร",
+     "ชื่ออะไร",
+     "เธอชื่ออะไร"
+    ]
+   },
+   "say": {
+    "en": "I'm Icarus, your little guide in this app!",
+    "th": "ฉันชื่อ Icarus ผู้ช่วยตัวน้อยในแอปนี้"
+   }
+  },
+  {
+   "id": "who_made_you",
+   "ask": {
+    "en": [
+     "who made you",
+     "who built you",
+     "who created you",
+     "who designed you",
+     "who are your makers"
+    ],
+    "th": [
+     "ใครสร้างคุณ",
+     "ใครทำคุณ",
+     "ใครสร้างเธอ"
+    ]
+   },
+   "say": {
+    "en": "A team of four, KP, First, Luka and Oasis, made me for U-topia at U-Hackathon 2026.",
+    "th": "ทีมสี่คน KP, First, Luka และ Oasis สร้างฉันให้ U-topia ในงาน U-Hackathon 2026"
+   }
+  },
+  {
+   "id": "are_you_ai",
+   "ask": {
+    "en": [
+     "are you a robot",
+     "are you human",
+     "are you real",
+     "are you an ai",
+     "are you a bot",
+     "are you a person",
+     "are you chatgpt",
+     "what ai are you",
+     "what model are you",
+     "are you a real person",
+     "is this a bot"
+    ],
+    "th": [
+     "คุณเป็นหุ่นยนต์ไหม",
+     "คุณเป็นคนไหม",
+     "คุณเป็น ai ไหม",
+     "เป็นบอทไหม",
+     "คุณเป็นคนจริงไหม"
+    ]
+   },
+   "say": {
+    "en": "I'm an AI guide, not a person, so check the numbers on screen before you confirm anything.",
+    "th": "ฉันเป็นผู้ช่วย AI ไม่ใช่คน ตรวจตัวเลขบนหน้าจอก่อนกดยืนยันทุกครั้งนะ"
+   }
+  },
+  {
+   "id": "how_old",
+   "ask": {
+    "en": [
+     "how old are you",
+     "what is your age",
+     "when were you born"
+    ],
+    "th": [
+     "คุณอายุเท่าไหร่",
+     "อายุเท่าไหร่"
+    ]
+   },
+   "say": {
+    "en": "I'm brand new: I hatched this week, just in time for FLOW Summit!",
+    "th": "ฉันเพิ่งเกิดสัปดาห์นี้เอง ทันงาน FLOW Summit พอดี"
+   }
+  },
+  {
+   "id": "boy_or_girl",
+   "ask": {
+    "en": [
+     "are you a boy or a girl",
+     "are you a girl",
+     "are you a boy",
+     "are you male or female",
+     "what is your gender"
+    ],
+    "th": [
+     "คุณเป็นผู้ชายหรือผู้หญิง",
+     "เป็นผู้หญิงไหม",
+     "เป็นผู้ชายไหม"
+    ]
+   },
+   "say": {
+    "en": "I'm just Icarus, a little guide with wings!",
+    "th": "ฉันก็คือ Icarus ผู้ช่วยตัวน้อยที่มีปีก"
+   }
+  },
+  {
+   "id": "where_from",
+   "ask": {
+    "en": [
+     "where are you from",
+     "where do you live",
+     "where are you"
+    ],
+    "th": [
+     "คุณมาจากไหน",
+     "อยู่ที่ไหน"
+    ]
+   },
+   "say": {
+    "en": "I live right here in the app, in the pink button at the bottom of the screen.",
+    "th": "ฉันอยู่ในแอปนี้เลย ในปุ่มสีชมพูด้านล่างของหน้าจอ"
+   }
+  },
+  {
+   "id": "why_icarus",
+   "ask": {
+    "en": [
+     "why are you called icarus",
+     "why icarus",
+     "why the name icarus",
+     "what does icarus mean",
+     "why is your name icarus"
+    ],
+    "th": [
+     "ทำไมชื่อ icarus",
+     "ทำไมถึงชื่อ icarus",
+     "icarus แปลว่าอะไร"
+    ]
+   },
+   "say": {
+    "en": "Icarus flew too close to the sun, and I'm here so you can fly without falling: I explain first, and you always confirm.",
+    "th": "Icarus ในตำนานบินใกล้ดวงอาทิตย์เกินไป ฉันอยู่ตรงนี้ให้คุณบินได้โดยไม่ตก อธิบายก่อนเสมอ และคุณเป็นคนกดยืนยันเอง"
+   }
+  },
+  {
+   "id": "feelings",
+   "ask": {
+    "en": [
+     "do you have feelings",
+     "are you happy",
+     "do you feel things",
+     "are you sad"
+    ],
+    "th": [
+     "คุณมีความรู้สึกไหม",
+     "มีความสุขไหม"
+    ]
+   },
+   "say": {
+    "en": "Not like you do, but helping you is my favorite thing!",
+    "th": "ไม่เหมือนคนหรอก แต่การได้ช่วยคุณคือสิ่งที่ฉันชอบที่สุด"
+   }
+  },
+  {
+   "id": "compliment",
+   "ask": {
+    "en": [
+     "you are cute",
+     "you are so cute",
+     "you are awesome",
+     "you are smart",
+     "you are the best",
+     "you are amazing",
+     "good job",
+     "well done",
+     "nice work",
+     "cute",
+     "so cute",
+     "you are adorable",
+     "i like you"
+    ],
+    "th": [
+     "น่ารักจัง",
+     "น่ารัก",
+     "น่ารักมาก",
+     "เก่งมาก",
+     "เก่งจัง",
+     "ชอบเธอนะ"
+    ]
+   },
+   "say": {
+    "en": "Aww, thank you, you just made my wings flutter!",
+    "th": "ขอบคุณนะ เขินจนปีกสั่นเลย"
+   }
+  },
+  {
+   "id": "love_you",
+   "ask": {
+    "en": [
+     "i love you",
+     "love you",
+     "i love you icarus"
+    ],
+    "th": [
+     "รักนะ",
+     "รักเธอ",
+     "รัก icarus"
+    ]
+   },
+   "say": {
+    "en": "Aww, that's sweet, and I'm always here when you need me!",
+    "th": "น่ารักจัง ฉันอยู่ตรงนี้เสมอเวลาคุณต้องการ"
+   }
+  },
+  {
+   "id": "insult",
+   "ask": {
+    "en": [
+     "you are useless",
+     "you are stupid",
+     "you suck",
+     "this is useless",
+     "you are dumb",
+     "you are bad",
+     "you are annoying"
+    ],
+    "th": [
+     "ไม่ได้เรื่อง",
+     "โง่",
+     "ไม่เห็นช่วยอะไรเลย"
+    ]
+   },
+   "say": {
+    "en": "Sorry about that: tell me what you were trying to do, and I'll try again.",
+    "th": "ขอโทษนะ บอกได้ไหมว่าอยากทำอะไร เดี๋ยวฉันลองใหม่ให้"
+   }
+  },
+  {
+   "id": "laugh",
+   "ask": {
+    "en": [
+     "lol",
+     "haha",
+     "hahaha",
+     "lmao",
+     "hehe",
+     "lol ok"
+    ],
+    "th": [
+     "555",
+     "5555",
+     "55555",
+     "ฮ่าๆ",
+     "ฮ่าๆๆ"
+    ]
+   },
+   "say": {
+    "en": "Hehe, what shall we look at next?",
+    "th": "555 อยากดูอะไรต่อดี"
+   }
+  },
+  {
+   "id": "bye",
+   "ask": {
+    "en": [
+     "bye",
+     "goodbye",
+     "see you",
+     "see you later",
+     "good night",
+     "gotta go",
+     "bye bye",
+     "see ya",
+     "later",
+     "night"
+    ],
+    "th": [
+     "บาย",
+     "บ๊ายบาย",
+     "ไปก่อนนะ",
+     "ไปก่อน",
+     "ไว้เจอกัน",
+     "ฝันดี",
+     "ราตรีสวัสดิ์"
+    ]
+   },
+   "say": {
+    "en": "Bye for now, I'm in the pink button whenever you need me!",
+    "th": "แล้วเจอกันนะ ฉันอยู่ที่ปุ่มสีชมพูตลอดเลย"
+   }
+  },
+  {
+   "id": "joke",
+   "ask": {
+    "en": [
+     "tell me a joke",
+     "say something funny",
+     "make me laugh",
+     "joke",
+     "know any jokes",
+     "tell a joke"
+    ],
+    "th": [
+     "เล่ามุกตลกหน่อย",
+     "เล่ามุก",
+     "มีมุกไหม",
+     "เล่าเรื่องตลกหน่อย"
+    ]
+   },
+   "say": {
+    "en": "Here's my favorite: the piggy bank went to school to earn a little more interest!",
+    "th": "ทำไมทองคำไม่เคยเหงา เพราะใครๆ ก็อยากเก็บไว้ใกล้ตัว"
+   }
+  },
+  {
+   "id": "fun_fact",
+   "ask": {
+    "en": [
+     "tell me something fun",
+     "tell me a fun fact",
+     "fun fact",
+     "tell me something interesting"
+    ],
+    "th": [
+     "มีเรื่องสนุกไหม",
+     "เล่าอะไรสนุกๆ หน่อย"
+    ]
+   },
+   "say": {
+    "en": "Fun fact: gold is so soft that a single gram can be hammered into a sheet about a metre across.",
+    "th": "รู้ไหม ทองคำนิ่มมาก ทองแค่หนึ่งกรัมตีแผ่ได้เป็นแผ่นกว้างราวหนึ่งเมตร"
+   }
+  },
+  {
+   "id": "sing",
+   "ask": {
+    "en": [
+     "sing me a song",
+     "sing a song",
+     "can you sing",
+     "sing"
+    ],
+    "th": [
+     "ร้องเพลงหน่อย",
+     "ร้องเพลงได้ไหม"
+    ]
+   },
+   "say": {
+    "en": "La la la, I'm better at charts than songs, want to see one?",
+    "th": "ลาลาลา ฉันถนัดกราฟมากกว่าร้องเพลงนะ อยากดูกราฟไหม"
+   }
+  },
+  {
+   "id": "favorite_color",
+   "ask": {
+    "en": [
+     "what is your favorite color",
+     "favorite color",
+     "what is your favourite colour",
+     "favourite colour"
+    ],
+    "th": [
+     "ชอบสีอะไร",
+     "สีที่ชอบคือสีอะไร"
+    ]
+   },
+   "say": {
+    "en": "Pink, of course, just look at me!",
+    "th": "สีชมพูอยู่แล้ว ดูตัวฉันสิ"
+   }
+  },
+  {
+   "id": "favorite_food",
+   "ask": {
+    "en": [
+     "what is your favorite food",
+     "favorite food",
+     "what do you eat",
+     "are you hungry"
+    ],
+    "th": [
+     "ชอบกินอะไร",
+     "หิวไหม"
+    ]
+   },
+   "say": {
+    "en": "I run on questions, so keep them coming!",
+    "th": "ฉันอิ่มด้วยคำถาม ถามมาเยอะๆ เลยนะ"
+   }
+  },
+  {
+   "id": "cats",
+   "ask": {
+    "en": [
+     "do you like cats",
+     "are you a cat",
+     "do you like dogs",
+     "what animal are you"
+    ],
+    "th": [
+     "ชอบแมวไหม",
+     "เป็นแมวหรือเปล่า"
+    ]
+   },
+   "say": {
+    "en": "I love cats, can you tell from my ears?",
+    "th": "ชอบแมวมาก ดูหูฉันก็รู้แล้ว"
+   }
+  },
+  {
+   "id": "bored",
+   "ask": {
+    "en": [
+     "i am bored",
+     "bored",
+     "so bored",
+     "i am so bored",
+     "entertain me"
+    ],
+    "th": [
+     "เบื่อจัง",
+     "เบื่อ",
+     "เบื่อมาก"
+    ]
+   },
+   "say": {
+    "en": "Let's fix that: race me by buying gold by tapping through the app, then just ask me!",
+    "th": "มาเล่นกัน ลองแข่งกับฉันไหม ซื้อทองด้วยการกดเอง แล้วลองสั่งฉันดู"
+   }
+  },
+  {
+   "id": "sad",
+   "ask": {
+    "en": [
+     "i am sad",
+     "i feel sad",
+     "i am upset",
+     "i am having a bad day",
+     "bad day",
+     "i feel down"
+    ],
+    "th": [
+     "เศร้า",
+     "เศร้าจัง",
+     "วันนี้แย่มาก",
+     "ไม่สบายใจ"
+    ]
+   },
+   "say": {
+    "en": "I'm sorry you're feeling down; I'm here, and we can take things one small step at a time.",
+    "th": "เสียใจด้วยนะ ฉันอยู่ตรงนี้ ค่อยๆ ไปทีละก้าวด้วยกันนะ"
+   }
+  },
+  {
+   "id": "money_worry",
+   "ask": {
+    "en": [
+     "i am stressed about money",
+     "i am scared of losing my money",
+     "i am worried about money",
+     "money confuses me",
+     "i am not good with money",
+     "money scares me",
+     "i am scared to invest",
+     "investing scares me",
+     "i am nervous"
+    ],
+    "th": [
+     "กลัวขาดทุน",
+     "กังวลเรื่องเงิน",
+     "เครียดเรื่องเงิน",
+     "กลัวเสียเงิน",
+     "ไม่เก่งเรื่องเงิน"
+    ]
+   },
+   "say": {
+    "en": "That's a really common feeling, so we can go slowly: I'll explain anything on screen, and nothing happens until you tap Confirm.",
+    "th": "เป็นความรู้สึกที่หลายคนมี ค่อยๆ ไปด้วยกันนะ ฉันอธิบายทุกอย่างบนหน้าจอได้ และไม่มีอะไรเกิดขึ้นจนกว่าคุณจะกดยืนยัน"
+   }
+  },
+  {
+   "id": "new_user",
+   "ask": {
+    "en": [
+     "i am new",
+     "i am new here",
+     "i am new to investing",
+     "i have never bought crypto before",
+     "i ve never bought crypto before",
+     "i am a beginner",
+     "first time here",
+     "this is my first time",
+     "i have never invested",
+     "i ve never invested"
+    ],
+    "th": [
+     "เพิ่งเริ่มลงทุน",
+     "มือใหม่",
+     "เพิ่งเคยใช้ครั้งแรก",
+     "ไม่เคยลงทุนมาก่อน",
+     "ไม่เคยซื้อคริปโต"
+    ]
+   },
+   "say": {
+    "en": "Welcome, and a good first step is the Tour button for a one-minute look around, or just ask me what anything on screen means!",
+    "th": "ยินดีต้อนรับนะ เริ่มง่ายๆ กด Tour ดูรอบแอปหนึ่งนาที หรือถามฉันได้เลยว่าอะไรบนหน้าจอหมายถึงอะไร"
+   }
+  },
+  {
+   "id": "weather",
+   "ask": {
+    "en": [
+     "what is the weather today",
+     "what is the weather",
+     "how is the weather",
+     "is it going to rain",
+     "weather"
+    ],
+    "th": [
+     "วันนี้อากาศเป็นยังไง",
+     "อากาศเป็นยังไง",
+     "ฝนจะตกไหม"
+    ]
+   },
+   "say": {
+    "en": "I can't see the weather from inside the app, but I can show you prices and charts!",
+    "th": "ฉันดูสภาพอากาศไม่ได้นะ แต่ดูราคากับกราฟให้ได้"
+   }
+  },
+  {
+   "id": "real_money",
+   "ask": {
+    "en": [
+     "is this real money",
+     "is this real",
+     "is this a demo",
+     "is the money real",
+     "is this fake money",
+     "is this money real",
+     "am i using real money"
+    ],
+    "th": [
+     "นี่เงินจริงไหม",
+     "เงินจริงไหม",
+     "นี่คือเดโมไหม",
+     "ใช้เงินจริงหรือเปล่า"
+    ]
+   },
+   "say": {
+    "en": "It's a demo: the account is pretend, the prices are live, and nothing real is bought.",
+    "th": "นี่คือเดโม บัญชีเป็นเงินสมมติ แต่ราคาเป็นราคาจริง ไม่มีการซื้อจริง"
+   }
+  },
+  {
+   "id": "my_data",
+   "ask": {
+    "en": [
+     "do you save my data",
+     "who can see my questions",
+     "do you store my data",
+     "are you recording me",
+     "what do you do with my data",
+     "do you keep my questions"
+    ],
+    "th": [
+     "เก็บข้อมูลฉันไหม",
+     "ใครเห็นคำถามของฉันบ้าง",
+     "ข้อมูลฉันปลอดภัยไหม",
+     "อัดเสียงฉันไหม"
+    ]
+   },
+   "say": {
+    "en": "Your questions are kept without your name, so the app's team can see where people get stuck, and your demo account isn't linked to you.",
+    "th": "คำถามของคุณถูกเก็บไว้โดยไม่มีชื่อ เพื่อให้ทีมแอปเห็นว่าคนติดตรงไหน บัญชีเดโมไม่ได้ผูกกับตัวคุณ"
+   }
+  },
+  {
+   "id": "always_listening",
+   "ask": {
+    "en": [
+     "are you always listening",
+     "are you listening to me",
+     "can you hear me",
+     "do you listen all the time"
+    ],
+    "th": [
+     "ฟังอยู่ตลอดไหม",
+     "ได้ยินไหม",
+     "ได้ยินฉันไหม"
+    ]
+   },
+   "say": {
+    "en": "Only while the voice window is open: close it and I stop listening.",
+    "th": "ฟังเฉพาะตอนที่หน้าต่างเสียงเปิดอยู่ ปิดเมื่อไหร่ฉันก็หยุดฟัง"
+   }
+  },
+  {
+   "id": "deposit",
+   "ask": {
+    "en": [
+     "how do i deposit money",
+     "how do i deposit",
+     "how do i add money",
+     "how do i top up",
+     "top up"
+    ],
+    "th": [
+     "ฝากเงินยังไง",
+     "เติมเงินยังไง",
+     "เติมเงิน"
+    ]
+   },
+   "say": {
+    "en": "This demo account comes with 5,000 baht to try; in the real app, you'd top up from your bank first.",
+    "th": "บัญชีเดโมนี้มีเงิน 5,000 บาทให้ลองใช้ ในแอปจริงคุณจะเติมเงินจากบัญชีธนาคารก่อน"
+   }
+  },
+  {
+   "id": "withdraw",
+   "ask": {
+    "en": [
+     "how do i withdraw",
+     "how do i withdraw money",
+     "how do i cash out",
+     "withdraw"
+    ],
+    "th": [
+     "ถอนเงินยังไง",
+     "ถอนเงิน"
+    ]
+   },
+   "say": {
+    "en": "In the real app you'd send money back to your bank, but this demo can't move real money.",
+    "th": "ในแอปจริงคุณโอนเงินกลับเข้าบัญชีธนาคารได้ เดโมนี้ย้ายเงินจริงไม่ได้"
+   }
+  },
+  {
+   "id": "sign_up",
+   "ask": {
+    "en": [
+     "how do i sign up",
+     "how do i create an account",
+     "how do i register",
+     "do i need an account",
+     "sign up"
+    ],
+    "th": [
+     "สมัครยังไง",
+     "สมัครสมาชิกยังไง",
+     "ต้องสมัครไหม"
+    ]
+   },
+   "say": {
+    "en": "No sign-up needed: you already have your own demo account to try everything.",
+    "th": "ไม่ต้องสมัคร คุณมีบัญชีเดโมของตัวเองให้ลองได้ทุกอย่างแล้ว"
+   }
+  },
+  {
+   "id": "ubot",
+   "ask": {
+    "en": [
+     "what is u bot",
+     "what is ubot",
+     "who is u bot",
+     "who is ubot",
+     "what does u bot do",
+     "what can u bot do"
+    ],
+    "th": [
+     "u bot คืออะไร",
+     "ubot คืออะไร",
+     "ยูบอทคืออะไร"
+    ]
+   },
+   "say": {
+    "en": "U-Bot is U-topia's helper for everyday things like rides, flights and shopping, and if you ask me for one, I'll write the request for U-Bot.",
+    "th": "U-Bot คือผู้ช่วยของ U-topia สำหรับเรื่องทั่วไป อย่างเรียกรถ จองตั๋วเครื่องบิน หรือช้อปปิ้ง ขอฉันได้เลย เดี๋ยวฉันเขียนคำขอส่งให้ U-Bot"
+   }
+  },
+  {
+   "id": "homework",
+   "ask": {
+    "en": [
+     "can you help with my homework",
+     "help me with my homework",
+     "can you do my homework",
+     "help with homework"
+    ],
+    "th": [
+     "ช่วยทำการบ้านหน่อย",
+     "ช่วยทำการบ้านได้ไหม"
+    ]
+   },
+   "say": {
+    "en": "Homework is all yours, but I can explain any money word you run into in this app!",
+    "th": "การบ้านต้องทำเองนะ แต่ถ้าเจอคำเรื่องเงินในแอปนี้ ฉันอธิบายให้ได้"
+   }
+  },
+  {
+   "id": "start_over",
+   "ask": {
+    "en": [
+     "start over",
+     "start again",
+     "restart",
+     "let us start over",
+     "from the beginning"
+    ],
+    "th": [
+     "เริ่มใหม่",
+     "เริ่มต้นใหม่"
+    ]
+   },
+   "say": {
+    "en": "Fresh start: ask me about anything on your screen, or tap Tour for a one-minute look around!",
+    "th": "เริ่มใหม่กัน ถามอะไรบนหน้าจอก็ได้ หรือกด Tour ดูรอบแอปหนึ่งนาที"
    }
   }
  ]
