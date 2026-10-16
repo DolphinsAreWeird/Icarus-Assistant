@@ -3,35 +3,35 @@
     "rate": 33.54,
     "as_of": "2026-10-15",
     "source": "frankfurter",
-    "fetched_at": 1792132833.645356
+    "fetched_at": 1792151654.4185312
   },
   "prices": {
     "btc": {
       "asset_id": "btc",
-      "price_usd": 82091.13,
-      "price_thb": 2753336.5,
-      "change_24h_pct": 1.35,
-      "as_of": "2026-10-16T06:40:34+00:00",
+      "price_usd": 82642.45,
+      "price_thb": 2771827.77,
+      "change_24h_pct": 1.93,
+      "as_of": "2026-10-16T11:54:14+00:00",
       "source": "binance",
-      "fetched_at": 1792132833.645356
+      "fetched_at": 1792151654.4185312
     },
     "eth": {
       "asset_id": "eth",
-      "price_usd": 2446.24,
-      "price_thb": 82046.89,
-      "change_24h_pct": 3.52,
-      "as_of": "2026-10-16T06:40:34+00:00",
+      "price_usd": 2478.61,
+      "price_thb": 83132.58,
+      "change_24h_pct": 4.72,
+      "as_of": "2026-10-16T11:54:14+00:00",
       "source": "binance",
-      "fetched_at": 1792132833.645356
+      "fetched_at": 1792151654.4185312
     },
     "gold": {
       "asset_id": "gold",
-      "price_usd": 4179.92,
-      "price_thb": 140194.52,
-      "change_24h_pct": 1.0,
-      "as_of": "2026-10-16T06:40:33+00:00",
+      "price_usd": 4172.13,
+      "price_thb": 139933.24,
+      "change_24h_pct": 0.48,
+      "as_of": "2026-10-16T11:54:11+00:00",
       "source": "binance",
-      "fetched_at": 1792132833.645356
+      "fetched_at": 1792151654.4185312
     },
     "usdt": {
       "asset_id": "usdt",
@@ -40,7 +40,97 @@
       "change_24h_pct": 0.0,
       "as_of": "2026-10-15",
       "source": "fixed",
-      "fetched_at": 1792132833.645356
+      "fetched_at": 1792151654.4185312
+    },
+    "qqq": {
+      "asset_id": "qqq",
+      "price_usd": 728.0,
+      "price_thb": 24417.12,
+      "change_24h_pct": -0.13,
+      "as_of": "2026-10-15T20:00:00+00:00",
+      "source": "yahoo",
+      "market_open": false,
+      "fetched_at": 1792151654.4185312
+    },
+    "aapl": {
+      "asset_id": "aapl",
+      "price_usd": 342.0,
+      "price_thb": 11470.68,
+      "change_24h_pct": -0.28,
+      "as_of": "2026-10-15T20:00:01+00:00",
+      "source": "yahoo",
+      "market_open": false,
+      "fetched_at": 1792151654.4185312
+    },
+    "msft": {
+      "asset_id": "msft",
+      "price_usd": 539.44,
+      "price_thb": 18092.82,
+      "change_24h_pct": 1.08,
+      "as_of": "2026-10-15T20:00:01+00:00",
+      "source": "yahoo",
+      "market_open": false,
+      "fetched_at": 1792151654.4185312
+    },
+    "nvda": {
+      "asset_id": "nvda",
+      "price_usd": 217.23,
+      "price_thb": 7285.89,
+      "change_24h_pct": -1.84,
+      "as_of": "2026-10-15T20:00:00+00:00",
+      "source": "yahoo",
+      "market_open": false,
+      "fetched_at": 1792151654.4185312
+    },
+    "googl": {
+      "asset_id": "googl",
+      "price_usd": 349.22,
+      "price_thb": 11712.84,
+      "change_24h_pct": 0.45,
+      "as_of": "2026-10-15T20:00:01+00:00",
+      "source": "yahoo",
+      "market_open": false,
+      "fetched_at": 1792151654.4185312
+    },
+    "amzn": {
+      "asset_id": "amzn",
+      "price_usd": 254.76,
+      "price_thb": 8544.65,
+      "change_24h_pct": 0.27,
+      "as_of": "2026-10-15T20:00:01+00:00",
+      "source": "yahoo",
+      "market_open": false,
+      "fetched_at": 1792151654.4185312
+    },
+    "meta": {
+      "asset_id": "meta",
+      "price_usd": 736.72,
+      "price_thb": 24709.59,
+      "change_24h_pct": -0.11,
+      "as_of": "2026-10-15T20:00:01+00:00",
+      "source": "yahoo",
+      "market_open": false,
+      "fetched_at": 1792151654.4185312
+    },
+    "tsla": {
+      "asset_id": "tsla",
+      "price_usd": 362.44,
+      "price_thb": 12156.24,
+      "change_24h_pct": -1.29,
+      "as_of": "2026-10-15T20:00:00+00:00",
+      "source": "yahoo",
+      "market_open": false,
+      "fetched_at": 1792151654.4185312
+    },
+    "brk": {
+      "asset_id": "brk",
+      "price_usd": 525.68,
+      "price_thb": 17631.31,
+      "change_24h_pct": -0.13,
+      "as_of": "2026-10-15T20:04:28+00:00",
+      "source": "yahoo",
+      "market_open": false,
+      "fetched_at": 1792151654.4185312
     }
   }
 }
