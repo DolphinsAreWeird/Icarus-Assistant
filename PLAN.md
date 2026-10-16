@@ -14,7 +14,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 
 ## Issue checklist
 
-- [ ] **I01: Preserve decimal purchase amounts.** Keep requested, spoken, displayed and executed amounts equal; regress 1000.49/1000.50 and boundaries.
+- [x] **I01: Preserve decimal purchase amounts.** Keep requested, spoken, displayed and executed amounts equal; regress 1000.49/1000.50 and boundaries.
 - [ ] **I02: Suppress unsupported generated financial figures.** Reject unsafe text before display, speech, history and caching; retain grounded tool output.
 - [ ] **I03: Ground legacy trade arguments.** Require the user's purchase intent, asset, side and amount before producing an actionable preview.
 - [ ] **I04: Isolate cached contextual answers.** Prevent reuse across users, sessions or different relevant conversation histories.
@@ -30,6 +30,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 - [ ] **I14: Repair documentation and claims.** Correct stale run paths, historical handoffs, six broken links, data-locality wording and demo scope. Do not fabricate a live URL, deck or human review.
 - [ ] **I15: Restore reproducible validation.** Install locked JS dependencies/browser tooling, run Python/JS suites, typechecks/builds and meaningful offline browser coverage for both engines where feasible.
 - [ ] **I16: Final independent review and regression sweep.** Resolve review findings, verify clean issue commits, record remaining external checks and commit the final ledger.
+- [ ] **I17: Prepare Vercel hosting.** Prefer Vercel over GitHub Pages for the web app; provide tested routing/build configuration for the existing API service and document the stateful backend requirement. Do not claim an untested serverless migration or fabricate a deployed URL.
 
 ## Commit and verification ledger
 
@@ -37,13 +38,16 @@ The issue's commit subject identifies its checkpoint. Hashes will be collected a
 
 | Issue | Commit / verification | Independent review |
 |---|---|---|
-| Planning | Initial remediation checklist and reviewed baseline | Pending implementation |
+| Planning | `760038d`: initial remediation checklist and reviewed baseline | Pending implementation |
+| I01 | `fix: preserve decimal purchase amounts`: 107 frontend tests, typecheck and build passed; 17 new mounted amount regressions | SOL 6.1 High approved; independently reran 17 regressions |
 
 ## Execution notes
 
 Two implementation agents can work concurrently on disjoint areas while the High reviewer checks completed patches. The orchestrator handles setup and integration checks and serializes commits. Agents report their exact changed files and stop editing before review/commit.
 
 I15 setup starts immediately so regressions can run during implementation. Browser evidence, package versions and limitations will be recorded here rather than inferred from historical counts.
+
+Hosting steering: the user prefers GitHub or Vercel, whichever is easier. GitHub Pages serves static files; Vercel can host the web app and proxy its API routes. The current Python process stores accounts/previews in memory, so deploying it as independently scaling functions would lose confirmation/session guarantees without a shared-state redesign. Preserve the existing API service boundary and prepare Vercel configuration first; document any account/service requirement precisely.
 
 ## External completion checks
 
