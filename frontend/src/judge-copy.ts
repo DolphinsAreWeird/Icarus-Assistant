@@ -6,7 +6,40 @@
 //   PRODUCT_POLISH  no design placeholders on screen: a real Visa card, an avatar, one user name, baht everywhere
 //   LIVE_DATA_COPY  with the backend: labels that say what is true (live prices; the swap uses the THB balance)
 
+const REPO = 'https://github.com/DolphinsAreWeird/Icarus-Assistant';
+const INK = 'color:#4A2E36;font-weight:500';
+
 export const JUDGE_COPY: ReadonlyArray<readonly [string, string]> = [
+  // one letter per row (the export repeats B and D), before the rows' words change below
+  ["{k:'B',title:'Say", "{k:'C',title:'Say"],
+  ["{k:'C',title:'Explain anything'", "{k:'D',title:'Explain anything'"],
+  ["{k:'D',title:'Just talk'", "{k:'E',title:'Just talk'"],
+  ["{k:'D',title:'Step-by-step guide'", "{k:'F',title:'Step-by-step guide'"],
+  ['font-size:14px;flex:none">E</div>\n<div style="flex:1"><div style="font-size:15px;font-weight:500">Business dashboard',
+    'font-size:14px;flex:none">G</div>\n<div style="flex:1"><div style="font-size:15px;font-weight:500">Business dashboard'],
+  // the "Integration" card: the team's API notes become what a visitor (and a partner app) gets, with a live line
+  // showing what the app shares with Icarus right now
+  ['<div style="font-size:16px;font-weight:500">Integration</div>',
+    '<div style="font-size:16px;font-weight:500">How Icarus plugs into an app</div>' +
+    '<div style="font-size:13.5px;color:#6E5560;margin-top:4px;line-height:1.5">Any finance app can add Icarus; U-topia is the first. ' +
+    'The app shares what is on screen, and Icarus answers and works the app\'s own buttons.</div>' +
+    '<div style="margin-top:12px;background:#FFF2F5;border-radius:14px;padding:10px 12px">' +
+    '<div style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#A8385A;font-weight:600">Icarus sees right now</div>' +
+    '<div style="font-size:15px;margin-top:3px;font-weight:500;color:#4A2E36">{{ seesNow }}</div></div>'],
+  ['<div style="display:flex;align-items:center;gap:8px;font-size:14px;margin-top:6px"><span style="width:8px;height:8px;border-radius:50%;background:{{ statusColor }}"></span>AI backend: {{ backendText }}</div>', ''],
+  ['<div style="font:12px/1.6 ui-monospace,Menlo,monospace;color:#5E4650;margin-top:10px;background:#FFF2F5;border-radius:12px;padding:10px 12px;word-break:break-word">Icarus.setBackend(async (q, ctx) =&gt; ({ text, speech, emotion, speak, ui_actions, sources }))<br>Icarus.setTTS(async (speech, { lang, emotion, onProgress }) =&gt; {…}, stop)<br>Icarus.pushTranscript(text, isFinal)</div>',
+    `<div style="font-size:13px;color:#6E5560;margin-top:10px;line-height:1.55"><span style="${INK}">It can</span> open a page, switch a chart, type an amount, point at a button, and hand a ride or a flight to U-Bot.</div>`],
+  ['<div style="font-size:12.5px;color:#6E5560;margin-top:8px;line-height:1.5"><span style="font-weight:500">speech</span> is a separate spoken script for TTS: short sentences, rounded numbers, “baht” instead of ฿, one follow-up question. <span style="font-weight:500">emotion</span> sets the mascot pose: happy, excited, curious, thinking.</div>',
+    `<div style="font-size:13px;color:#6E5560;margin-top:6px;line-height:1.55"><span style="${INK}">It can't</span> press Confirm. Buying is always your tap.</div>`],
+  ['<div style="font-size:12.5px;color:#8A6B75;margin-top:8px;line-height:1.5">Actions: navigate · open_asset · set_period · set_filter · start_buy · type_amount · select_wallet · review · cancel_buy · toggle_freeze · highlight. Icarus runs them in order while it speaks, then stops at Confirm.</div>', ''],
+  ['<div style="font-size:12.5px;color:#8A6B75;margin-top:8px;line-height:1.5">UI ids: home.balance · asset.chart · asset.change24h · buy.amount_input · buy.fee_line · buy.confirm_button · swap.from_asset · swap.to_asset · portfolio.allocation</div>',
+    '<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#8A6B75;margin-top:12px;flex-wrap:wrap">' +
+    '<span style="width:8px;height:8px;border-radius:50%;background:{{ statusColor }}"></span>AI {{ backendText }} · ' +
+    `<a href="${REPO}/blob/main/INTEGRATION.md" target="_blank" rel="noopener" style="color:#A8385A">how a developer adds it</a></div>`],
+  // the live line: the same summary the app sends with every question (getContext)
+  ["backendText:this.backend?'connected':'demo responses (no backend set)',",
+    "backendText:this.backend?'connected':'scripted answers (no AI connected)',seesNow:(()=>{try{const c=this.getContext();" +
+    "return c.label+(c.buy&&c.buy.total_thb?' · ฿'+Math.round(c.buy.total_thb).toLocaleString('en-US'):'')}catch(e){return 'The app'}})(),"],
   ['Icarus demo console', 'Try Icarus yourself'],
   ['Hackathon scenarios. Prices, balances and assistant replies are demo data.', 'Live prices, demo account. Nothing real is bought.'],
   ["title:'Without Icarus',sub:'Resets to Home, starts timer. Stops at confirmation.'",

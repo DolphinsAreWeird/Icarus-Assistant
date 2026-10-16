@@ -1,10 +1,10 @@
 {
-  "voiceId": "XiPS9cXxAVbaIWtGDHDh",
+  "voiceId": "OgYaI2gRZaQ7b2dSmv2Z",
   "model": "eleven_flash_v2_5",
   "speed": 1,
   "text": "one thousand baht into gold. Fee ten baht. Total one thousand ten baht. Say confirm or cancel.",
   "outputFormat": "pcm_24000",
   "sampleRate": 24000,
-  "bytes": 378950,
-  "createdAt": "2026-10-15T14:16:26.069Z"
+  "bytes": 305388,
+  "createdAt": "2026-10-16T05:03:25.733Z"
 }

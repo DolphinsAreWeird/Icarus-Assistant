@@ -160,7 +160,7 @@ export function useIcarusVoice(serverUrl: string) {
 
 Notes:
 
-- **Voices.** English is **Brittney** (`XiPS9cXxAVbaIWtGDHDh`) and Thai is **Malee** (`mYcpTKg1oj1H5CtzUZNO`), both from the ElevenLabs Voice Library, picked on 15 Oct for the cute theme after an audition (see [Choosing the voices](#choosing-the-voices)). Before that, Sarah (a premade voice) was a stand-in. **A Thai speaker still has to listen to Malee.**
+- **Voice.** Since 16 Oct Icarus has **one voice in both languages**: **Icarus Soft** (`OgYaI2gRZaQ7b2dSmv2Z`), an original anime-style voice we made with ElevenLabs Voice Design for the mascot (not a clone of anyone). English uses Flash v2.5, Thai uses v4 Turbo; the voice is the same. Before that: Brittney (English) and Malee (Thai) from the Voice Library, see [Choosing the voices](#choosing-the-voices). **A Thai speaker still has to listen to the Thai.**
 - **Key permissions.** A restricted key works for the app if it has **Text to Speech** and **Speech to Text**. `npm run check` also wants **Models: read** and **Voices: read**, and explains if they are missing.
 - If ElevenLabs text-to-speech fails, the module falls back to the browser's own voice (macOS has an English voice and a Thai one called Kanya). It sounds different, but everything keeps working.
 
@@ -223,6 +223,22 @@ Limits to know:
 
 Library voices **do not need to be added** to the account: on a paid plan, text-to-speech takes a library voice ID directly (we checked). Adding one to "My Voices" is optional and needs a key with the **Voices: write** permission (ours does not have it). Put the ID in `VOICE_ID_EN` or `VOICE_ID_TH` and run `npm run check -- --speak`. English and Thai can be two different voices. A free-plan key cannot use most library voices.
 
+### 16 Oct: one original voice for both languages
+
+The mascot is a cute anime-style character, and two library voices made it sound like two people. So we **designed** a voice instead: ElevenLabs Voice Design makes a new voice from a written description, so it copies no real person or character. Three designs (sweet, bubbly, soft), each saved to our account and auditioned below in both languages (`npm run audition -- --only sweet,bubbly,soft`):
+
+| Voice | Language, model | Pitch saying our lines | First audio (first / later) | Scribe understood (worst / average) | Amounts |
+|---|---|---|---|---|---|
+| Sweet | EN, Flash v2.5 | 348 Hz | 261 / 138 ms | **0% / 34%** (distorted, clipped) | wrong |
+| Bubbly | EN, Flash v2.5 | 372 Hz | 205 / 142 ms | **0% / 56%** (distorted, clipped) | all right |
+| **Soft** (picked) | EN, Flash v2.5 | 291 Hz | 196 / 190 ms | 97% / 99% | all right |
+| **Soft** (picked) | TH, v4 Turbo | 286 Hz | 191 / 173 ms | 93% / 98% | all right |
+| Sweet, Bubbly | TH, v4 Turbo | 314 to 327 Hz | 129 to 144 ms | 93% / 98% | all right |
+
+- **Soft** is the only design that stays clean on Flash v2.5, the fastest English model, and it sounds the same in Thai (291 against 286 Hz). Picked by KP after listening.
+- Sweet and Bubbly are fine on v4 Turbo in both languages (93 to 98%), but Flash v2.5 distorts them in English, and v4 Turbo is slower and was "system busy" (429) several times on 16 Oct.
+- A designed voice belongs to our ElevenLabs account, so the hosted demo must use a key from the same account.
+
 ### The audition (15 Oct): how we picked Brittney and Malee
 
 `npm run audition` makes every finalist (in `src/config/voice-candidates.ts`) say **our** lines: the greeting, the red-number explanation, the money read-back and the U-Bot handoff. It saves WAV files to `auditions/` (not committed) so people can listen, and measures each voice: the real pitch of what it said, the time to the first audio, how well the live Scribe understood it, and whether every **amount** came back right (1,000 / 15 / 1,015, whether Scribe writes digits or words). About 2,500 characters for all seven.
@@ -250,7 +266,7 @@ Things to know:
 - **Listen before the demo.** Numbers cannot tell you whether a voice sounds nice, and a Thai speaker has to check Malee. Thai lines leave out ค่ะ and ครับ: add ค่ะ to match Malee if the Thai reviewer wants it.
 - **First use is slow.** In one run, a library voice that had not spoken yet took 2 to 3 s to its first audio, then about 150 ms. The server now says one short word in each voice at start and every 20 minutes (`TTS_WARMUP_MINUTES`, a few characters each time).
 - **A library voice can disappear** if its owner removes it. Then text-to-speech fails with a clear "bad voice" error, the app falls back to the browser's voice, and the committed demo audio still plays.
-- `npm run pregenerate -- --verify` plays every demo clip into the live Scribe and fails if an amount is wrong. The committed demo audio (Brittney) passed: every line understood, every amount right.
+- `npm run pregenerate -- --verify` plays every demo clip into the live Scribe and fails if an amount is wrong. Run it after any voice change, then commit `demo-audio/`.
 
 ## Connect the real assistant
 

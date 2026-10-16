@@ -20,7 +20,7 @@ microphone
        plus at most one card: a trade preview, a chart, or step-by-step instructions
   -> the app runs the screen actions; the card shows over the phone (frontend/src/trade-card.ts, chat-cards.ts)
   -> Icarus says the reply; for a trade preview, the exact read-back from the card's numbers
-  -> text-to-speech (ElevenLabs via the voice server, Brittney in English, Malee in Thai)
+  -> text-to-speech (ElevenLabs via the voice server, one voice for both languages: "Icarus Soft", designed for the mascot)
   -> speaker
 
 tap Confirm on the trade card -> backend POST /trades/{preview_id}/confirm  (the only way a trade happens)
@@ -63,7 +63,7 @@ The backend now uses the app's own asset ids, screens, periods and element ids (
 3. **Buying through the card changes the backend's demo account, not the screens.** Confirm on the trade card updates the backend's user (`u_new`), while the prototype's John Doe balances stay the same. Say so on stage, or have the screens read `GET /portfolio/{user_id}`.
 4. **Reply fields.** The app also uses `emotion` (the mascot's face) and `suggestions` (chips). The backend could send them.
 5. **U-Bot.** The `handoff` action and the "Ask U-topia" glossary live in the voice server and run before the backend. Fine for the demo. If the backend wants them as tools, the shapes are in `voice/README.md` (U-Bot section).
-6. **Thai.** Lines marked `THAI REVIEW` (voice strings, the read-back, the cards, the U-Bot mock) and the Thai voice (Malee) need a Thai speaker.
+6. **Thai.** Lines marked `THAI REVIEW` (voice strings, the read-back, the cards, the U-Bot mock) and the Thai voice need a Thai speaker.
 
 ## For the backend: what the voice needs from a reply
 

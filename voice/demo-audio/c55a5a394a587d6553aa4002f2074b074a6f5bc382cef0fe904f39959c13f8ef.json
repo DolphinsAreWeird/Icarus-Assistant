@@ -1,10 +1,10 @@
 {
-  "voiceId": "XiPS9cXxAVbaIWtGDHDh",
+  "voiceId": "OgYaI2gRZaQ7b2dSmv2Z",
   "model": "eleven_flash_v2_5",
   "speed": 1,
   "text": "I can't pick investments for you, but I can compare gold and Bitcoin on fees and past ups and downs. Want that?",
   "outputFormat": "pcm_24000",
   "sampleRate": 24000,
-  "bytes": 332138,
-  "createdAt": "2026-10-15T14:16:26.637Z"
+  "bytes": 283098,
+  "createdAt": "2026-10-16T05:03:26.283Z"
 }

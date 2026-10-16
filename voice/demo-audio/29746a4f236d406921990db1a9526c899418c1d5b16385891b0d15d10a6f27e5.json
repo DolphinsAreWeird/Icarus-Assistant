@@ -1,10 +1,10 @@
 {
-  "voiceId": "XiPS9cXxAVbaIWtGDHDh",
+  "voiceId": "OgYaI2gRZaQ7b2dSmv2Z",
   "model": "eleven_flash_v2_5",
   "speed": 1,
   "text": "Sure, taking you to gold.",
   "outputFormat": "pcm_24000",
   "sampleRate": 24000,
-  "bytes": 82478,
-  "createdAt": "2026-10-15T14:16:25.711Z"
+  "bytes": 62416,
+  "createdAt": "2026-10-16T05:03:24.433Z"
 }
