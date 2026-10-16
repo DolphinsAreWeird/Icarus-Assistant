@@ -34,6 +34,10 @@ class RateLimited(LLMError):
     pass
 
 
+class Unavailable(LLMError):
+    """The model is overloaded, down or too slow right now. Another model may answer."""
+
+
 class ChatModel:
     def __init__(self, provider: str, base_url: str, model: str, api_key: str | None,
                  extra: dict | None = None, timeout: float = 60):
@@ -50,32 +54,59 @@ class ChatModel:
         if not key:
             raise LLMError(f"{provider} needs {p['key_env']}")
         return cls(provider, os.getenv("LLM_BASE_URL", p["base_url"]),
-                   os.getenv("LLM_MODEL", p["model"]), key, p["extra"])
+                   os.getenv("LLM_MODEL", p["model"]), key, p["extra"],
+                   timeout=float(os.getenv("LLM_TIMEOUT_S", "60")))
 
     def complete(self, messages: list[dict], tools: list[dict]) -> tuple[dict, str]:
-        """One model call. Returns (assistant message, finish_reason)."""
-        body = {"model": self.model, "messages": messages, "tools": tools,
+        """One model call. Returns (assistant message, finish_reason).
+
+        LLM_MODEL may list several models, comma separated. When one is rate limited, overloaded, down or
+        too slow, the next one answers: free tiers limit each model separately. A bad request still fails."""
+        models = [m.strip() for m in self.model.split(",") if m.strip()] or [self.model]
+        last: LLMError | None = None
+        for i, model in enumerate(models):
+            try:
+                reply = self._complete_with(model, messages, tools, wait_on_limit=i == len(models) - 1)
+                self.last_model = model
+                return reply
+            except (RateLimited, Unavailable) as e:
+                print(f"[llm] {e}; {'trying ' + models[i + 1] if i + 1 < len(models) else 'no model left'}", flush=True)
+                last = e
+        raise last or RateLimited(f"{self.provider} rate limit")
+
+    def _complete_with(self, model: str, messages: list[dict], tools: list[dict],
+                       wait_on_limit: bool = True) -> tuple[dict, str]:
+        body = {"model": model, "messages": messages, "tools": tools,
                 "tool_choice": "auto", "temperature": 0.2, **self.extra}
         for attempt in range(2):
-            r = httpx.post(f"{self.base_url}/chat/completions", json=body, timeout=self.timeout,
-                           headers={"Authorization": f"Bearer {self.api_key}"})
+            try:
+                r = httpx.post(f"{self.base_url}/chat/completions", json=body, timeout=self.timeout,
+                               headers={"Authorization": f"Bearer {self.api_key}"})
+            except httpx.TimeoutException as e:
+                raise Unavailable(f"{self.provider} {model} timed out") from e
             if r.status_code == 429:
                 wait = float(r.headers.get("retry-after", "0") or 0)
-                if attempt == 0 and wait <= 5:  # free tiers: one short retry, then give up
+                # Free tiers: one short retry, then give up. Not when another model can answer at once.
+                if wait_on_limit and attempt == 0 and wait <= 5:
                     time.sleep(wait or 1)
                     continue
-                raise RateLimited(f"{self.provider} rate limit, retry after {wait or '?'} s")
+                raise RateLimited(f"{self.provider} {model} rate limit, retry after {wait or '?'} s")
+            if r.status_code >= 500:
+                raise Unavailable(f"{self.provider} {model} {r.status_code}: {r.text[:300]}")
             if r.status_code >= 400:
                 raise LLMError(f"{self.provider} {r.status_code}: {r.text[:300]}")
             choice = r.json()["choices"][0]
             msg = choice["message"]
             # Keep only the standard fields; some providers add extras they reject when echoed back.
+            # Except extra_content on a tool call: Gemini 3 puts its "thought signature" there and refuses
+            # the next step if it is not sent back. Only a provider that sent it gets it back.
             clean = {"role": "assistant", "content": msg.get("content") or ""}
             if msg.get("tool_calls"):
                 clean["tool_calls"] = [
                     {"id": c["id"], "type": "function",
                      "function": {"name": c["function"]["name"],
-                                  "arguments": c["function"].get("arguments") or "{}"}}
+                                  "arguments": c["function"].get("arguments") or "{}"},
+                     **({"extra_content": c["extra_content"]} if c.get("extra_content") else {})}
                     for c in msg["tool_calls"]]
             else:
                 known = {t["function"]["name"] for t in tools}
@@ -83,7 +114,7 @@ class ChatModel:
                 if calls:
                     clean = {"role": "assistant", "content": content, "tool_calls": calls}
             return clean, choice.get("finish_reason") or "stop"
-        raise RateLimited(f"{self.provider} rate limit")
+        raise RateLimited(f"{self.provider} {model} rate limit")
 
 
 TEXT_CALL_BLOCK = re.compile(r"<(tools|tool_call)>(.*?)</\1>", re.DOTALL)
