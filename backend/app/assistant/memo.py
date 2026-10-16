@@ -4,7 +4,9 @@ AnswerCache keeps replies that needed the model, for the same normalized questio
 asset and chart period, while the facts we would say are unchanged (the fact packs' version), for
 ANSWER_CACHE_TTL_S seconds (default 300; 0 turns it off). Only answers built from read-only tools are
 kept, never trades, cancels or guides, and only for questions that don't lean on the conversation
-("what about it?"). An answer that read the user's own money is kept for that user only.
+("what about it?"). Only a session's FIRST turn is kept or served: with any earlier history the model
+may have used it, so the answer is never stored or reused. The key also holds the journey stage and the
+screen context. An answer that read the user's own money (or names the user) is kept for that user only.
 
 QuestionLog writes one JSON line per question with the route that answered it (prepared, fastpath,
 cache, model) to QUESTION_LOG (default backend/.runtime/questions.jsonl; 0 turns it off). The

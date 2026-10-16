@@ -17,7 +17,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 - [x] **I01: Preserve decimal purchase amounts.** Keep requested, spoken, displayed and executed amounts equal; regress 1000.49/1000.50 and boundaries.
 - [x] **I02: Suppress unsupported generated financial figures.** Reject unsafe text before display, speech, history and caching; retain grounded tool output.
 - [x] **I03: Ground legacy trade arguments.** Require the user's purchase intent, asset, side and amount before producing an actionable preview.
-- [ ] **I04: Isolate cached contextual answers.** Prevent reuse across users, sessions or different relevant conversation histories.
+- [x] **I04: Isolate cached contextual answers.** Prevent reuse across users, sessions or different relevant conversation histories.
 - [x] **I05: Preserve reviewed server preview terms.** Carry preview identity/terms into native review; never silently create and execute an unseen replacement.
 - [x] **I06: Protect public administrative reset.** Public visitors cannot globally reset other accounts or previews.
 - [x] **I07: Make QA failures enforceable.** High-severity scans and failed phone confirmation must produce failing run/exit status.
@@ -58,6 +58,8 @@ The issue's commit subject identifies its checkpoint. Hashes will be collected a
 | I08 | `fix: separate hosted request budgets by class and visitor`: 483 voice tests and typecheck passed; multi-visitor bursts, chat exhaustion leaving reads/preview/confirm open, spoofed X-Forwarded-For, bounded tables, malformed paths (400) | Opus 5.5 High approved after fixes (table-full lockout, ID-less shared bucket, per-tab session key, malformed path 400). Shared Render proxy IP ceiling remains documented |
 
 | I12 | `fix: portable npm invocation and fake-mode launch on Windows`: 489 voice tests (1 POSIX-only skipped), typecheck; build-app exit 0 on Windows, bogus npm exits 1; `npm run dev:fake` served /api/health with fakeElevenLabs on Windows. POSIX SIGTERM forwarding test not run (no Linux here) | Opus 5.5 High approved after fixes (signal forwarding, no DEP0190 shell args, test path escapes) |
+
+| I04 | `fix: isolate cached assistant answers by user, session and context`: 312 full backend tests (OFFLINE pinned env); two-user different-history, same user new session, same-session repeat, screen-context and account/snapshot-change regressions; generic first-turn reuse still works | Opus 5.5 Medium approved after fix (personal key includes snapshot/account data). Follow-ups for I14/I16: README 5-minute wording; snapshot visitors sharing a session_id share history |
 
 ## Execution notes
 

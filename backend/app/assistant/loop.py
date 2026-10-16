@@ -168,6 +168,7 @@ class Assistant:
                   + turn_context(user, lang, req.screen_context, turn["assets_mentioned"], turn["asks_for_advice"],
                                  req.snapshot, given)}
         start_len = len(history)
+        first_turn = start_len == 0  # nothing said before: the answer can't lean on the conversation
         previous = next((m["content"] for m in reversed(history) if m["role"] == "user"
                          and isinstance(m.get("content"), str)), None)
         history.append({"role": "user", "content": req.text})
@@ -218,9 +219,11 @@ class Assistant:
             history.append({"role": "assistant", "content": reply.text})
         trim(history)
         keep, personal = reusable(used)
-        if (keep and fastpath.enabled() and standalone(norm) and finish != "content_filter"
+        # a reply that names the user is theirs alone, whatever tools it used
+        personal = personal or user["display_name"].casefold() in reply.text.casefold()
+        if (keep and first_turn and fastpath.enabled() and standalone(norm) and finish != "content_filter"
                 and text != FALLBACK_REPLY[lang] and reply.status == "ok"):
-            self.answers.put(self._cache_key(req, user_id, lang, norm, start, facts, personal),
+            self.answers.put(self._cache_key(req, user, user_id, lang, norm, start, facts, personal),
                              {"text": reply.text, "ui_actions": reply.ui_actions,
                               "sources": [s.model_dump() for s in reply.sources], "model": reply.debug["model"],
                               "grounding": [*ctx.results.values(), *cited]})
@@ -228,15 +231,26 @@ class Assistant:
 
     # ---------- the answer cache ----------
 
-    def _cache_key(self, req, user_id, lang, norm, start, facts, personal) -> tuple:
-        period = req.screen_context.chart_period if req.screen_context else None
-        return norm, lang, start.screen, start.asset, period, facts.version, user_id if personal else "*"
+    def _cache_key(self, req, user, user_id, lang, norm, start, facts, personal) -> tuple:
+        """Everything the model saw besides the question: screen, asset, period, the facts, the journey stage,
+        and the screen context's focus, visible elements and typed amount. Shared across users only when the
+        answer read nothing personal; entries exist only for a session's first turn (no history to lean on)."""
+        screen = req.screen_context
+        seen = (user["journey"]["stage"], (req.snapshot or {}).get("label"),
+                screen.focused_element if screen else None, tuple(screen.visible_elements) if screen else (),
+                screen.entered_amount if screen else None)
+        period = screen.chart_period if screen else None
+        # A personal answer read the screen's own numbers or the account: key it on both, so a
+        # trade (or another visitor's app, all mapped to the demo user) never gets an old reply.
+        owner = (user_id, json.dumps([req.snapshot, user], sort_keys=True, default=str)) if personal else "*"
+        return norm, lang, start.screen, start.asset, period, facts.version, seen, owner
 
     def _from_cache(self, req, user_id, lang, norm, start, facts, history, started, turn) -> ChatReply | None:
-        if not standalone(norm):
+        if history or not standalone(norm):  # with history the model may have used it: never reuse
             return None
-        hit = (self.answers.get(self._cache_key(req, user_id, lang, norm, start, facts, False))
-               or self.answers.get(self._cache_key(req, user_id, lang, norm, start, facts, True)))
+        user = self.state.users[user_id]
+        hit = (self.answers.get(self._cache_key(req, user, user_id, lang, norm, start, facts, False))
+               or self.answers.get(self._cache_key(req, user, user_id, lang, norm, start, facts, True)))
         if hit is None:
             return None
         # Source labels alone cannot prove a cached figure. Old entries without the

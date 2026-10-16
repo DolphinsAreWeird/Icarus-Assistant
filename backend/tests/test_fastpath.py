@@ -319,7 +319,7 @@ def test_grounded_word_and_unspaced_thai_prices_remain_cacheable(cache, state, c
     request = ChatRequest(session_id="s1", user_id="u_new", text="Is gold risky to hold long term?",
                           input_mode="voice", lang=lang, snapshot=HOME)
     first = bot.chat(request)
-    again = bot.chat(request)
+    again = bot.chat(request.model_copy(update={"session_id": "s2"}))  # a cache hit needs a first turn
     assert first.status == again.status == "ok"
     assert first.text == again.text == claim and first.speak and again.speak
     assert first.sources and again.sources == first.sources
@@ -341,7 +341,7 @@ def test_cached_figures_are_rechecked_against_retained_evidence(cache, state):
     question = "Explain gold pricing in detail"
     first = ask(bot, question)
     assert first.status == "ok" and first.sources
-    cached = ask(bot, question)
+    cached = ask(bot, question, session="s2")
     assert cached.debug["route"] == "cache" and cached.text == first.text
     assert cached.sources == first.sources
     # Simulate a stale/unsafe entry created before the guard, with source labels
@@ -352,7 +352,7 @@ def test_cached_figures_are_rechecked_against_retained_evidence(cache, state):
     hit.pop("grounding")
     bot.answers.put(key, hit)
     bot.llm = FakeLLM([text("Gold is about 134,000 baht.")])
-    checked = ask(bot, question)
+    checked = ask(bot, question, session="s3")
     assert checked.debug["route"] == "model" and checked.status == "ok"
     assert "999999" not in json.dumps(state.sessions)
 
@@ -378,10 +378,79 @@ def test_trades_personal_answers_and_follow_ups_are_not_reused_across(cache, sta
     bot = Assistant(fake, state, cache)
     ask(bot, "set up a gold buy of 1000 baht for me")
     assert ask(bot, "set up a gold buy of 1000 baht for me", session="s2").debug["route"] == "model"  # a new card each time
-    ask(bot, "how is my money split up")
+    ask(bot, "how is my money split up", session="s4")  # a first turn, so it is cached (for u_new only)
     assert ask(bot, "how is my money split up", user="u_small").text == "You have 1,195 baht."  # not u_new's answer
     ask(bot, "and what about it today")
     assert ask(bot, "and what about it today", session="s3").debug["route"] == "model"  # leans on the conversation
+
+
+def _situation_bot(cache, state, script):
+    fake = FakeLLM(script)
+    return fake, Assistant(fake, state, cache)
+
+
+def test_history_dependent_answer_is_not_shared_with_another_user(cache, state):
+    fake, bot = _situation_bot(cache, state, [
+        text("Noted."), text("Your goal of a secret yacht is far off."), text("I can't see your accounts.")])
+    ask(bot, "My private goal is a secret yacht", user="u_new", session="a")
+    first = ask(bot, "How does my financial situation look?", user="u_new", session="a")
+    other = ask(bot, "How does my financial situation look?", user="u_small", session="b")
+    assert "yacht" in first.text and other.debug["route"] == "model" and "yacht" not in other.text
+    assert len(fake.calls) == 3
+    assert "yacht" not in json.dumps(fake.calls[2]["messages"])
+
+
+def test_history_dependent_answer_is_not_reused_in_the_users_other_session(cache, state):
+    fake, bot = _situation_bot(cache, state, [
+        text("Noted."), text("Your goal of a secret yacht is far off."), text("Tell me more about your goals.")])
+    ask(bot, "My private goal is a secret yacht", session="a")
+    ask(bot, "How does my financial situation look?", session="a")
+    again = ask(bot, "How does my financial situation look?", session="b")
+    assert again.debug["route"] == "model" and "yacht" not in again.text
+
+
+def test_same_question_with_different_history_in_one_session_is_asked_again(cache, state):
+    fake, bot = _situation_bot(cache, state, [text("One."), text("Two."), text("Three.")])
+    ask(bot, "Is bitcoin risky to hold long term?")
+    second = ask(bot, "Is bitcoin risky to hold long term?")  # history now exists
+    third = ask(bot, "Is bitcoin risky to hold long term?")
+    assert [second.debug["route"], third.debug["route"]] == ["model", "model"] and len(fake.calls) == 3
+
+
+def test_generic_first_turn_question_is_still_shared_across_users(cache, state):
+    fake, bot = _situation_bot(cache, state, [calls(("get_history", {"asset_id": "BTC", "period": "1Y"})),
+                                                text("Bitcoin is down about 24% over the past year.")])
+    state.users["u_small"]["journey"]["stage"] = state.users["u_new"]["journey"]["stage"]  # same prompt context
+    first = ask(bot, "Is bitcoin risky to hold long term?", user="u_new", session="a")
+    other = ask(bot, "Is bitcoin risky to hold long term?", user="u_small", session="b")
+    assert other.debug["route"] == "cache" and other.text == first.text and len(fake.calls) == 2
+
+
+def test_personal_answer_is_reused_only_for_the_same_account_and_screen_data(cache, state):
+    portfolio = calls(("get_portfolio", {}))
+    fake, bot = _situation_bot(cache, state, [portfolio, text("Mostly cash."), portfolio, text("Now some gold."),
+                                              portfolio, text("Your screen shows 2 assets.")])
+    first = ask(bot, "how is my money split up", session="a")
+    assert ask(bot, "how is my money split up", session="b").debug["route"] == "cache"  # same account, same screen
+    state.users["u_new"]["cash_thb"] -= 1  # the account changed (a trade): the old reply is stale
+    changed = ask(bot, "how is my money split up", session="c")
+    assert changed.debug["route"] == "model" and changed.text != first.text
+    # another visitor's app (mapped to the same demo user) sends its own screen numbers
+    other_screen = HOME | {"portfolio": {"total_thb": 2, "holdings": [{"asset_id": "XAU"}, {"asset_id": "BTC"}]}}
+    seen = ask(bot, "how is my money split up", session="d", snapshot=other_screen)
+    assert seen.debug["route"] == "model" and len(fake.calls) == 6
+
+
+def test_screen_context_is_part_of_the_cache_key(cache, state):
+    from app.contracts import ScreenContext
+    fake, bot = _situation_bot(cache, state, [text("It is the total."), text("It is the change."), text("again")])
+
+    def focused(session, el):
+        return bot.chat(ChatRequest(session_id=session, user_id="u_new", text="Explain what this number means",
+                                    snapshot=HOME, screen_context=ScreenContext(screen_id="home", focused_element=el)))
+    a, b, a2 = focused("a", "balance"), focused("b", "change"), focused("c", "balance")
+    assert [a.debug["route"], b.debug["route"], a2.debug["route"]] == ["model", "model", "cache"]
+    assert b.text == "It is the change." and a2.text == a.text
 
 
 def test_cached_answers_expire():
