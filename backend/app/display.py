@@ -43,6 +43,12 @@ def exact_baht(x: float, lang: str = "en") -> str:
     return f"{x:,.0f} {unit}" if float(x).is_integer() else f"{x:,.2f} {unit}"
 
 
+def size(pct: float) -> str:
+    """The size of a percentage, the way people say it: 23.97 -> '24', 0.42 -> '0.4'."""
+    a = abs(pct)
+    return f"{a:.0f}" if a >= 10 else f"{a:.1f}".rstrip("0").rstrip(".")
+
+
 def change(pct: float, lang: str = "en") -> str:
     """-23.97 -> 'down about 24%'. 0.42 -> 'up about 0.4%'."""
     if not isinstance(pct, (int, float)) or isinstance(pct, bool) or not math.isfinite(pct):

@@ -21,10 +21,10 @@ import secrets
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
-from app import display, knowledge, ui
+from app import display, insights, knowledge, ui
 from app.contracts import ScreenContext
 from app.market.cache import PriceCache
-from app.market.history import period_rows, summarize
+from app.market.history import load_history, period_rows, summarize
 from app.state import DemoState
 from app.trades import TradeError, cancel_pending, portfolio, prepare_trade
 
@@ -69,6 +69,15 @@ def tool_specs() -> list[dict]:
              "Also highlights it.",
              {"element_id": {"type": "string", "enum": list(a["elements"])}}),
         spec("get_portfolio", "The user's holdings, value and how their money is split.", {}),
+        spec("get_balance", "The user's cash, portfolio value, how their money is split and fees paid this month, in plain words.", {}),
+        spec("get_risk", "How an asset behaved over the last 3 years: usual daily move, worst month, biggest fall. Describes the "
+             "past only. Use for 'how risky is...', 'how volatile is...'.", {"asset_id": asset}),
+        spec("what_if", "What an amount in baht put into an asset some time ago would be worth today. A past result, not a forecast.",
+             {"asset_id": asset, "amount_thb": {"type": "number"}, "period": {"type": "string", "enum": ["1M", "3M", "1Y", "ALL"]}}),
+        spec("goal_math", "How much to save per month to reach a target in baht, by a number of months or by a month of the year "
+             "(1 to 12). Plain arithmetic with no interest.",
+             {"target_thb": {"type": "number"}, "months": {"type": "integer"}, "by_month": {"type": "integer"}},
+             optional=("months", "by_month")),
         spec("show_chart",
              "Draw a small price chart in the chat, in baht. Use it when a picture helps: comparing "
              "2 or 3 assets, or a period the user isn't looking at. Not for simple questions. If the "
@@ -405,7 +414,121 @@ def cancel_trade(ctx: ToolContext) -> dict:
             else "There was no open preview to cancel."}
 
 
+# ---------- plain questions: price, balance, risk, what-if, goal ----------
+# Each returns the exact numbers plus `reply`, a ready-to-say English and Thai sentence built from them. All in baht.
+# They describe the past or do arithmetic. None predicts a price, and none recommends anything.
+
+NOT_ADVICE = {"en": "This describes the past. It doesn't predict the future.", "th": "นี่คือข้อมูลในอดีต ไม่ใช่การคาดการณ์อนาคต"}
+WHEN_PHRASE = {"1M": {"en": "a month ago", "th": "เมื่อ 1 เดือนก่อน"}, "3M": {"en": "3 months ago", "th": "เมื่อ 3 เดือนก่อน"},
+               "1Y": {"en": "a year ago", "th": "เมื่อ 1 ปีก่อน"}, "ALL": {"en": "3 years ago", "th": "เมื่อ 3 ปีก่อน"}}
+
+
+def _asset_name(app_asset: str, lang: str) -> str:
+    app = knowledge.app_ui()["assets"][app_asset]
+    named = knowledge.assets().get(app["data_id"] or "")
+    return (named["name_th"].split(" (")[0] if lang == "th" and named else None) or app["name"]
+
+
+def _no_data(ctx: ToolContext, tool: str, app_asset: str, what: str) -> dict:
+    name_en, name_th = _asset_name(app_asset, "en"), _asset_name(app_asset, "th")
+    return {"ok": False, "reason": "no_data", "reply": {
+        "en": f"I don't have {what} for {name_en} yet, so I can't answer that.",
+        "th": f"ยังไม่มีข้อมูล{what}ของ {name_th} จึงตอบเรื่องนี้ไม่ได้"}}
+
+
+def tell_price(ctx: ToolContext, asset_id: str) -> dict:
+    app_asset = ui.to_app_asset(asset_id)
+    if app_asset is None:
+        raise ValueError(f"unknown asset {asset_id}")
+    price = _price(ctx, app_asset)
+    if price.get("available") is False:
+        return _no_data(ctx, "tell_price", app_asset, "a price")
+    en, th = _asset_name(app_asset, "en"), _asset_name(app_asset, "th")
+    stale = {"live": "", "delayed": " (delayed)", "offline": " (from the saved snapshot)"}.get(price["freshness"], "")
+    stale_th = {"live": "", "delayed": " (ล่าช้า)", "offline": " (จากข้อมูลที่บันทึกไว้)"}.get(price["freshness"], "")
+    reply = {"en": f"{en} is at {display.baht(price['price_thb'])}, {display.change(price['change_24h_pct'])} today{stale}.",
+             "th": f"{th}อยู่ที่ {display.baht(price['price_thb'], 'th')} {display.change(price['change_24h_pct'], 'th')} วันนี้{stale_th}"}
+    return _envelope(ctx, "tell_price", {"ok": True, "asset_id": app_asset, **price, "reply": reply},
+                     "binance + frankfurter", price["as_of"], price["freshness"])
+
+
+def get_balance(ctx: ToolContext) -> dict:
+    """Cash, what the user holds, how it is split, and the fees paid this month: the portfolio X-ray, in plain words."""
+    pf = portfolio(ctx.state.users[ctx.user_id], ctx.cache, _now_iso(ctx))
+    names = {v["data_id"]: k for k, v in knowledge.app_ui()["assets"].items() if v["data_id"]}
+    held = [h for h in pf["holdings"] if h["value_thb"]]
+    cash_en, cash_th = display.exact_baht(pf["cash_thb"]), display.exact_baht(pf["cash_thb"], "th")  # the user's own number: exact
+    if not held:
+        reply = {"en": f"You have {cash_en} in cash and don't hold any assets yet.",
+                 "th": f"คุณมีเงินสด {cash_th} และยังไม่ได้ถือสินทรัพย์ใด"}
+    else:
+        parts_en = ", ".join(f"{display.size(h['share_pct'])}% in {_asset_name(names[h['asset_id']], 'en')}" for h in held[:3])
+        parts_th = ", ".join(f"{_asset_name(names[h['asset_id']], 'th')} {display.size(h['share_pct'])}%" for h in held[:3])
+        fee_en = f" You paid {display.exact_baht(pf['fees_this_month_thb'])} in fees this month." if pf["fees_this_month_thb"] else ""
+        fee_th = f" เดือนนี้จ่ายค่าธรรมเนียม {display.exact_baht(pf['fees_this_month_thb'], 'th')}" if pf["fees_this_month_thb"] else ""
+        reply = {"en": f"Your portfolio is worth {display.baht(pf['total_thb'])}, including {cash_en} in cash. Your money is split: {parts_en}.{fee_en}",
+                 "th": f"พอร์ตของคุณมีมูลค่า {display.baht(pf['total_thb'], 'th')} รวมเงินสด {cash_th} สัดส่วน: {parts_th}{fee_th}"}
+    return _envelope(ctx, "get_balance", {"ok": True, **pf, "reply": reply}, "demo account", freshness="simulated")
+
+
+def get_risk(ctx: ToolContext, asset_id: str) -> dict:
+    app_asset = ui.to_app_asset(asset_id)
+    data_id = _data_id(asset_id) if app_asset else None
+    stats = insights.risk_stats(load_history(data_id, "1d")) if data_id else None
+    if stats is None:
+        return _no_data(ctx, "get_risk", app_asset or "XAU", "enough price history")
+    en, th = _asset_name(app_asset, "en"), _asset_name(app_asset, "th")
+    years = round(stats["days"] / 365, 1)
+    years = int(years) if years == int(years) else years
+    reply = {"en": (f"Over the last {years} years, {en} moved about {display.size(stats['typical_day_move_pct'])}% on a normal day. "
+                    f"Its worst month was {display.change(stats['worst_month_pct'])}, and its biggest fall from a peak was about {display.size(stats['max_drop_pct'])}%. "
+                    f"{NOT_ADVICE['en']}"),
+             "th": (f"ในช่วง {years} ปีที่ผ่านมา {th}เคลื่อนไหวประมาณ {display.size(stats['typical_day_move_pct'])}% ในวันปกติ "
+                    f"เดือนที่แย่ที่สุด{display.change(stats['worst_month_pct'], 'th')} และลงจากจุดสูงสุดมากที่สุดประมาณ {display.size(stats['max_drop_pct'])}% "
+                    f"{NOT_ADVICE['th']}")}
+    return _envelope(ctx, "get_risk", {"ok": True, "asset_id": app_asset, **stats, "reply": reply},
+                     "binance history snapshot", stats["to"], "snapshot")
+
+
+def what_if(ctx: ToolContext, asset_id: str, amount_thb: float, period: str) -> dict:
+    app_asset = ui.to_app_asset(asset_id)
+    data_id = _data_id(asset_id) if app_asset else None
+    result = insights.what_if(period_rows(data_id, period), amount_thb) if data_id and period in WHEN_PHRASE else None
+    if result is None:
+        return _no_data(ctx, "what_if", app_asset or "XAU", "enough price history")
+    en, th = _asset_name(app_asset, "en"), _asset_name(app_asset, "th")
+    reply = {"en": (f"If you had put {display.exact_baht(amount_thb)} in {en} {WHEN_PHRASE[period]['en']}, it would be worth "
+                    f"{display.baht(result['value_now_thb'])} today ({display.change(result['change_pct'])}). Fees aren't included. "
+                    f"It's a past result, not a forecast."),
+             "th": (f"ถ้าคุณใส่เงิน {display.exact_baht(amount_thb, 'th')} ใน{th} {WHEN_PHRASE[period]['th']} ตอนนี้จะมีมูลค่า "
+                    f"{display.baht(result['value_now_thb'], 'th')} ({display.change(result['change_pct'], 'th')}) ไม่รวมค่าธรรมเนียม "
+                    f"เป็นผลในอดีต ไม่ใช่การคาดการณ์")}
+    return _envelope(ctx, "what_if", {"ok": True, "asset_id": app_asset, "period": period, **result, "reply": reply},
+                     "binance history snapshot", result["to"], "snapshot")
+
+
+def goal_math(ctx: ToolContext, target_thb: float, months: int | None = None, by_month: int | None = None) -> dict:
+    today = datetime.fromtimestamp(ctx.state.clock(), UTC).date()
+    if months is None and by_month is not None:
+        months = insights.months_until(by_month, today)
+    result = insights.goal_math(target_thb, months, 0.0) if months else None
+    if result is None:
+        return {"ok": False, "reason": "bad_goal", "reply": {
+            "en": "I need a target of at least 1 baht and a time between 1 and 600 months to work that out.",
+            "th": "ต้องมีเป้าหมายอย่างน้อย 1 บาท และระยะเวลา 1 ถึง 600 เดือน จึงจะคำนวณได้"}}
+    reply = {"en": (f"To save {display.exact_baht(target_thb)} in {months} month{'s' if months != 1 else ''}, put aside about "
+                    f"{display.exact_baht(result['monthly_thb'])} a month. This is simple arithmetic with no interest or growth."),
+             "th": (f"ถ้าอยากเก็บเงิน {display.exact_baht(target_thb, 'th')} ใน {months} เดือน ต้องเก็บประมาณ "
+                    f"{display.exact_baht(result['monthly_thb'], 'th')} ต่อเดือน เป็นการคำนวณง่าย ๆ ไม่รวมดอกเบี้ยหรือผลตอบแทน")}
+    return _envelope(ctx, "goal_math", {"ok": True, **result, "reply": reply}, "arithmetic (no market data)", freshness="n/a")
+
+
 TOOLS = {
+    "tell_price": tell_price,
+    "get_balance": get_balance,
+    "get_risk": get_risk,
+    "what_if": what_if,
+    "goal_math": goal_math,
     "get_prices": get_prices,
     "get_history": get_history,
     "get_asset_info": get_asset_info,

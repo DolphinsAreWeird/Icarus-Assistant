@@ -92,3 +92,11 @@ Hosting config exists (a `Dockerfile` and `render.yaml` for Render, and a Vercel
 ## Tests
 
 `npm test` (44 tests). The main one mounts the real prototype in a simulated browser, starts voice mode and checks that the greeting goes to our text-to-speech, that a spoken question comes back through the Scribe look-alike and gets an answer, that Thai speaks Thai, and that it falls back to the demo mode when the mic is denied.
+
+## Icarus speaks up when you are stuck (`?backend`)
+
+`src/idle-nudge.ts`: after about 15 s with no tap, key, scroll or screen change, the app asks the backend (`POST /nudge`)
+and shows the answer quietly: a bubble on the mascot, the same line in the chat (with a tap-to-send chip when useful),
+and a highlight. **It is silent** (never speaks aloud) and stays out of the way: not while the chat or voice is open, a
+guide is running, or a scenario stopwatch is on. One question per screen state, one nudge per (screen, reason), at most 4
+a session. `nudge_shown` goes into the demo events the Business Dashboard reads. The design file is untouched.

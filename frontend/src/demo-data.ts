@@ -97,6 +97,13 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
   const load = async () => {
     const data = await request(`/demo/state/${encodeURIComponent(userId)}`) as DemoBundle;
     if (data.mode !== 'simulated' || data.currency !== 'THB' || data.user_id !== userId) throw new Error('Unsupported demo bundle.');
+    // Check the whole shape first, and only then use any of it: a half-valid bundle must never be left half-applied.
+    const assets = data.assets as Record<string, Asset> | undefined;
+    if (!Array.isArray(data.transactions) || !data.fees || !Number.isFinite(data.fees.trading_fee_pct) || !Number.isFinite(data.fees.min_buy_thb)
+      || !Number.isFinite(data.cash_thb) || !data.holdings || typeof data.holdings !== 'object' || !assets || typeof assets !== 'object'
+      || Object.values(assets).some((a) => !a || !Number.isFinite(a.price_thb) || !a.charts || typeof a.charts !== 'object')) {
+      throw new Error('Unsupported demo bundle: missing fields.');
+    }
     bundle = data; fetchedAt = Date.now();
     const txs = data.transactions.filter(t => t.type === 'buy').map(t => ({ id: t.id, asset: Object.keys(ids).find(id => ids[id] === t.asset_id), thb: t.amount_thb, qty: t.qty, date: t.ts.slice(0, 10) })).filter(t => t.asset).reverse();
     proto.setState({ thbBal: data.cash_thb, usdBal: 0, hold: { ...data.holdings }, txs, walletId: 'thb' });

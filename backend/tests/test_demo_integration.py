@@ -115,3 +115,9 @@ def test_a_frozen_card_blocks_buying_through_icarus_too():
         normal = client.post("/chat", json={"text": "Put 1,000 baht in gold", "user_id": "u_new",
                                             "snapshot": {**snap, "card_frozen": False}}).json()
         assert normal["ui_actions"], "a card that is not frozen can still buy"
+
+
+@pytest.mark.parametrize("phrase", ["compare gold to btc", "Compare gold with bitcoin", "compare bitcoin versus gold", "compare btc vs. eth", "compare gold against ethereum"])
+def test_compare_accepts_the_natural_ways_to_say_it(phrase):
+    name, args = parse_intent(phrase)
+    assert name == "show_chart" and len(args["asset_ids"]) == 2 and args["period"] == "1Y"

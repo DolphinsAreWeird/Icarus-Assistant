@@ -10,12 +10,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import knowledge, nudge
+from app import friction, knowledge, nudge, ui
 from app.assistant.llm import ChatModel, LLMError, RateLimited
 from app.assistant.loop import Assistant, NoModel, UnknownUser
 from app.assistant.memo import QuestionLog
 from app.config import OFFLINE, POLL_INTERVAL_S
-from app.contracts import ChatReply, ChatRequest, ConfirmRequest, ErrorBody, NudgeRequest, PreviewRequest
+from app.contracts import ChatReply, ChatRequest, ConfirmRequest, ErrorBody, EventRequest, NudgeRequest, PreviewRequest
 from app.market.cache import PriceCache
 from app.market.history import PERIODS, period_rows, summarize
 from app.state import DemoState
@@ -116,6 +116,7 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
                 thread.join(timeout=30)
 
     app = FastAPI(title="Icarus backend", lifespan=lifespan)
+    friction_log = friction.FrictionLog()  # what users ask and where they get stuck (the business's friction map)
 
     @app.exception_handler(RequestValidationError)
     async def bad_request(_: Request, exc: RequestValidationError):
@@ -197,7 +198,9 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
         if assistant is None:
             fail(503, "no_model")
         try:
-            return assistant.chat(req)
+            reply = assistant.chat(req)
+            friction_log.log_chat(req, reply, resolve_user(req.user_id))
+            return reply
         except UnknownUser:
             fail(404, "unknown_user")
         except NoModel:
@@ -218,15 +221,22 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
             fail(404, "unknown_user")
         lang = req.lang or ("th" if str(req.snapshot.get("language")) == "th" else "en")
         try:
-            return {"nudge": nudge.decide(req.snapshot, user["cash_thb"], lang)}
+            hint = nudge.decide(req.snapshot, user["cash_thb"], lang)
         except Exception:  # a proactive hint must never break the screen
             return {"nudge": None}
+        if hint:
+            friction_log.log("nudge_issued", user_id=resolve_user(req.user_id), screen=ui.state_from_snapshot(req.snapshot).screen,
+                             topic=hint["reason"], lang=lang)
+        return {"nudge": hint}
 
     @app.post("/trades/{preview_id}/confirm")
     def confirm(preview_id: str, body: ConfirmRequest):
         try:
-            return confirm_trade(state, resolve_user(body.user_id), preview_id)
+            result = confirm_trade(state, resolve_user(body.user_id), preview_id)
+            friction_log.log("task_completed", user_id=resolve_user(body.user_id), session_id=preview_id, screen="buy")
+            return result
         except TradeError as e:
+            friction_log.log("validation_failed", user_id=resolve_user(body.user_id), screen="buy", topic=e.code)
             fail(404 if e.code == "preview_not_found" else 409, e.code, **e.details)
 
     @app.post("/demo/reset")
@@ -252,9 +262,31 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
         if user_id not in state.users:
             fail(404, "unknown_user")
         try:
-            return prepare_trade(state, cache, user_id, body.asset_id, body.side, body.amount_thb)
+            made = prepare_trade(state, cache, user_id, body.asset_id, body.side, body.amount_thb)
+            friction_log.log("preview_shown", user_id=user_id, session_id=made["preview_id"], screen="buy", topic=body.asset_id)
+            return made
         except TradeError as e:
+            friction_log.log("validation_failed", user_id=user_id, screen="buy", topic=e.code)
             fail(409, e.code, **e.details)
+
+    @app.post("/events")
+    def add_event(body: EventRequest):
+        """The app tells us what only it can see (a screen view, a task started or abandoned, a help tap)."""
+        if body.type not in friction.APP_TYPES:
+            fail(422, "bad_request", allowed=sorted(friction.APP_TYPES))
+        friction_log.log(body.type, user_id=resolve_user(body.user_id), session_id=body.session_id, screen=body.screen,
+                         topic=body.topic, lang=body.lang)
+        return {"ok": True}
+
+    @app.get("/friction/summary")
+    def friction_summary():
+        """What users asked and where they got stuck: the business's friction map, with denominators."""
+        return friction_log.summary()
+
+    @app.post("/friction/reset")
+    def friction_reset():
+        friction_log.clear()
+        return {"ok": True}
 
     @app.post("/trades/{preview_id}/cancel")
     def cancel(preview_id: str, body: ConfirmRequest):

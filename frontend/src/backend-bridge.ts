@@ -127,8 +127,11 @@ export function toChatRequest(text: string, ctx: PrototypeContext | undefined, o
   };
 }
 
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+
 /** "get_prices · binance + frankfurter (live at 09:00)", once each. */
-function sourceLabels(sources: Array<Record<string, unknown>> = []): string[] {
+function sourceLabels(raw: unknown): string[] {
+  const sources = (Array.isArray(raw) ? raw : []).filter(isObj); // anything that is not a list of objects is ignored
   // A reply is a snapshot that stays in the chat, so a "live" source says when it was live ("live at 09:00"), never a
   // bare "live" that would still read as current an hour later. A recent as_of past the threshold makes it "delayed".
   // A much older as_of on a source the server called live is not trusted either way (the model path's as_of includes
@@ -166,11 +169,54 @@ export function buyReadback(actions: Array<Record<string, unknown>>, ctx: Protot
   return preview ? `${buildReadback(preview, lang, { prompt: false })} ${STRINGS[lang].lines.tapConfirmPurchase}` : null;
 }
 
+// What the prototype can open, so a wrong id from the backend never reaches it (it would blank the whole app).
+const ASSET_IDS = new Set(['BTC', 'ETH', 'XAU', 'AAPL', 'TSLA']);
+const FILTERS = new Set(['All', 'Crypto', 'Stocks', 'Gold']);
+const PERIODS = new Set(['1D', '1W', '1M', '3M', '1Y', 'ALL']);
+const TABS = new Set(['home', 'wallets', 'invest', 'payments', 'card']);
+const VIEWS = new Set(['invest', 'portfolio']);
+
+/** Is this a screen action the prototype can safely run, with values it knows? */
+export function actionIsRunnable(a: Record<string, unknown>): boolean {
+  switch (a.type) {
+    case 'back': case 'review': case 'cancel_buy': return true;
+    case 'navigate': return isObj(a.to) && typeof a.to.tab === 'string' && TABS.has(a.to.tab) && (a.to.view === undefined || (typeof a.to.view === 'string' && VIEWS.has(a.to.view)));
+    case 'open_asset': case 'start_buy': case 'start_guide': return typeof a.asset === 'string' && ASSET_IDS.has(a.asset);
+    case 'set_period': return typeof a.period === 'string' && PERIODS.has(a.period);
+    case 'set_filter': return typeof a.filter === 'string' && FILTERS.has(a.filter);
+    case 'type_amount': return typeof a.value === 'number' && Number.isFinite(a.value) && a.value >= 0;
+    case 'select_wallet': return a.wallet === 'thb' || a.wallet === 'usd';
+    case 'toggle_freeze': case 'hide_balance': return typeof a.value === 'boolean';
+    default: return false;
+  }
+}
+
 /** One backend screen action in the prototype's shape, or null when the prototype cannot run it. */
-export function toPrototypeAction(a: Record<string, unknown>): Record<string, unknown> | null {
+export function toPrototypeAction(a: unknown): Record<string, unknown> | null {
+  if (!isObj(a)) return null;
   if (a.type === 'highlight' && typeof a.element_id === 'string') return { type: 'highlight', target: a.element_id };
   if (a.type === 'highlight' && typeof a.target === 'string') return a;
-  return SCREEN_ACTIONS.has(String(a.type)) ? a : null;
+  return SCREEN_ACTIONS.has(String(a.type)) && actionIsRunnable(a) ? a : null;
+}
+
+/** A chart card the drawing code can handle, or null: lists where lists are expected, numbers where numbers are. */
+export function cleanChart(d: Record<string, unknown>): Record<string, unknown> | null {
+  if (!Array.isArray(d.series)) return null;
+  const series = d.series.filter(isObj).map((s) => ({
+    ...s, name: String(s.name ?? ''),
+    points: (Array.isArray(s.points) ? s.points : []).filter((p) => Array.isArray(p) && typeof p[0] === 'string' && typeof p[1] === 'number' && Number.isFinite(p[1])),
+  })).filter((s) => s.points.length >= 2);
+  return series.length ? { ...d, title: String(d.title ?? ''), series: series.slice(0, 3) } : null;
+}
+
+/** A steps card the drawing code can handle, or null. Each step's "Show me" actions are checked like any other action. */
+export function cleanSteps(d: Record<string, unknown>): Record<string, unknown> | null {
+  if (!Array.isArray(d.steps)) return null;
+  const steps = d.steps.filter(isObj).map((st, i) => ({
+    ...st, n: Number.isFinite(st.n) ? st.n : i + 1, title: String(st.title ?? ''), text: String(st.text ?? ''),
+    show_me: (Array.isArray(st.show_me) ? st.show_me : []).map(toPrototypeAction).filter((x): x is Record<string, unknown> => x !== null),
+  })).filter((st) => st.title || st.text);
+  return steps.length ? { ...d, title: String(d.title ?? ''), steps } : null;
 }
 
 export interface ReplyCards {
@@ -187,14 +233,14 @@ export interface ReplyCards {
 export function toPrototypeReply(r: BackendReply, lang: 'en' | 'th', ctx?: PrototypeContext, proto: PrototypeLike | null = null): { reply: PrototypeReply } & ReplyCards {
   const actions: Array<Record<string, unknown>> = [];
   const cards: ReplyCards = { trade: null, chart: null, steps: null };
-  for (const a of r.ui_actions ?? []) {
-    if (!a || typeof a.type !== 'string') continue;
+  for (const a of Array.isArray(r.ui_actions) ? r.ui_actions : []) {
+    if (!isObj(a) || typeof a.type !== 'string') continue;
     if (a.type === 'card') {
-      const data = a.data && typeof a.data === 'object' ? (a.data as Record<string, unknown>) : null;
+      const data = isObj(a.data) ? a.data : null;
       if (!data) continue;
       if (a.card_type === 'trade_preview') cards.trade = withReadbackFields(data);
-      else if (a.card_type === 'chart') cards.chart = data;
-      else if (a.card_type === 'steps') cards.steps = data;
+      else if (a.card_type === 'chart') cards.chart = cleanChart(data);
+      else if (a.card_type === 'steps') cards.steps = cleanSteps(data);
       continue;
     }
     const action = toPrototypeAction(a);
@@ -224,7 +270,7 @@ export function toPrototypeReply(r: BackendReply, lang: 'en' | 'th', ctx?: Proto
       speak: r.speak ?? true,
       ui_actions: actions,
       sources: sourceLabels(r.sources),
-      suggestions: r.suggestions ?? [],
+      suggestions: Array.isArray(r.suggestions) ? r.suggestions.filter((x): x is string => typeof x === 'string' && x !== '').slice(0, 4) : [],
       offer: null,
     },
     ...cards,
@@ -266,6 +312,8 @@ export interface BackendBridgeOptions {
   /** Put the U-topia routing around the backend (withUtopiaRouting). */
   wrap?: (fn: (q: string, ctx: unknown) => Promise<PrototypeReply>) => (q: string, ctx: unknown) => unknown;
   showTrade: (card: Record<string, unknown>, lang: 'en' | 'th') => void;
+  /** Remembers a card shown with a reply and returns the chip text that reopens it (card-chips.ts). */
+  cardChip?: (kind: 'chart' | 'steps', card: Record<string, unknown>, lang: 'en' | 'th') => string;
   showChart?: (card: Record<string, unknown>, lang: 'en' | 'th') => void;
   showSteps?: (card: Record<string, unknown>, lang: 'en' | 'th') => void;
   /** Take down any card from the last reply. */
@@ -335,8 +383,23 @@ export function installBackend(o: BackendBridgeOptions): boolean {
       const message = detail && typeof detail[lang === 'th' ? 'message_th' : 'message_en'] === 'string' ? String(detail[lang === 'th' ? 'message_th' : 'message_en']) : COPY[lang].failed;
       return fallback(`backend error ${res.status}${detail?.code ? ` ${String(detail.code)}` : ''}`, message);
     }
-    const { reply, trade, chart, steps } = toPrototypeReply(body as unknown as BackendReply, lang, ctx, proto);
-    const later = (show: () => void) => window.setTimeout(() => { if (turn === generation) show(); }, o.cardDelayMs ?? 650);
+    let converted: ReturnType<typeof toPrototypeReply>;
+    try {
+      converted = toPrototypeReply(body as unknown as BackendReply, lang, ctx, proto);
+    } catch {
+      return fallback('the backend sent a reply the app could not read', COPY[lang].failed);
+    }
+    const { reply, trade, chart, steps } = converted;
+    // A card that was closed can be brought back: its chip goes under the reply, first.
+    if (o.cardChip && !trade) {
+      const chip = chart && o.showChart ? o.cardChip('chart', chart, lang) : steps && o.showSteps ? o.cardChip('steps', steps, lang) : null;
+      if (chip) reply.suggestions = [chip, ...reply.suggestions].slice(0, 4);
+    }
+    // A card that fails to draw must never leave half a card behind, or throw outside the app.
+    const later = (show: () => void) => window.setTimeout(() => {
+      if (turn !== generation) return;
+      try { show(); } catch { o.hideCards?.(); }
+    }, o.cardDelayMs ?? 650);
     if (trade) later(() => o.showTrade(trade, lang));
     else if (chart && o.showChart) later(() => o.showChart?.(chart, lang));
     else if (steps && o.showSteps) later(() => o.showSteps?.(steps, lang));
