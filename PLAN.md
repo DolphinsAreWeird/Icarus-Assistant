@@ -27,7 +27,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 - [x] **I11: Settle failed fallback speech.** Clean up and settle every terminal playback outcome while keeping interrupted read-back unapproved.
 - [x] **I12: Fix Windows build/fake startup.** Portable npm invocation, nonzero spawn failure and cross-platform fake-mode launch.
 - [x] **I13: Refresh dashboard after ring rollover.** Detect replacement events when event count remains 400; retain truthful browser-local analytics labeling.
-- [ ] **I14: Repair documentation and claims.** Correct stale run paths, historical handoffs, six broken links, data-locality wording and demo scope. Do not fabricate a live URL, deck or human review.
+- [x] **I14: Repair documentation and claims.** Correct stale run paths, historical handoffs, six broken links, data-locality wording and demo scope. Do not fabricate a live URL, deck or human review.
 - [ ] **I15: Restore reproducible validation.** Install locked JS dependencies/browser tooling, run Python/JS suites, typechecks/builds and meaningful offline browser coverage for both engines where feasible.
 - [ ] **I16: Final independent review and regression sweep.** Resolve review findings, verify clean issue commits, record remaining external checks and commit the final ledger.
 - [x] **I17: Prepare Vercel hosting.** Prefer Vercel over GitHub Pages for the web app; provide tested routing/build configuration for the existing API service and document the stateful backend requirement. Do not claim an untested serverless migration or fabricate a deployed URL.
@@ -66,6 +66,8 @@ The issue's commit subject identifies its checkpoint. Hashes will be collected a
 | I10 | `fix: align launcher engines with health and readiness checks`: 316 backend tests, 28 voice test files (498 pass, 1 win32 skip), typecheck, `bash -n`; manual start-hosted runs (hung, crashed, SIGTERM-ignoring, real uvicorn), run-demo.ps1 and demo.sh engine checks against live local uvicorn. /api/ready timeout default raised to 5 s by orchestrator | Opus 5.5 Medium approved after fixes (legacy model_offline null, demo.sh venv python, crash-aware wait, signal trap and forced cleanup) |
 
 | I17 | `feat: prepare Vercel static hosting in front of the stateful service`: 7 config/build tests; root build; local proxy stand-in honouring vercel.json redirects/rewrites served /app/, /api/health, /api/ask, streamed /api/tts and U-Bot mock through to a fake-mode service with no console errors. No Vercel deploy performed; origin is a placeholder the build refuses on Vercel | Opus 5.5 Medium approved after doc fix (shared proxy IP ceiling predates Vercel) |
+
+| I14 | `docs: correct run paths, claims, links and data-locality wording`: relative-link check 0 broken across all Markdown (was 6); 137 frontend tests and typecheck; `bash -n demo.sh`; stand-in fallback behaviour probed via TestClient. No live URL, deck or human review claimed | Opus 5.5 Medium approved after fixes (stand-in fallback, cache/facts wording, Windows defaults, 2-minute delayed rule, question vs friction log contents, demo-audio counts) |
 
 ## Execution notes
 

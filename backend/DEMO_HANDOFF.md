@@ -1,3 +1,6 @@
+> **Historical note (as of 16 Oct 2026, the hackathon).** This handoff describes the `backend` branch and the `.worktrees/backend` checkout. It records the state at that time: worktree and branch names, commit hashes and test counts below are old, and those paths are not the current layout (main now holds the integrated code; `.worktrees/backend` is a separate older checkout). Windows runs use `scripts/run-demo.ps1` from the repo root. For the current state, read [`README.md`](../README.md), [`PLAN.md`](../PLAN.md) and [`SUMMARY.md`](../SUMMARY.md). The integrated code is on `main`.
+
+
 # Connected demo handoff — 16 October 2026
 
 All implementation work is on `backend` at `D:\Uhackathon\.worktrees\backend`. Main was inspected through Git; its frontend and voice code matched this worktree's starting point, so no main worktree or frontend merge was required. Main remains at `14401ceeee54b8fb117c98426f9e634611b7c8a3`.

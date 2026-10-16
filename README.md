@@ -6,30 +6,30 @@
 
 Built for U-Hackathon 2026 (FLOW Summit, Bangkok, 15 to 16 Oct 2026), AI track. Icarus plugs into any finance app; U-topia is the first partner. (Planning notes from the hackathon are in [`docs/team-notes/`](docs/team-notes/).)
 
-**Live demo: LIVE_DEMO_URL** (opens with a one-minute tour by the mascot; turn your sound on)
+**Live demo: no public URL yet.** No deployment has been verified, so none is linked here. Run it locally (see [Showcase](#showcase-run-everything-with-one-command)); the app opens with a one-minute tour by the mascot, so turn your sound on. Hosting config exists but is untested on a real host: a [`Dockerfile`](Dockerfile) and [`render.yaml`](render.yaml) for Render, and a Vercel guide in [`docs/hosting-vercel.md`](docs/hosting-vercel.md).
 
 ![The mascot's tour, left to right: hello; gold's year on the chart; no advice on "should I buy"; a 1,000 baht gold buy filled in and stopped at Confirm; an answer in Thai; a ride request handed to U-Bot, written for it](docs/media/tour-storyboard.png)
 
-[Watch the tour (57 s video)](docs/media/icarus-tour.mp4) · [as a GIF](docs/media/icarus-tour.gif). Recorded from the live app; the video has no sound, the captions are what the mascot says.
+[Watch the tour (57 s video)](docs/media/icarus-tour.mp4) · [as a GIF](docs/media/icarus-tour.gif). Recorded from the running app; the video has no sound, the captions are what the mascot says.
 
 ## Try it in two minutes
 
 1. **Watch the tour**, or tap **Tour** in the corner any time. The mascot shows everything below on the real screens.
 2. Open Icarus (the mascot button) and say or type **"Put 1,000 baht in gold."** Icarus fills in the buy screen, reads back the amount, fee and total, and stops at Confirm. You tap.
-3. **"How did bitcoin do this year?"** A chart, with the numbers from live data.
+3. **"How did bitcoin do this year?"** A chart, with numbers from market data.
 4. **"Should I buy bitcoin?"** Icarus won't pick for you. It offers facts instead.
 5. **"ดูราคาทองคำ"** It speaks Thai too.
 6. **"Book me a ride to Siam Paragon."** Not a finance task: Icarus writes the request for U-Bot, U-topia's own assistant, and opens it.
 7. **The race:** in the side panel, buy 1,000 baht of gold by tapping through the app, then again by voice. A stopwatch times both.
 8. **The business view:** the dashboard shows what users asked and where they got stuck.
 
-**What is real:** live prices (Binance, Frankfurter for baht), ElevenLabs voice (Scribe v2 Realtime listening, Flash v2.5 and v4 Turbo speaking), the AI answers, and the U-Bot link. **What is demo:** the account (every visitor gets their own 5,000 baht), the fee rule (0.25%, at least 5 baht), and the purchases: no real money moves.
+**What is real when the backend is connected:** market prices (Binance, Frankfurter for baht; the app shows when they were last updated, and marks them delayed once they are more than two minutes old), ElevenLabs voice (Scribe v2 Realtime listening, Flash v2.5 and v4 Turbo speaking), the AI answers, and the U-Bot link. **What is demo:** the account (every visitor gets their own 5,000 baht), the fee rule (0.25%, at least 5 baht), and the purchases: no real money moves.
 
 ## How it works
 
 ![How Icarus works: you ask (voice or text, English or Thai); it listens (ElevenLabs Scribe); it thinks (code works out what you want first, the AI only finds the words); it shows (one sentence out loud while it moves the screens); you tap Confirm. It thinks with prepared answers, an AI model in the cloud with a backup, live data and house rules. Non-finance requests are written up for U-Bot, and every question feeds a friction map.](docs/media/architecture.png)
 
-Code does the work, the AI finds the words. The backend works out what the user wants and gets the numbers first (prepared fact sheets, refreshed with every price), so plain requests never wait for an AI: 8 everyday questions went from 42 s to 3 s in total (measured 16 Oct 2026). New questions get one short AI call, and a backup model answers if the first is slow; asked again within 5 minutes, they come back instantly. New questions are logged, so the most-asked ones become prepared answers. A 100-question battery (`backend/scripts/battery100.py`) checks the answers and the house rules. Drawn in [`docs/architecture.html`](docs/architecture.html).
+Code does the work, the AI finds the words. The backend works out what the user wants and gets the numbers first (prepared fact sheets, refreshed with every price), so plain requests never wait for an AI: 8 everyday questions went from 42 s to 3 s in total (measured 16 Oct 2026). New questions get one short AI call, and a backup model answers if the first is slow; if the same opening question is asked again on the same screen within 5 minutes, and the facts it would quote have not changed, the saved answer comes back instantly. Only a first question is saved this way. Answers that use a person's own account or history are kept per account and are never shared. New questions are logged, so the most-asked ones become prepared answers. A 100-question battery (`backend/scripts/battery100.py`) checks the answers and the house rules. Drawn in [`docs/architecture.html`](docs/architecture.html).
 
 ## The problem
 
@@ -43,7 +43,7 @@ The first week decides everything, and most users quit before they understand th
 
 ## What the user gets
 
-1. **Ask about anything on screen.** "What does this red number mean?" Icarus answers with the user's live data.
+1. **Ask about anything on screen.** "What does this red number mean?" Icarus answers with the user's own account data.
 2. **Show me.** Icarus highlights the next button or field on the real screen.
 3. **Say it instead of tapping through it.** "Put 1,000 baht in gold." Icarus turns a multi-step trade screen into one sentence and a preview card with one confirm button.
 4. **Voice or text**, English or Thai.
@@ -88,11 +88,14 @@ A volunteer who has never used a crypto app is asked to buy 1,000 baht of gold, 
 ./demo.sh
 ```
 
-It builds the app, starts the voice server and the backend, and opens **http://localhost:8787/app/?backend=http://localhost:8001**. Needs `voice/.env` with the ElevenLabs key (see `voice/.env.example`).
+It builds the app, starts the voice server and the backend, checks the backend's `/health`, and opens **http://localhost:8787/app/?backend=http://localhost:8001**. It runs the backend's legacy engine on purpose (the real-model path). Needs `voice/.env` with the ElevenLabs key (see `voice/.env.example`).
 
 - **With a model** (Ollama with the `icarus` model, or `backend/.env` with `LLM_PROVIDER=groq` and `GROQ_API_KEY`): the real brain answers everything.
-- **Without one:** the backend runs its stand-in brain. Buys, charts and how-to steps come from the backend with live prices; any other question gets the prototype's own scripted answer. If the backend fails or is slow, the app also falls back to the scripted answer, so nothing dead-ends on stage.
-- `./demo.sh --app-only` runs the prototype's scripted answers only: the safest mode.
+- **Without one:** the backend runs its stand-in brain (simple rules, no AI). Buys, charts and how-to steps, and the common questions it has prepared answers for (prices, fees, "what is bitcoin?", "should I buy?"), still come from the backend with market prices. Anything else fails on purpose and the app falls back as below.
+- **If the backend cannot answer** (down, no model, slow): a plain screen move may use the prototype's scripted answer, labelled "Scripted demo answer". Anything else gets an honest reply: "Sorry, I can't answer that one right now," with three things that still work. Icarus does not invent an answer. See [`qa/failure-drills.md`](qa/failure-drills.md).
+- `./demo.sh --app-only` runs the prototype's scripted answers only, with no backend.
+- **Windows:** `scripts/run-demo.ps1` starts the voice server and the backend's model engine. By default all of it is offline: the model's offline preview (not a live model), saved prices instead of live ones, and fake voice (tones). `-Gateway` uses the live model gateway and `-RealVoice` real speech (needs `voice/.env`). Build the frontend first.
+- **Any platform, no key and no backend:** `cd voice && npm run dev:fake`, then open http://localhost:8787/app/.
 - A buy ("Put 1,000 baht in gold") fills in the app's own buy screen and stops on Review purchase. Icarus reads back the numbers on that screen, and the volunteer taps Confirm purchase (the stopwatch stops there).
 - Voice needs a microphone the browser may use: open the app in Chrome or Brave and allow the mic.
 

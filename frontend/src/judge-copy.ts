@@ -8,7 +8,7 @@
 
 export const JUDGE_COPY: ReadonlyArray<readonly [string, string]> = [
   ['Icarus demo console', 'Try Icarus yourself'],
-  ['Hackathon scenarios. Prices, balances and assistant replies are demo data.', 'Live prices, demo account. Nothing real is bought.'],
+  ['Hackathon scenarios. Prices, balances and assistant replies are demo data.', 'Real market prices when connected, otherwise demo data. Demo account: nothing real is bought.'],
   ["title:'Without Icarus',sub:'Resets to Home, starts timer. Stops at confirmation.'",
     "title:'Race 1: without Icarus',sub:'Buy ฿1,000 of gold by tapping through the app. The stopwatch stops at Confirm.'"],
   ["title:'With Icarus',sub:'Opens voice and starts timer. Say “Put 1,000 baht in gold”.'",

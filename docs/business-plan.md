@@ -216,13 +216,13 @@ What to watch: voice and token prices move the number of paying users we need mo
 | "Isn't the model a cost risk?" | The model is about 0.10 THB a question. If token prices doubled we would need about 271,000 paying users instead of 162,000 for a 20% margin, or we move to the cheaper host or the smaller model (section 7). |
 | "Why not your own GPUs?" | A GPU sized for the busiest hour sits idle most of the day; the API charges only for what is used. We rent GPUs, in Thailand, when a partner needs its data kept there. |
 | "What about Thai?" | Thai voice is on ElevenLabs v4 Turbo (Flash does not speak Thai). iApp measured Qwen3.8-27B at 0.82 on OpenThaiEval. Every Thai line is marked for review by a Thai speaker. Scribe's Thai accuracy is rated "Good" (10 to 20% word error), so typing stays available. |
-| "Where does the data go?" | U-topia's own policy says it processes data in the US. For Thai-regulated partners we can run the model on GPUs in Thailand. Under the PDPA, keeping data on an overseas server no third party can access is not a transfer. |
+| "Where does the data go?" | U-topia's own policy says it processes data in the US. For Thai-regulated partners we can run the model on GPUs in Thailand. Under the PDPA, keeping data on an overseas server no third party can access is not a transfer (a legal reading we have not had checked). Today, voice and AI requests also go to outside providers (ElevenLabs and the AI model provider), and both servers log what users say locally: the backend each question's text, the voice server each spoken transcript with user and session ids. |
 
 ## 9. Rules we already follow
 
 - **Bank of Thailand AI risk guidelines (Sep 2025):** tell users they are talking to AI, give a way to reach staff, ground answers in the firm's own data. Icarus labels itself, hands off to people or U-Bot, and every number comes from a tool or the screen.
 - **SEC Thailand:** paid advice on digital assets is a licensed activity. Icarus gives no advice (hard rule 1).
-- **PDPA:** personal data stays with the partner's systems. The friction map shows patterns, not people.
+- **PDPA:** this is a design goal, not a finished claim. The backend logs the text of every question locally, with its screen, language and route (`backend/.runtime/questions.jsonl`; `QUESTION_LOG=0` turns it off), and the voice server logs every final spoken transcript with user and session ids (`voice/logs/friction.jsonl`). Requests to the AI model provider and to ElevenLabs leave the app and the partner's systems. Keeping personal data with the partner needs extra work (redaction, retention limits, a data-processing agreement) that is not built yet. The friction dashboard is meant to show patterns, not people, but the raw logs are not anonymous.
 - **Voice is never approval.** Every purchase is confirmed by a tap (hard rule 4).
 
 ## 10. The next 12 months

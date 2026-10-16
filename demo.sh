@@ -4,8 +4,10 @@
 #   Builds the app, starts the voice server (ElevenLabs voices) and the backend (the brain), then opens the app.
 #   - With a model the real brain answers everything. A model means backend/.env has LLM_PROVIDER=groq and
 #     GROQ_API_KEY (or gemini and GEMINI_API_KEY), or Ollama is running with the "icarus" model.
-#   - Without a model the backend runs its stand-in brain: buys, charts and how-to steps come from the real backend
-#     (live prices); anything else gets the prototype's own scripted demo answers. Nothing dead-ends either way.
+#   - Without a model the backend runs its stand-in brain: buys, charts, how-to steps and the prepared common
+#     questions (prices, fees, "what is bitcoin?") come from the real backend (live prices). Anything else the backend
+#     refuses on purpose; the app then uses a labelled scripted demo answer for a plain screen move, and an honest
+#     "can't answer right now" with suggestions for the rest (see qa/failure-drills.md).
 #
 #   ./demo.sh --app-only    the prototype's scripted answers only, no backend (the safest mode)
 #   ./demo.sh --no-open     do not open the browser
@@ -84,7 +86,7 @@ if [ "$APP_ONLY" = 0 ]; then
       (cd backend && ASSISTANT_ENGINE=legacy .venv/bin/uvicorn app.main:app --port "$BACKEND_PORT" >"$ROOT/.demo-backend.log" 2>&1) &
     else
       say "No model on this machine: starting the backend with its stand-in brain on port $BACKEND_PORT..."
-      echo "  Buys, charts and how-to steps come from the backend; other questions get the prototype's scripted answers."
+      echo "  Buys, charts, how-to steps and prepared common questions come from the backend; anything else gets a labelled scripted screen move or an honest \"can't answer right now\"."
       (cd backend && ASSISTANT_ENGINE=legacy .venv/bin/python -m scripts.stand_in_brain --port "$BACKEND_PORT" >"$ROOT/.demo-backend.log" 2>&1) &
     fi
     PIDS+=($!)
