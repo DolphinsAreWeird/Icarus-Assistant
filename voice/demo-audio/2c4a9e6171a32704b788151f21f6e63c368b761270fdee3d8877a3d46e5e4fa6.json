@@ -1,0 +1,10 @@
+{
+  "voiceId": "OgYaI2gRZaQ7b2dSmv2Z",
+  "model": "eleven_flash_v2_5",
+  "speed": 1,
+  "text": "That's the tour. Your turn now! Tap the mic, or type anything.",
+  "outputFormat": "pcm_24000",
+  "sampleRate": 24000,
+  "bytes": 149350,
+  "createdAt": "2026-10-16T06:02:10.921Z"
+}

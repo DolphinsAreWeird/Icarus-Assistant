@@ -1,0 +1,10 @@
+{
+  "voiceId": "OgYaI2gRZaQ7b2dSmv2Z",
+  "model": "eleven_flash_v2_5",
+  "speed": 1,
+  "text": "Hi, I'm Icarus! I live inside your finance app. Ask me anything, out loud or by typing, in English or Thai.",
+  "outputFormat": "pcm_24000",
+  "sampleRate": 24000,
+  "bytes": 334368,
+  "createdAt": "2026-10-16T06:01:24.718Z"
+}
