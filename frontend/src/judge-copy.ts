@@ -75,20 +75,17 @@ export const JUDGE_COPY: ReadonlyArray<readonly [string, string]> = [
   ["'Icarus flow was '+(s.results.A/s.results.B).toFixed(1)+'× faster':'Manual flow was faster this run'",
     "'With Icarus: '+(s.results.A/s.results.B).toFixed(1)+'× faster than by hand':'By hand was faster this time. Try race 2 by voice.'"],
   // The two races are the point of the demo: make them the first thing a visitor sees and taps. Every row gets
-  // quiet defaults (transparent), the two Start rows a tinted card, a ring and a pulsing button; the stopwatch gets a ring.
-  ...['Say', 'Open', 'Talk', 'Run'].map((btn): readonly [string, string] => [`,btn:'${btn}',on:`, `,hl:'transparent',ring:'transparent',pulse:'none',btn:'${btn}',on:`]),
+  // quiet defaults (transparent), the two Start rows a tinted card and a ring; the stopwatch gets a ring. Nothing flashes or moves.
+  ...['Say', 'Open', 'Talk', 'Run'].map((btn): readonly [string, string] => [`,btn:'${btn}',on:`, `,hl:'transparent',ring:'transparent',btn:'${btn}',on:`]),
   ...['A', 'B'].map((k): readonly [string, string] => [`,btn:'Start',on:()=>this.scenario('${k}')`,
-    `,hl:'#FFEAF1',ring:'#E67895',pulse:'icPulse 1.8s ease-in-out infinite',btn:'Start',on:()=>this.scenario('${k}')`]),
+    `,hl:'#FFEAF1',ring:'#E67895',btn:'Start',on:()=>this.scenario('${k}')`]),
   ['<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #F8E8EC">\n<div style="width:30px;height:30px;border-radius:50%;background:#FDECF1;color:#C94F72;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex:none">{{ c.k }}</div>',
     '<div style="display:flex;align-items:center;gap:12px;padding:12px;margin-top:8px;border-radius:18px;background:{{ c.hl }};box-shadow:inset 0 0 0 2px {{ c.ring }}">\n<div style="width:30px;height:30px;border-radius:50%;background:#FDECF1;color:#C94F72;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex:none">{{ c.k }}</div>'],
-  ['<div onClick="{{ c.on }}" style="height:34px;padding:0 14px;border-radius:17px;background:#C94F72;color:#fff;display:flex;align-items:center;font-size:13px;cursor:pointer;flex:none">',
-    '<div onClick="{{ c.on }}" style="height:34px;padding:0 14px;border-radius:17px;background:#C94F72;color:#fff;display:flex;align-items:center;font-size:13px;cursor:pointer;flex:none;animation:{{ c.pulse }}">'],
   ['<div style="display:flex;flex-direction:column;margin-top:10px">\n<sc-for list="{{ scenarios }}"',
     '<div style="margin-top:12px;display:inline-block;background:linear-gradient(90deg,#E67895,#C94F72);color:#fff;font-size:12px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;padding:6px 12px;border-radius:12px">The race: try both</div>\n' +
     '<div style="display:flex;flex-direction:column;margin-top:4px">\n<sc-for list="{{ scenarios }}"'],
-  ['@keyframes icIn{', '@keyframes icPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,79,114,.5)}50%{box-shadow:0 0 0 10px rgba(201,79,114,0)}}@keyframes icIn{'],
   ['<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04)">\n<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:16px;font-weight:500">Stopwatch</div>',
-    '<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 0 0 5px #E67895,0 10px 28px rgba(201,79,114,.22)">\n<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:16px;font-weight:500">Stopwatch</div>'],
+    '<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 0 0 4px #E67895,0 10px 28px rgba(201,79,114,.22)">\n<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:16px;font-weight:500">Stopwatch</div>'],
 ];
 
 const CONTACTLESS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M8.5 7.5a6 6 0 0 1 0 9M12 5a9.5 9.5 0 0 1 0 14M15.5 2.5a13 13 0 0 1 0 19"/></svg>';
