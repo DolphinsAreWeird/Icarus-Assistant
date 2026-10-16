@@ -9,6 +9,8 @@ import { createDcApp, installHelmet } from './dc-runtime';
 import { hideHandoffCard, showHandoffCard } from './handoff-card';
 import { hideTradeCard, showTradeCard } from './trade-card';
 import { renderUbotMock } from './ubot-mock';
+import { withJudgeCopy } from './judge-copy';
+import { installTour, type TourInstance } from './tour';
 import { installUtopiaRouting, withUtopiaRouting, type PrototypeInstance } from './utopia-bridge';
 import { attachTts, installVoice } from './voice-bridge';
 import { installDemoData } from './demo-data';
@@ -124,9 +126,9 @@ async function main() {
   if (!res.ok) throw new Error(`Could not load the page (${res.status}).`);
   // With a backend the fee follows the backend's rule (demo-data.ts), so the design's fixed "(1%)" label would be
   // wrong next to the amount. The amount on the screen is the backend's; the label just says what it is.
-  const html = backend
-    ? (await res.text()).replaceAll('Transaction fee (1%)', 'Transaction fee')
-    : await res.text();
+  // The side console speaks to visitors on their own, not to a presenter (judge-copy.ts).
+  const page = withJudgeCopy(await res.text());
+  const html = backend ? page.replaceAll('Transaction fee (1%)', 'Transaction fee') : page;
 
   // Use the real mascot images if they are served next to the app. If not, draw placeholders.
   const hasMascots = await fetch('mascot/bow/hero.png', { method: 'HEAD' }).then((r) => r.ok && (r.headers.get('content-type') ?? '').startsWith('image/'), () => false);
@@ -208,6 +210,20 @@ async function main() {
             }),
         });
       }
+      // The mascot's one-minute tour (tour.ts): offered on a first visit, and from the "Tour" pill any time.
+      const tourParam = PARAMS.get('tour');
+      installTour(
+        {
+          getInstance: () => instance as unknown as TourInstance | null,
+          showHandoff: (info) => showHandoffCard(info, { th: false, getPhone }),
+          hideCards: () => {
+            hideTradeCard();
+            hideInfoCard();
+            hideHandoffCard();
+          },
+        },
+        { offer: tourParam === '0' ? 'never' : tourParam === '1' ? 'always' : 'auto' },
+      );
       void describeServer().then((text) => status(backend ? `${text} Brain: backend at ${backend.url} (user ${backend.userId}).` : text));
     } else if (Date.now() - started > 5000) {
       clearInterval(wait);

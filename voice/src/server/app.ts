@@ -308,7 +308,7 @@ export function createApp(deps: AppDeps): express.Express {
   if (deps.ubotSessions) mountUbotMock(app, deps.ubotSessions);
 
   // The public demo opens on the app. The voice test page stays at /index.html.
-  if (cfg.publicDemo) app.get('/', (_req, res) => res.redirect(302, '/app/'));
+  if (cfg.publicDemo) app.get('/', (req, res) => res.redirect(302, '/app/' + (req.originalUrl.match(/\?.*$/)?.[0] ?? '')));
 
   app.use('/app', express.static(path.join(VOICE_ROOT, '..', 'frontend', 'dist')));
 
