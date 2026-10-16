@@ -202,11 +202,12 @@ def refresh_dynamic_memory(memory):
     return cleaned
 
 
-def answer(message, *, language="en", profile_id="new", today="2026-10-15", model=None,
+def answer(message, *, language="en", profile_id="new", today=None, model=None,
            offline=False, screen_context=None, memory=None,profile_updates=None,profile_provenance=None,data_adapter=None):
     started = time.perf_counter()
     if language not in ("en","th") or not isinstance(message,str) or not message.strip() or len(message)>12000:
         raise ValueError("INVALID_REQUEST")
+    today = date.today().isoformat() if today is None else today
     date.fromisoformat(today)
     profile = merge_profile(load_profile(profile_id),profile_updates or {})
     if data_adapter is not None:
@@ -222,7 +223,7 @@ def answer(message, *, language="en", profile_id="new", today="2026-10-15", mode
                 evidence.setdefault(source["id"],source["data"])
     timings, tool_results = [],{}
     turn_id = uuid.uuid4().hex[:8]
-    base = {"language":language,"profile_id":profile_id,"profile_origin":profile["origin"],
+    base = {"language":language,"profile_id":profile_id,"profile_origin":profile["origin"],"calculation_date":today,
             "app_data_available":data_adapter is not None,
             "profile_context":profile,"profile_provenance":profile_provenance or {},
             "guidance_context":guidance_context(profile),
@@ -263,11 +264,19 @@ def answer(message, *, language="en", profile_id="new", today="2026-10-15", mode
         refs = list(dict.fromkeys([*refs,*tool_results]))
         limitations = list(limitations or [])
         cited = [{"id":ref,"data":evidence[ref]} for ref in refs if ref in evidence]
+        successful_tools = [row["data"] for row in cited if "tool" in row["data"] and
+                            row["data"].get("data", {}).get("status") not in ("error", "unavailable")]
         app_records = [row["data"] for row in cited if row["data"].get("tool") in ("get_prices","get_portfolio","explain_displayed_chart") and "snapshot_id" in row["data"].get("data",{})]
-        historical_records = [row for row in cited if row["data"].get("tool") in ("get_history_summary","compare_assets","what_if","get_risk_forecast")]
-        if app_records and not historical_records:
-            # A model-selected canned limitation may describe the wrong currency/source.
-            limitations = [item for item in limitations if item!=LIMITATIONS["historical_only"][language]]
+        historical_records = [row for row in successful_tools if row["tool"] in ("get_history_summary","compare_assets","what_if","get_risk_forecast")]
+        # Data origin/currency labels follow actual cited tools, not model guesses.
+        derived_codes = ("historical_only", "experimental_forecast", "mock_account", "synthetic_data", "saved_reference")
+        limitations = [item for item in limitations if item not in {LIMITATIONS[code][language] for code in derived_codes}]
+        if historical_records:
+            limitations.append(LIMITATIONS["historical_only"][language])
+        if any(row["tool"] == "get_risk_forecast" for row in historical_records):
+            limitations.append(LIMITATIONS["experimental_forecast"][language])
+        if any(row["tool"] in ("calculate_fee", "get_portfolio") and row["data"].get("origin") == "synthetic" for row in successful_tools):
+            limitations.append(LIMITATIONS["mock_account"][language])
         app_sources = []
         for record in app_records:
             data = record["data"]
@@ -411,7 +420,7 @@ def main():
     parser.add_argument("message",nargs="?")
     parser.add_argument("--lang",choices=["en","th"],default="en")
     parser.add_argument("--profile",choices=list(read_json(ROOT / "data" / "profiles.json")),default="new")
-    parser.add_argument("--today",default="2026-10-15",help="Explicit demo date, YYYY-MM-DD")
+    parser.add_argument("--today",default=None,help="Override the local current date for a fixed demo, YYYY-MM-DD")
     parser.add_argument("--offline",action="store_true")
     parser.add_argument("--interactive",action="store_true")
     parser.add_argument("--model",default=None)
@@ -434,6 +443,8 @@ def main():
             path = session_path(args.session)
             if path.exists():
                 state = ConversationSession.load(args.session)
+                if args.today is not None:
+                    state.set_calculation_date(args.today)
         except (ValueError,KeyError,TypeError,OSError) as exc:
             parser.error(f"Cannot load session: {type(exc).__name__}")
     if not args.interactive and not args.message:

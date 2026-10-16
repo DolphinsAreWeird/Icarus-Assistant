@@ -45,7 +45,7 @@ def parse_intent(message):
         "how do i buy": ("show_steps", {"topic": "buy"}), "ซื้อยังไง": ("show_steps", {"topic": "buy"}),
         "show me how to buy": ("show_steps", {"topic": "buy"}),
         "freeze my card": ("set_card_frozen", {"frozen": True}), "ล็อกบัตรของฉัน": ("set_card_frozen", {"frozen": True}),
-        "unfreeze my card": ("set_card_frozen", {"frozen": False}),
+        "unfreeze my card": ("set_card_frozen", {"frozen": False}), "ปลดล็อกบัตรของฉัน": ("set_card_frozen", {"frozen": False}),
         "hide my balance": ("set_balances_hidden", {"hidden": True}), "show my balance": ("set_balances_hidden", {"hidden": False}),
         "go back": ("go_back", {}), "cancel that": ("cancel_trade", {}), "cancel the preview": ("cancel_trade", {}),
         "ยกเลิก": ("cancel_trade", {}),
@@ -59,7 +59,7 @@ def handle_intent(req, state, cache, user_id, lang):
         return None
     name, args = intent
     ctx = ToolContext(state=state, cache=cache, user_id=user_id, lang=lang, screen=req.screen_context,
-                      snapshot=None, ui_state=ui.state_from_snapshot(req.snapshot,
+                      snapshot=None, card_frozen=bool((req.snapshot or {}).get("card_frozen")), ui_state=ui.state_from_snapshot(req.snapshot,
                       req.screen_context.screen_id if req.screen_context else None,
                       req.screen_context.selected_asset if req.screen_context else None))
     result = TOOLS[name](ctx, **args)
@@ -73,9 +73,13 @@ def handle_intent(req, state, cache, user_id, lang):
           "show_chart": "นี่คือกราฟราคาย้อนหลังที่บันทึกไว้ ไม่ใช่การคาดการณ์ผลตอบแทนในอนาคต",
           "show_steps": "นี่คือขั้นตอน แตะแสดงให้ดูเพื่อค้นหาปุ่มแต่ละปุ่ม", "cancel_trade": "ยกเลิกรายการแล้ว ยังไม่มีการซื้อ"}
     text = (en if lang == "en" else th).get(name, "Done. Check the screen." if lang == "en" else "เรียบร้อย ตรวจสอบบนหน้าจอได้เลย")
-    if not ok:
+    if ok and name == "cancel_trade" and "no open preview" in str(data.get("done", "")):
+        text = "There was no open preview to cancel." if lang == "en" else "ไม่มีรายการที่ต้องยกเลิก"
+    if not ok and data.get("reason") == "card_frozen":
+        text = ({"en": 'Your card is frozen, so buying is blocked. Unfreeze it first, then try again.', "th": 'บัตรของคุณถูกล็อก จึงซื้อไม่ได้ ปลดล็อกก่อน แล้วลองใหม่อีกครั้งนะ'})[lang]
+    elif not ok:
         text = "I couldn't prepare that request. Check the amount, balance and supported asset." if lang == "en" else "ยังเตรียมรายการนี้ไม่ได้ โปรดตรวจสอบจำนวนเงิน ยอดคงเหลือ และสินทรัพย์ที่รองรับ"
-    return ChatReply(text=text, speech=text, speak=True, ui_actions=ui.finalize(ctx.ui_actions) if ok else [],
+    return ChatReply(text=text, speech=text, speak=req.input_mode == "voice", ui_actions=ui.finalize(ctx.ui_actions) if ok else [],
                      sources=[SourceRef(result_id=result.get("result_id", "demo_" + uuid4().hex), tool=name,
                                         provider=source.get("provider", "Icarus demo tools"),
                                         as_of=source.get("as_of"), freshness=source.get("freshness", "simulated"))],

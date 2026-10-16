@@ -17,7 +17,7 @@ def main():
     for case in cases:
         if args.lang != "both" and case["language"] != args.lang:
             continue
-        state = ConversationSession(case["profile"],case["language"])
+        state = ConversationSession(case["profile"],case["language"],today="2026-10-15")
         turns = []
         for step in case["turns"]:
             result = state.ask(step["message"],offline=not args.live)

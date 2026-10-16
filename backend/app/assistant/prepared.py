@@ -10,6 +10,13 @@ Matching, after normalize(): the question is one of the listed ways (exact); or 
 content words in any order, give or take a few small words; or, for Thai, which has no spaces to
 split words on, it is nearly the same string with the same assets and numbers. A near miss goes to
 the model, never to a wrong answer.
+
+Only a question that clearly IS a listed one gets its answer. A vague, open or context-dependent one
+("help", "is it safe?", "what is this?", "who?") goes to the model, which answers about the screen
+and the conversation: such ways are not listed, and a near match needs at least one word that says
+what is asked, beyond question words and pointing words. A definition (a glossary term, a listed
+"what is X") doesn't near-match a question with "the": "what's the balance?" asks about the one on
+screen, not about the word.
 """
 import difflib
 import json
@@ -27,6 +34,10 @@ PATH = DATA_DIR / "prepared_answers.json"
 # Small words that don't change what is asked. Not "my" (personal), "this" (the screen), "what" or "how".
 STOP = {"a", "an", "the", "is", "are", "was", "do", "does", "did", "can", "could", "would", "will", "you", "your",
         "i", "me", "please", "just", "now", "right", "really", "exactly", "actually", "so", "to", "for", "of", "it"}
+# Words that don't say what is asked on their own: "who?", "what is it", "what is this" lean on the screen
+# or the conversation, so they never near-match.
+QUESTION_WORDS = {"what", "how", "why", "who", "where", "when", "which"}
+POINTING = {"this", "that", "these", "those", "here", "there"}
 THAI_MIN_RATIO = 0.9
 SLOT = re.compile(r"\{(\w+)\.(\w+)\}")
 GLOSSARY_WAYS = {"en": ["what is {x}", "what is a {x}", "what is an {x}", "what are {x}", "what does {x} mean",
@@ -100,10 +111,20 @@ class PreparedAnswers:
             same = assets_in(candidate_norm) == assets_in(norm) and numbers_in(candidate_norm) == numbers_in(norm)
             entry = entry if same else None
         else:
-            entry = self.by_words.get(content_words(norm))
+            words = content_words(norm)
+            if not words - QUESTION_WORDS - POINTING:
+                return None
+            entry = self.by_words.get(words)
+            if entry and "the" in norm.split() and self._is_definition(entry):
+                return None  # "what's the balance?", "what's the risk?": the one on screen, not the word
         if entry and asks_for_advice(text) and not self._is_advice(entry):
             return None  # "recommend" and friends: the model handles the nuance
         return entry
+
+    @staticmethod
+    def _is_definition(entry: dict) -> bool:
+        """A glossary term or a listed "what is X" answer: it explains a word, not what's on screen."""
+        return entry["id"].startswith(("glossary:", "what_is_"))
 
     @staticmethod
     def _is_advice(entry: dict) -> bool:
@@ -121,6 +142,8 @@ class PreparedAnswers:
             kind = args.pop("kind")
             if args.get("asset_id") == "here":
                 args["asset_id"] = here or ctx.ui_state.asset
+            if kind == "advice":
+                args.setdefault("asset_id", here)  # "what should I buy?" on gold's page: about gold
             done = run(Intent(kind, args), ctx, facts, lang, llm, user_text)
             if done is None:
                 return None

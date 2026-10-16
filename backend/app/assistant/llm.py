@@ -406,10 +406,10 @@ def _json_calls(body: str, known: set[str]) -> list[dict]:
     while (start := body.find("{", pos)) != -1:
         try:
             obj, pos = decoder.raw_decode(body, start)
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, RecursionError):  # garbage, or JSON nested too deep to read
             pos = start + 1
             continue
-        if isinstance(obj, dict) and obj.get("name") in known:
+        if isinstance(obj, dict) and isinstance(obj.get("name"), str) and obj["name"] in known:
             calls.append({"id": f"text_call_{len(calls)}", "type": "function",
                           "function": {"name": obj["name"],
                                        "arguments": json.dumps(obj.get("arguments", {}))}})
@@ -424,7 +424,8 @@ def tool_calls_in_text(content: str, known: set[str]) -> tuple[str, list[dict]]:
     for block in TEXT_CALL_BLOCK.finditer(content):
         calls += _json_calls(block.group(2), known)
     content = TEXT_CALL_BLOCK.sub("", content)
-    if not calls:
+    # A bare call is the whole reply. JSON quoted inside a normal sentence is just text, not a call to run.
+    if not calls and content.lstrip()[:1] in ("{", "<", "`", "["):
         calls = _json_calls(content, known) or _tag_calls(content, known)
         if calls:  # the whole reply was the call; drop it so it isn't shown or spoken
             content = ""

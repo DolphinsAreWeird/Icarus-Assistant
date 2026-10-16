@@ -41,6 +41,7 @@ class ToolContext:
     ui_state: ui.UIState = field(default_factory=ui.UIState)
     results: dict = field(default_factory=dict)      # result_id -> envelope
     ui_actions: list = field(default_factory=list)
+    card_frozen: bool = False                        # the app says the card is frozen: buying is blocked
 
 
 def tool_specs() -> list[dict]:
@@ -178,6 +179,9 @@ def get_prices(ctx: ToolContext, asset_ids: list[str]) -> dict:
 def get_history(ctx: ToolContext, asset_id: str, period: str) -> dict:
     data_id = _data_id(asset_id)
     s = summarize(period_rows(data_id, period)) if data_id else None
+    if data_id is None:
+        return _envelope(ctx, "get_history", {"asset_id": asset_id, "period": period, "available": False,
+                                              "note": "no price history for this asset"}, "app_ui.json")
     return _envelope(ctx, "get_history", {"asset_id": asset_id, "period": period, "summary": s,
                                           "say": _say_summary(s, period, ctx.lang)},
                      "binance history snapshot", s["end"]["t"] if s else None, "snapshot")
@@ -207,17 +211,22 @@ def explain_element(ctx: ToolContext, element_id: str) -> dict:
     if snap and element["screen_data"]:
         # Explain what is on the screen, with the screen's own numbers.
         part = element["screen_data"]
-        # The app sends every amount in baht (getContext in the prototype).
-        chart = snap.get("chart") or {}
-        live = {"chart": {"asset": (snap.get("asset") or {}).get("name"), "period": snap.get("period"),
-                          "currency": "THB", **chart,
-                          "say": {k: display.baht(v, ctx.lang) for k, v in chart.items()
-                                  if k in ("start", "end", "high", "low") and isinstance(v, (int, float))}
-                          | ({"change": display.change(chart["change_pct"], ctx.lang)}
-                             if isinstance(chart.get("change_pct"), (int, float)) else {})},
-                "asset": {"currency": "THB", **(snap.get("asset") or {})},
-                "buy": snap.get("buy") and {"currency": "THB", **snap["buy"]},
-                "portfolio": {"currency": "THB", **(snap.get("portfolio") or {})}}[part]
+        # Which currency are the screen's numbers in? The backend demo adapter says THB. The plain prototype sends
+        # dollar fields (price_usd, value_usd). Never call dollars baht.
+        snap_asset = snap.get("asset") if isinstance(snap.get("asset"), dict) else {}
+        snap_pf = snap.get("portfolio") if isinstance(snap.get("portfolio"), dict) else {}
+        currency = snap.get("currency") or ("USD" if "price_usd" in snap_asset or "value_usd" in snap_pf else "THB")
+        chart = snap.get("chart") if isinstance(snap.get("chart"), dict) else {}
+        say = {}
+        if currency == "THB":  # ready-to-say baht wording only when the numbers really are baht
+            say = {k: display.baht(v, ctx.lang) for k, v in chart.items()
+                   if k in ("start", "end", "high", "low") and isinstance(v, (int, float))}
+        if isinstance(chart.get("change_pct"), (int, float)):
+            say["change"] = display.change(chart["change_pct"], ctx.lang)  # a percentage has no currency
+        live = {"chart": {"asset": snap_asset.get("name"), "period": snap.get("period"), "currency": currency, **chart, "say": say},
+                "asset": {"currency": currency, **snap_asset},
+                "buy": snap.get("buy") and {"currency": "THB", **snap["buy"]} if isinstance(snap.get("buy"), dict) else None,
+                "portfolio": {"currency": currency, **snap_pf}}[part]
         provider, freshness = "app screen (demo data)", "screen"
     elif not snap:
         app_asset = ctx.ui_state.asset
@@ -245,9 +254,11 @@ def explain_element(ctx: ToolContext, element_id: str) -> dict:
 
 
 def get_portfolio(ctx: ToolContext) -> dict:
-    if ctx.snapshot and ctx.snapshot.get("portfolio"):
-        # The app shows its own demo portfolio. Answer about what the user sees.
-        return _envelope(ctx, "get_portfolio", ctx.snapshot["portfolio"], "app screen (demo data)",
+    if ctx.snapshot and isinstance(ctx.snapshot.get("portfolio"), dict) and ctx.snapshot["portfolio"]:
+        # The app shows its own demo portfolio. Answer about what the user sees, in the currency it is in.
+        pf = ctx.snapshot["portfolio"]
+        currency = ctx.snapshot.get("currency") or ("USD" if "value_usd" in pf else "THB")
+        return _envelope(ctx, "get_portfolio", {"currency": currency, **pf}, "app screen (demo data)",
                          freshness="screen")
     data = portfolio(ctx.state.users[ctx.user_id], ctx.cache, _now_iso(ctx))
     return _envelope(ctx, "get_portfolio", data, "demo account", freshness="simulated")
@@ -272,6 +283,9 @@ def _ui_tool(planner):
 
 
 def prepare_trade_tool(ctx: ToolContext, asset_id: str, side: str, amount_thb: float) -> dict:
+    if side == "buy" and (ctx.card_frozen or (ctx.snapshot or {}).get("card_frozen")):
+        return {"ok": False, "reason": "card_frozen",
+                "message": "the card is frozen, so buying is blocked. The user can unfreeze it first, then buy"}
     data_id = _data_id(asset_id)
     if data_id is None:
         return {"ok": False, "reason": "no_data",

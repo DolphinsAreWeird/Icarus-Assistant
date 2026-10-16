@@ -1,4 +1,6 @@
-# Prototype status, 15 October 2026
+# Prototype status, 16 October 2026
+
+Final optimization checkpoint: 83 automated tests, both retrieval suites, six deterministic numeric cases and the offline conversation suite pass. All three market/forecast artifacts validate; 99 cached source archives verify with zero failures. The final six-case bilingual live smoke run passes structural checks. Money/date/asset grounding, atomic data publication, malformed-response fallbacks, natural calculation routing, provenance-derived limitations and runtime calendar dates are implemented. Use `python model/verify_checkpoint.py` for a network-blocked local check. See `OPTIMIZATION_LOG.md` for checkpoint results and deferred review items. Earlier notes below retain the project history.
 
 Latest checkpoint, 16 October 2026: work continues on the renamed `assistant-model` branch. Added causal daily-return intervals with separate selection/calibration/test periods, input-provenance hashes and empirical coverage reporting, alongside the existing variance baselines. Added four primary-source-backed bilingual knowledge records and a 28-query retrieval development set. See `MODEL_CARD.md` for real-data results and reproduction commands. The simple rolling reference remains competitive; no trading advantage or guaranteed interval coverage is claimed. Earlier chronological notes below describe prior checkpoints.
 

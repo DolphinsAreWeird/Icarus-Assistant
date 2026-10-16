@@ -5,15 +5,17 @@ import time
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import knowledge
+from app import knowledge, nudge
 from app.assistant.llm import ChatModel, LLMError, RateLimited
 from app.assistant.loop import Assistant, NoModel, UnknownUser
 from app.assistant.memo import QuestionLog
 from app.config import OFFLINE, POLL_INTERVAL_S
-from app.contracts import ChatReply, ChatRequest, ConfirmRequest, ErrorBody, PreviewRequest
+from app.contracts import ChatReply, ChatRequest, ConfirmRequest, ErrorBody, NudgeRequest, PreviewRequest
 from app.market.cache import PriceCache
 from app.market.history import PERIODS, period_rows, summarize
 from app.state import DemoState
@@ -37,6 +39,11 @@ ERRORS = {
     "not_enough_cash": ("Not enough baht in your balance.", "ยอดเงินไม่พอ"),
     "not_enough_holdings": ("You don't hold enough of that.", "คุณถือไม่พอ"),
 }
+
+
+def resolve_user(user_id: str) -> str:
+    """The voice server's default "demo-user" is the demo account."""
+    return os.getenv("DEMO_USER", "u_new") if user_id == "demo-user" else user_id
 
 
 def fail(status: int, code: str, **details):
@@ -109,6 +116,13 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
                 thread.join(timeout=30)
 
     app = FastAPI(title="Icarus backend", lifespan=lifespan)
+
+    @app.exception_handler(RequestValidationError)
+    async def bad_request(_: Request, exc: RequestValidationError):
+        """Bad input gets the same error shape as every other error: {code, message_en, message_th}."""
+        body = ErrorBody(code="bad_request", message_en="That request wasn't valid.", message_th="คำขอนี้ไม่ถูกต้อง").model_dump()
+        fields = [{"field": ".".join(str(x) for x in e["loc"][1:]), "problem": e["msg"]} for e in exc.errors()[:5]]
+        return JSONResponse(status_code=422, content={"detail": {**body, "fields": fields}})
     origins = os.getenv("CORS_ORIGINS", "http://localhost:8787,http://127.0.0.1:8787,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000")
     app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in origins.split(",") if o.strip()],
                        allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
@@ -195,10 +209,23 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
         except Exception as e:
             fail(502, "assistant_failed", reason=type(e).__name__)
 
+    @app.post("/nudge")
+    def get_nudge(req: NudgeRequest):
+        """Proactive help for a user who has been idle on a screen. Rule-based: no model, so it answers
+        instantly and also works when /chat is down. Returns {"nudge": null} when there is nothing useful to say."""
+        user = state.users.get(resolve_user(req.user_id))
+        if user is None:
+            fail(404, "unknown_user")
+        lang = req.lang or ("th" if str(req.snapshot.get("language")) == "th" else "en")
+        try:
+            return {"nudge": nudge.decide(req.snapshot, user["cash_thb"], lang)}
+        except Exception:  # a proactive hint must never break the screen
+            return {"nudge": None}
+
     @app.post("/trades/{preview_id}/confirm")
     def confirm(preview_id: str, body: ConfirmRequest):
         try:
-            return confirm_trade(state, body.user_id, preview_id)
+            return confirm_trade(state, resolve_user(body.user_id), preview_id)
         except TradeError as e:
             fail(404 if e.code == "preview_not_found" else 409, e.code, **e.details)
 
@@ -221,10 +248,11 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
 
     @app.post("/trades/preview")
     def preview(body: PreviewRequest):
-        if body.user_id not in state.users:
+        user_id = resolve_user(body.user_id)
+        if user_id not in state.users:
             fail(404, "unknown_user")
         try:
-            return prepare_trade(state, cache, body.user_id, body.asset_id, body.side, body.amount_thb)
+            return prepare_trade(state, cache, user_id, body.asset_id, body.side, body.amount_thb)
         except TradeError as e:
             fail(409, e.code, **e.details)
 
@@ -232,7 +260,7 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
     def cancel(preview_id: str, body: ConfirmRequest):
         with state.lock:
             item = state.previews.get(preview_id)
-            if item is None or item["user_id"] != body.user_id:
+            if item is None or item["user_id"] != resolve_user(body.user_id):
                 fail(404, "preview_not_found")
             if item["status"] == "pending":
                 item["status"] = "cancelled"

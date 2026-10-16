@@ -2,6 +2,8 @@
 
 Reviewed 16 October 2026, Bangkok time. Checkout: `main`, commit `b2b879fc79979ad95e5df0a3d8bae9de6deef566`.
 
+The model team's own status summary is in [model/SUMMARY.md](model/SUMMARY.md).
+
 ## Overall assessment
 
 Icarus has a substantial integrated demo: English/Thai voice, backend-driven navigation, deterministic financial tools, simulated purchases with tap confirmation, charts, guides, U-Bot handoff, a mascot tour and deployment configuration. It is beyond a collection of disconnected prototypes.
