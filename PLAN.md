@@ -21,7 +21,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 - [x] **I05: Preserve reviewed server preview terms.** Carry preview identity/terms into native review; never silently create and execute an unseen replacement.
 - [x] **I06: Protect public administrative reset.** Public visitors cannot globally reset other accounts or previews.
 - [x] **I07: Make QA failures enforceable.** High-severity scans and failed phone confirmation must produce failing run/exit status.
-- [ ] **I08: Separate hosted request budgets.** Avoid shared-IP starvation of account reads and confirmations; test multiple visitors and bursts.
+- [x] **I08: Separate hosted request budgets.** Avoid shared-IP starvation of account reads and confirmations; test multiple visitors and bursts.
 - [ ] **I09: Refresh and age visible market data.** Old observations cannot remain labeled live; cover idle/focus/reconnect and quote-review interactions.
 - [ ] **I10: Align launcher engines and readiness.** Explicit engine choice, accurate health/readiness, failed backend startup/hang checks.
 - [x] **I11: Settle failed fallback speech.** Clean up and settle every terminal playback outcome while keeping interrupted read-back unapproved.
@@ -54,6 +54,8 @@ The issue's commit subject identifies its checkpoint. Hashes will be collected a
 | I11 | `fix: settle failed fallback speech`: 9 settle regressions (double TTS/fallback failure, interrupted and failed read-back stay unapproved, mid-stream provider drop handed to fallback), 168 focused controller/confirm/barge-in tests, voice typecheck passed | Opus 5.5 High approved after fixes (stale-handle result ignored, speakingEnd on fallback error) |
 
 | I03 | `fix: ground legacy trade previews in the user request`: 306 full backend tests passed (OFFLINE pinned env); refusals for invented asset/amount/side, quantities as baht, past tense, question follow-ups; EN/TH/decimal/Thai-digit positives | Opus 5.5 High approved after fixes (quantity units, past tense, question follow-ups, restored unbacked_numbers assertion) |
+
+| I08 | `fix: separate hosted request budgets by class and visitor`: 483 voice tests and typecheck passed; multi-visitor bursts, chat exhaustion leaving reads/preview/confirm open, spoofed X-Forwarded-For, bounded tables, malformed paths (400) | Opus 5.5 High approved after fixes (table-full lockout, ID-less shared bucket, per-tab session key, malformed path 400). Shared Render proxy IP ceiling remains documented |
 
 ## Execution notes
 

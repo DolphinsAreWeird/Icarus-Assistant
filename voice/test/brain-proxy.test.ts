@@ -1,7 +1,8 @@
 import express from 'express';
 import { request } from 'node:http';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listen, makeStack } from './helpers';
+import { VoiceApi } from '../src/client/api';
 
 let backend: Awaited<ReturnType<typeof listen>>;
 let server: Awaited<ReturnType<typeof listen>>;
@@ -15,11 +16,11 @@ async function startProxy(publicDemo: boolean) {
 }
 
 // Preserve raw path variants that fetch would normalize before sending them.
-async function send(path: string, method = 'POST', body: unknown = {}) {
+async function send(path: string, method = 'POST', body: unknown = {}, headers: Record<string, string> = {}) {
   return new Promise<{ status: number; body: any }>((resolve, reject) => {
     const payload = JSON.stringify(body);
     const req = request(server.base, {
-      path, method, headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload) },
+      path, method, headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload), ...headers },
     }, (res) => {
       let data = '';
       res.setEncoding('utf8');
@@ -120,5 +121,80 @@ describe('public brain proxy reset boundary', () => {
     expect(forwarded).toEqual(['POST /demo/reset/?rehearsal=1']);
     expect(accounts.size).toBe(0);
     expect(previews.size).toBe(0);
+  });
+});
+
+
+describe('public request budgets with a fake backend', () => {
+  it('allows multiple visitors to burst beyond the old shared 40 limit', async () => {
+    for (const user_id of ['visitor-a', 'visitor-b', 'visitor-c']) {
+      for (let i = 0; i < 25; i++) expect((await send('/brain/chat', 'POST', { user_id })).status).toBe(200);
+    }
+    expect(forwarded).toHaveLength(75);
+  });
+  it('limits visitor chat while preserving reads, preview and confirmation', async () => {
+    for (let i = 0; i < 30; i++) expect((await send('/brain/chat', 'POST', { user_id: 'visitor-b' })).status).toBe(200);
+    expect((await send('/brain/%63hat', 'POST', { user_id: 'visitor-b' })).status).toBe(429);
+    expect((await send('/brain/chat', 'POST', { user_id: 'visitor-a' })).status).toBe(200);
+    expect((await send('/brain/demo/state/visitor-b', 'GET')).status).toBe(200);
+    expect((await send('/brain/trades/preview', 'POST', { user_id: 'visitor-b', amount: 1000.49 })).status).toBe(200);
+    expect((await send('/brain/trades/pending-b/confirm', 'POST', { user_id: 'visitor-b' })).body.status).toBe('executed');
+    expect(accounts.get('visitor-b')).toBe(7999.51);
+  });
+  it('caps aggregate chat despite rotating IDs and spoofed forwarded addresses', async () => {
+    for (let i = 0; i < 600; i++) {
+      expect((await send('/brain/chat', 'POST', { user_id: `visitor-${i}` }, { 'x-forwarded-for': `10.0.${i >> 8}.${i % 256}` })).status).toBe(200);
+    }
+    expect((await send('/brain/chat', 'POST', { user_id: 'another' }, { 'x-forwarded-for': '203.0.113.9' })).status).toBe(429);
+    expect((await send('/brain/prices', 'GET')).status).toBe(200);
+    expect((await send('/brain/trades/preview', 'POST', { user_id: 'visitor-b', amount: 5 })).status).toBe(200);
+    expect((await send('/brain/trades/pending-b/confirm', 'POST', { user_id: 'visitor-b' })).status).toBe(200);
+  }, 15_000);
+  it.each(['/brain/%E0%A4%A', '/brain/chat%', '/brain/demo/%zzreset', '/brain/trades/%/confirm'])(
+    'refuses malformed percent-encoding %s with 400 before any budget or backend request', async (path) => {
+      const result = await send(path, 'POST', { user_id: 'visitor-a' });
+      expect(result).toMatchObject({ status: 400, body: { error: { code: 'bad_path' } } });
+      expect(forwarded).toEqual([]);
+      expect((await send('/brain/chat', 'POST', { user_id: 'visitor-a' })).status).toBe(200);
+    });
+  it('keeps confirmation available through chat exhaustion for path variants of confirm', async () => {
+    for (let i = 0; i < 30; i++) await send('/brain/chat', 'POST', { user_id: 'visitor-b' });
+    expect((await send('/brain//chat/', 'POST', { user_id: 'visitor-b' })).status).toBe(429);
+    expect((await send('/brain/trades/preview/', 'POST', { user_id: 'visitor-b', amount: 1 })).status).toBe(200);
+    expect((await send('/brain/trades/pending-b/confirm?x=1', 'POST', { user_id: 'visitor-b' })).body.status).toBe('executed');
+  });
+  it('restores allowance at the sliding window boundary', async () => {
+    const date = vi.spyOn(Date, 'now').mockReturnValue(100_000);
+    try {
+      for (let i = 0; i < 30; i++) expect((await send('/brain/chat', 'POST', { user_id: 'visitor-a' })).status).toBe(200);
+      expect((await send('/brain/chat', 'POST', { user_id: 'visitor-a' })).status).toBe(429);
+      date.mockReturnValue(160_000);
+      expect((await send('/brain/chat', 'POST', { user_id: 'visitor-a' })).status).toBe(200);
+    } finally { date.mockRestore(); }
+  });
+});
+
+
+describe('visitors without a selector on one socket IP', () => {
+  it('do not share one small U-topia route bucket', async () => {
+    for (let i = 0; i < 45; i++) {
+      const res = await fetch(`${server.base}/api/utopia/route`, {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: 'What is U-topia?', language: 'en' }),
+      });
+      expect(res.status).toBe(200);
+    }
+  });
+});
+
+describe('real browser VoiceApi quota selectors', () => {
+  it('isolates STT sessions and keeps TTS independent from exhausted STT', async () => {
+    const a = new VoiceApi(server.base, 'browser-session-a');
+    const b = new VoiceApi(server.base, 'browser-session-b');
+    for (let i = 0; i < 12; i++) await a.scribeToken('en', 'hands-free');
+    await expect(a.scribeToken('en', 'hands-free')).rejects.toMatchObject({ code: 'slow_down', status: 429 });
+    expect((await b.scribeToken('en', 'hands-free')).url).toContain('fake-token');
+    const speech = await a.tts({ text: 'Hello.', language: 'en', speed: 1 }, new AbortController().signal);
+    expect(speech.sampleRate).toBe(24000);
+    await new Response(speech.body).arrayBuffer();
   });
 });

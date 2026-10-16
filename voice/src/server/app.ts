@@ -43,25 +43,72 @@ export interface AppDeps {
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
-/**
- * On the public demo, at most `max` requests a minute per visitor for each kind of request, so one visitor (or a bot)
- * can't spend the voice and model budget for everyone. Off when running locally.
+/** Demo fairness only: user/session IDs are selectors, not authenticated identities.
+ * Each class has independent bounded visitor and aggregate socket-IP windows.
+ * Never clear active counters at capacity. Because any client can rotate selectors, the per-visitor window is
+ * fairness only and the socket-IP aggregate is the real ceiling: requests with no selector, or new selectors once
+ * the visitor table is full, are counted against the aggregate alone (so one client cannot lock out new visitors
+ * by filling the table, and visitors without a selector do not share one small bucket). New socket IPs are still
+ * refused while the IP table is full.
  */
-function makeLimiter(enabled: boolean) {
-  const hits = new Map<string, number[]>();
-  return (kind: string, max: number) => (req: Request, res: Response, next: NextFunction) => {
-    if (!enabled) return next();
-    const key = `${kind}:${req.ip ?? 'unknown'}`;
-    const now = Date.now();
-    const recent = (hits.get(key) ?? []).filter((t) => now - t < 60_000);
-    if (recent.length >= max) {
-      res.setHeader('Retry-After', '20');
-      return void res.status(429).json({ error: { code: 'slow_down', message: 'Too many requests. Wait a few seconds.' } });
+export function makeLimiter(enabled: boolean, clock = () => Date.now(), maxEntries = 5000) {
+  type Window = { times: number[] };
+  const classes = new Map<string, { visitors: Map<string, Window>; ips: Map<string, Window>; swept: number }>();
+  return (kind: string, max: number, aggregate = max * 20) => {
+    let state = classes.get(kind);
+    if (!state) {
+      state = { visitors: new Map(), ips: new Map(), swept: 0 };
+      classes.set(kind, state);
     }
-    recent.push(now);
-    if (hits.size > 5000) hits.clear(); // a crude cap: the demo has a handful of visitors
-    hits.set(key, recent);
-    next();
+    const buckets = state;
+    return (req: Request, res: Response, next: NextFunction) => {
+      if (!enabled) return next();
+      const now = clock();
+      const trim = (window: Window) => { window.times = window.times.filter(t => now - t < 60_000); };
+      // At most one sweep a second, also when the tables are full, so a full table cannot make every request O(n).
+      if (now - buckets.swept >= 1000) {
+        for (const map of [buckets.visitors, buckets.ips]) {
+          for (const [key, window] of map) {
+            trim(window);
+            if (!window.times.length) map.delete(key);
+          }
+        }
+        buckets.swept = now;
+      }
+      // Deliberately ignore X-Forwarded-For: the current deployment has no
+      // configured trusted proxy boundary. A spoofed header must not buy credits.
+      const ip = req.socket.remoteAddress ?? 'unknown';
+      const validId = (raw: unknown) => typeof raw === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(raw) ? raw : undefined;
+      let pathUser: string | undefined;
+      try {
+        pathUser = /^\/(?:demo\/state|portfolio)\/([^/]+)\/?$/.exec(decodeURIComponent(req.path))?.[1];
+      } catch { /* malformed paths have no path selector */ }
+      const user = validId(req.body?.user_id) ?? validId(req.body?.userId) ?? validId(pathUser);
+      // The browser tab's session goes into the key too: a shared default userId must not merge every tab's bucket.
+      const session = validId(req.header('x-session-id'));
+      const key = user === undefined && session === undefined ? undefined : JSON.stringify([ip, user ?? null, session ?? null]);
+      const existing = key === undefined ? undefined : buckets.visitors.get(key);
+      const visitorWindow = existing ?? (key !== undefined && buckets.visitors.size < maxEntries ? { times: [] } : undefined);
+      const ipWindow = buckets.ips.get(ip) ?? (buckets.ips.size < maxEntries ? { times: [] } : undefined);
+      const refuse = (retry: number) => {
+        res.setHeader('Retry-After', String(retry));
+        return void res.status(429).json({ error: { code: 'slow_down', message: 'Too many requests. Please wait before trying again.' } });
+      };
+      if (!ipWindow) return refuse(60);
+      if (visitorWindow) trim(visitorWindow);
+      trim(ipWindow);
+      const full = [visitorWindow && visitorWindow.times.length >= max ? visitorWindow : undefined,
+        ipWindow.times.length >= aggregate ? ipWindow : undefined].filter((w): w is Window => w !== undefined);
+      // Wait until every exhausted window has a free slot again.
+      if (full.length) return refuse(Math.max(1, ...full.map(w => Math.ceil((w.times[0]! + 60_000 - now) / 1000))));
+      ipWindow.times.push(now);
+      buckets.ips.set(ip, ipWindow);
+      if (key !== undefined && visitorWindow) {
+        visitorWindow.times.push(now);
+        buckets.visitors.set(key, visitorWindow);
+      }
+      next();
+    };
   };
 }
 
@@ -71,8 +118,7 @@ export function createApp(deps: AppDeps): express.Express {
   const redact = makeRedactor(cfg.apiKey, cfg.utopiaApiKey);
   const app = express();
   app.disable('x-powered-by');
-  // Behind the host's proxy, the visitor's address is in X-Forwarded-For.
-  if (cfg.publicDemo) app.set('trust proxy', true);
+  // Keep Express's default trust proxy=false; see the socket-IP budget below.
   const limit = makeLimiter(Boolean(cfg.publicDemo));
 
   // ---- CORS: Oasis's frontend runs on another port while developing ----
@@ -148,7 +194,7 @@ export function createApp(deps: AppDeps): express.Express {
   });
 
   // ---- assistant ----
-  app.post('/api/ask', limit('ask', 30), async (req, res) => {
+  app.post('/api/ask', limit('chat', 30), async (req, res) => {
     const body = isObject(req.body) ? req.body : {};
     const text = typeof body.text === 'string' ? body.text.trim() : '';
     if (!text || text.length > 2000) return fail(res, 400, 'bad_request', 'text is required (up to 2000 characters).');
@@ -281,21 +327,39 @@ export function createApp(deps: AppDeps): express.Express {
   // The hosted demo is one address, so the app needs no backend URL and there is no CORS.
   if (cfg.backendProxyUrl) {
     const target = cfg.backendProxyUrl;
-    app.use('/brain', limit('brain', 40), async (req, res) => {
+    const brainChat = limit('chat', 30, 600);
+    const brainRead = limit('read', 600, 12_000);
+    const brainPreview = limit('preview', 60, 1200);
+    const brainConfirm = limit('confirm', 120, 2400);
+    app.use('/brain', async (req, res) => {
       const hasBody = !['GET', 'HEAD'].includes(req.method) && req.body !== undefined;
       try {
         if (cfg.publicDemo) {
           // Match what the upstream receives: URL normalization, one path decode,
           // and slash/dot segments. Query strings never change route permission.
+          let pathname: string;
+          try {
+            pathname = decodeURIComponent(new URL(target + req.url).pathname);
+          } catch {
+            // Malformed percent-encoding: refuse before any budget or backend request.
+            return fail(res, 400, 'bad_path', 'The request path is not valid.');
+          }
           const segments: string[] = [];
-          const pathname = decodeURIComponent(new URL(target + req.url).pathname);
           for (const segment of pathname.replace(/\\/g, '/').split('/')) {
             if (segment === '..') segments.pop();
             else if (segment && segment !== '.') segments.push(segment);
           }
-          if (/(?:^|\/)demo\/reset$/i.test(segments.join('/'))) {
+          const route = segments.join('/');
+          if (/(?:^|\/)demo\/reset$/i.test(route)) {
             return fail(res, 403, 'public_reset_disabled', 'Global demo reset is disabled on the public demo.');
           }
+          // Classify the decoded route, so /%63hat still uses chat's budget. Reset/admin is refused above first.
+          const budget = ['GET', 'HEAD'].includes(req.method) ? brainRead
+            : /(?:^|\/)trades\/[^/]+\/(?:confirm|cancel)$/i.test(route) ? brainConfirm
+            : /(?:^|\/)trades\/preview$/i.test(route) ? brainPreview : brainChat;
+          let allowed = false;
+          budget(req, res, () => { allowed = true; });
+          if (!allowed) return;
         }
         const upstream = await fetch(target + req.url, {
           method: req.method,
