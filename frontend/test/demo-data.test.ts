@@ -176,3 +176,23 @@ it('does not review a late manual preview after the amount changed', async () =>
   await act(async () => proto.confirm());
   expect(fetcher.mock.calls.some(([u]) => String(u).endsWith('/confirm'))).toBe(false);
 });
+
+it('lists stocks between crypto and gold, with gold last, and a tap asks Icarus for the chart', async () => {
+  const w = (name: string, ticker: string) => ({ name, ticker, mono: ticker[0], bg: '#123456', price_thb: 12000.5, change_1d_pct: -1.25, spark: [1, 2, 3, 2] });
+  const withWatch = { ...data, watchlist: { NVDA: w('Nvidia', 'NVDA'), AAPL: w('Apple', 'AAPL'), BAD: { name: 'Broken' } } } as unknown as DemoBundle;
+  const fetcher = vi.fn(async () => Response.json(withWatch));
+  const demo = installDemoData(proto, 'http://be', 'u_new', vi.fn(), fetcher);
+  await act(async () => demo.refresh());
+  expect(proto.renderVals().assetRows.map((a: any) => a.id)).toEqual(['BTC', 'ETH', 'NVDA', 'AAPL', 'XAU']); // gold last, the broken entry left out
+  await act(async () => proto.setState({ filter: 'Stocks' }));
+  const rows = proto.renderVals().assetRows;
+  expect(rows.map((a: any) => a.id)).toEqual(['NVDA', 'AAPL']);
+  expect(rows[0]).toMatchObject({ name: 'Nvidia', price: '฿12,000.50', change: '−1.25% 1D', color: '#C8312E' });
+  expect(rows[0].spark).toMatch(/^M0\.0 /);
+  await act(async () => proto.setState({ filter: 'Crypto' }));
+  expect(proto.renderVals().assetRows.map((a: any) => a.id)).toEqual(['BTC', 'ETH']);
+  await act(async () => proto.setState({ filter: 'Stocks' }));
+  const send = vi.spyOn(proto, 'send').mockImplementation(() => undefined);
+  proto.renderVals().assetRows[0].onOpen({ stopPropagation: () => undefined });
+  expect(send).toHaveBeenCalledWith('How did Nvidia do?');
+});

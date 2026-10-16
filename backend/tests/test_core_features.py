@@ -201,3 +201,10 @@ def test_logging_can_never_break_anything(tmp_path):
     log2 = friction.FrictionLog(path=str(tmp_path / "f.jsonl"))
     log2.log("question", user_id="u1", topic="fee")
     assert '"topic": "fee"' in (tmp_path / "f.jsonl").read_text() and "u1" not in (tmp_path / "f.jsonl").read_text()
+
+
+def test_the_demo_bundle_lists_stocks_to_look_at(client):
+    bundle = client.get("/demo/state/u_new").json()
+    watch = bundle.get("watchlist", {})
+    assert not watch or all(w["price_thb"] > 0 and len(w["spark"]) >= 2 and w["ticker"] for w in watch.values())
+    assert set(bundle["assets"]) == {"BTC", "ETH", "XAU"} and not set(watch) & {"BTC", "ETH", "XAU"}  # buyable assets stay apart from view-only ones
