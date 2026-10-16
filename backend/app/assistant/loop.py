@@ -11,6 +11,7 @@ import time
 from app import knowledge, ui
 from app.assistant.checks import (asks_for_advice, detect_language, first_sentence, mentioned_assets,
                                   unbacked_numbers)
+from app.assistant.guard import guard_text
 from app.assistant.llm import ChatModel, parse_arguments
 from app.assistant.prompt import FALLBACK_REPLY, REFUSAL_REPLY, SYSTEM_PROMPT, turn_context
 from app.contracts import ChatReply, ChatRequest, SourceRef
@@ -29,11 +30,13 @@ class UnknownUser(Exception):
 
 
 def trim(history: list) -> None:
-    """Drop old messages, but always start at a user message so tool calls stay paired."""
+    """Drop the oldest turns (each starts at a user message, so tool calls stay paired).
+    The newest turn is never dropped, even if it alone is longer than MAX_HISTORY."""
     while len(history) > MAX_HISTORY:
-        del history[0]
-        while history and history[0]["role"] != "user":
-            del history[0]
+        users = [i for i, m in enumerate(history) if m["role"] == "user"]
+        if len(users) < 2:
+            return
+        del history[:users[1]]
 
 
 class Assistant:
@@ -94,6 +97,7 @@ class Assistant:
 
         if not text:
             text = FALLBACK_REPLY[lang]
+        text, broke_rule = guard_text(text, lang)  # advice or "it's bought" never reaches the user
 
         # ---- after the model: plain code ----
         ctx.ui_actions = ui.finalize(ctx.ui_actions)
@@ -109,7 +113,7 @@ class Assistant:
             sources=[SourceRef(result_id=e["result_id"], tool=e["tool"], **e["source"])
                      for e in envelopes],
             debug={"provider": self.llm.provider, "model": self.llm.model, "model_calls": calls,
-                   "finish_reason": finish, "lang": lang, "assets_mentioned": mentioned, "asks_for_advice": advice,
+                   "finish_reason": finish, "lang": lang, "assets_mentioned": mentioned, "asks_for_advice": advice, "guard": broke_rule,
                    "screen_after": ctx.ui_state.screen, "asset_after": ctx.ui_state.asset,
                    "unbacked_numbers": unbacked_numbers(text, envelopes, req.text),
                    "latency_ms": round((time.perf_counter() - started) * 1000)},

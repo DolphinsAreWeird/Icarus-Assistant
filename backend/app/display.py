@@ -2,21 +2,39 @@
 so the model copies "about 3.6 million baht" instead of "3,607,006 baht"."""
 
 
+import math
+from decimal import ROUND_HALF_UP, Decimal
+
+
+def _round_to(a: float, step: int) -> int:
+    """Round half up to a multiple of step (Python's round() goes to even: 1050 -> 1000)."""
+    return int((Decimal(str(a)) / step).quantize(Decimal(1), rounding=ROUND_HALF_UP)) * step
+
+
 def baht(x: float, lang: str = "en") -> str:
-    """2_729_983 -> 'about 2.7 million baht'. 139_618 -> 'about 140,000 baht'. 5 -> '5 baht'."""
-    unit = "บาท" if lang == "th" else "baht"
-    about = "ประมาณ " if lang == "th" else "about "
+    """2_729_983 -> 'about 2.7 million baht'. 139_618 -> 'about 140,000 baht'. 5 -> '5 baht'. -1500 -> 'minus about 1,500 baht'."""
+    th = lang == "th"
+    if not isinstance(x, (int, float)) or isinstance(x, bool) or not math.isfinite(x):
+        return "ไม่มีข้อมูล" if th else "not available"
+    unit = "บาท" if th else "baht"
+    about = "ประมาณ " if th else "about "
+    sign = ("ลบ " if th else "minus ") if x < 0 else ""
     a = abs(x)
-    if a >= 1_000_000:
+    if a >= 1e12:
+        return f"{sign}{about}{a / 1e12:.1f}".rstrip("0").rstrip(".") + (" ล้านล้านบาท" if th else " trillion baht")
+    if a >= 1e9:
+        return f"{sign}{about}{f'{a / 1e9:.1f}'.rstrip('0').rstrip('.')} {'พันล้านบาท' if th else 'billion baht'}"
+    if a >= 1_000_000 or _round_to(a, 1000) >= 1_000_000:  # 999,999.5 is "about 1 million", not "1,000,000"
+        a = max(a, 1_000_000.0)
         millions = f"{a / 1_000_000:.1f}".rstrip("0").rstrip(".")
-        return f"{about}{millions} {'ล้านบาท' if lang == 'th' else 'million baht'}"
+        return f"{sign}{about}{millions} {'ล้านบาท' if th else 'million baht'}"
     if a >= 10_000:
-        return f"{about}{round(a, -3):,.0f} {unit}"
+        return f"{sign}{about}{_round_to(a, 1000):,} {unit}"
     if a >= 1_000:
-        return f"{about}{round(a, -2):,.0f} {unit}"
+        return f"{sign}{about}{_round_to(a, 100):,} {unit}"
     if a >= 100:
-        return f"{a:,.0f} {unit}"
-    return f"{a:,.2f}".rstrip("0").rstrip(".") + f" {unit}"
+        return f"{sign}{a:,.0f} {unit}"
+    return f"{sign}{a:,.2f}".rstrip("0").rstrip(".") + f" {unit}"
 
 
 def exact_baht(x: float, lang: str = "en") -> str:
@@ -27,6 +45,8 @@ def exact_baht(x: float, lang: str = "en") -> str:
 
 def change(pct: float, lang: str = "en") -> str:
     """-23.97 -> 'down about 24%'. 0.42 -> 'up about 0.4%'."""
+    if not isinstance(pct, (int, float)) or isinstance(pct, bool) or not math.isfinite(pct):
+        return "ไม่มีข้อมูล" if lang == "th" else "not available"
     a = abs(pct)
     size = f"{a:.0f}" if a >= 10 else f"{a:.1f}".rstrip("0").rstrip(".")
     if size in ("0", ""):

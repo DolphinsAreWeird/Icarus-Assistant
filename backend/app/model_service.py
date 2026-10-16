@@ -9,6 +9,7 @@ import time
 import re
 
 from app.assistant.checks import detect_language
+from app.assistant.guard import guard_text
 from app.assistant.loop import UnknownUser
 from app.contracts import ChatReply, SourceRef
 from app.model_runtime import ConversationSession, SnapshotAdapter
@@ -67,7 +68,7 @@ class SessionStore:
             self.entries.clear()
 
 
-def reply_envelope(result, snapshot_id):
+def reply_envelope(result, snapshot_id, input_mode="text"):
     summaries = result.get("numerical_summaries", [])
     limitations = result.get("limitations", [])
     disclaimer = result.get("disclaimer", "")
@@ -115,11 +116,15 @@ def reply_envelope(result, snapshot_id):
             spoken = (f"ราคาอ้างอิง {p['asset_id']} คือ {p['price']} {p['currency']} ตรวจสอบเวลาของข้อมูลบนหน้าจอ ไม่ใช่ราคาเสนอซื้อขาย" if th else
                       f"The reference price for {p['asset_id']} is {p['price']} {p['currency']}. Check the observation time on screen; this is not an executable quote.")
             break
-    return ChatReply(text=text, speech=spoken, speech_exact=bool(summaries), speak=True, ui_actions=[], sources=sources,
+    lang = "th" if th else "en"
+    text, broke_rule = guard_text(text, lang)  # advice or "it's bought" never reaches the user, whatever the model wrote
+    if broke_rule:
+        spoken = text
+    return ChatReply(text=text, speech=spoken, speech_exact=bool(summaries) and not broke_rule, speak=input_mode == "voice", ui_actions=[], sources=sources,
                      status=result.get("status", "ok"), limitations=limitations, disclaimer=disclaimer,
                      numerical_summaries=summaries, evidence=result.get("sources", []),
                      debug={"engine": "model", "route": result.get("route"), "snapshot_id": snapshot_id,
-                            "elapsed_seconds": result.get("elapsed_seconds", 0)})
+                            "elapsed_seconds": result.get("elapsed_seconds", 0), "guard": broke_rule})
 
 
 class ModelService:
@@ -162,7 +167,7 @@ class ModelService:
                     message = "/portfolio"
                 result = session.ask(message, offline=self.offline, model=self.model,
                                      data_adapter=adapter, screen_context=context)
-                return reply_envelope(result, payload["snapshot_id"])
+                return reply_envelope(result, payload["snapshot_id"], req.input_mode)
             except Exception:
                 session.__dict__.clear()
                 session.__dict__.update(previous)

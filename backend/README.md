@@ -146,3 +146,15 @@ and fail if either stops supporting something we send.
 `POST /chat` accepts the bridge's request (`screen_context`, lowercase ids and periods), the voice
 server's (`{text, language, snapshot, userId}`), and ours. `userId: "demo-user"` maps to `DEMO_USER`
 (default `u_new`).
+
+## Proactive help: `POST /nudge`
+
+When a user is stuck, Icarus speaks up first. The app measures the idle time (15 s) and asks
+`POST /nudge {user_id, lang?, snapshot, idle_s}`; the answer is `{"nudge": null}` or
+`{reason, text, highlight, suggestions}`. It is **rules only, no model** (`app/nudge.py`): instant, works offline and
+on either engine, and cannot invent a number or give advice. Wording is reviewed English and Thai templates; the only
+numbers are the buy minimum and the user's cash.
+
+Rules (first match wins): frozen card · wrong wallet · below the minimum · more than the cash · empty amount · ready to
+review · waiting on review · Payments dead end · Card. Other screens get nothing. There is no KYC nudge because the app
+has no KYC screen: add a rule keyed on its screen name in `app/nudge.py` when it exists. Tests: `tests/test_nudge.py`.
