@@ -17,6 +17,13 @@ export const JUDGE_COPY: ReadonlyArray<readonly [string, string]> = [
     "title:'No mic? Let Icarus hear it',sub:'Plays the race 2 request for you.'"],
   ["sub:'Optional tutorial mode with highlights.'", "sub:'Icarus points at each button, one step at a time.'"],
   ['Shows questions and friction from this session.', 'What users asked and where they got stuck: the view a business pays for.'],
+  // the race itself: what's running, the two times, and the result in plain words
+  ["this.toast('Scenario A: buy ฿1,000 of Gold manually')", "this.toast('Race 1: buy ฿1,000 of gold by tapping through the app')"],
+  ["'Running · Scenario A':'Running · Scenario B'):'Idle'", "'Race 1 running · by hand':'Race 2 running · with Icarus'):'Ready'"],
+  ['>A · Manual<', '>Race 1 · by hand<'],
+  ['>B · With Icarus<', '>Race 2 · Icarus<'],
+  ["'Icarus flow was '+(s.results.A/s.results.B).toFixed(1)+'× faster':'Manual flow was faster this run'",
+    "'With Icarus: '+(s.results.A/s.results.B).toFixed(1)+'× faster than by hand':'By hand was faster this time. Try race 2 by voice.'"],
 ];
 
 const CONTACTLESS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M8.5 7.5a6 6 0 0 1 0 9M12 5a9.5 9.5 0 0 1 0 14M15.5 2.5a13 13 0 0 1 0 19"/></svg>';
