@@ -11,29 +11,29 @@
   * { box-sizing: border-box; margin: 0; }
   body { background: transparent; font-family: Nunito, system-ui, sans-serif; color: var(--ink); }
   .viz { position: relative; margin: 0 0 40px; }
-  .legend { display: flex; gap: 22px; font-size: 18px; color: var(--soft); }
-  .legend i { display: inline-block; width: 16px; height: 16px; border-radius: 4px; margin-right: 8px; vertical-align: -2px; }
+  .legend { display: flex; gap: 26px; font-size: 26px; font-weight: 700; color: #4A2E36; }
+  .legend i { display: inline-block; width: 22px; height: 22px; border-radius: 4px; margin-right: 8px; vertical-align: -2px; }
   .n { font: 600 18px Fredoka, sans-serif; color: var(--ink); }
   /* speed */
-  #speed { width: 1000px; padding: 6px 0; }
-  .srow { display: grid; grid-template-columns: 300px 1fr; align-items: center; gap: 18px; height: 64px; border-bottom: 1px solid #F3DCE3; }
-  .srow .q { font-size: 19px; color: var(--ink); text-align: right; }
+  #speed { width: 1180px; padding: 6px 0; }
+  .srow { display: grid; grid-template-columns: 380px 1fr; align-items: center; gap: 20px; height: 78px; border-bottom: 1px solid #F3DCE3; }
+  .srow .q { font-size: 26px; font-weight: 700; color: var(--ink); text-align: right; }
   .bars { display: flex; flex-direction: column; gap: 5px; }
-  .bar { height: 18px; border-radius: 9px; display: flex; align-items: center; }
-  .bar span { font: 600 15px Fredoka, sans-serif; margin-left: calc(100% + 10px); white-space: nowrap; }
-  .before { background: var(--rose); } .before span { color: #B08592; }
-  .after { background: var(--pink); min-width: 10px; } .after span { color: var(--deep); }
+  .bar { height: 22px; border-radius: 11px; display: flex; align-items: center; }
+  .bar span { font: 600 22px Fredoka, sans-serif; margin-left: calc(100% + 10px); white-space: nowrap; }
+  .before { background: #F4B9C9; } .before span { color: #7A5563; }
+  .after { background: var(--pink); min-width: 10px; } .after span { color: #9E3354; }
   /* columns */
   .cols { position: relative; display: flex; align-items: flex-end; gap: 46px; border-bottom: 2px solid #E9C3CF; padding: 0 20px; }
   .group { display: flex; flex-direction: column; align-items: center; gap: 12px; }
   .pair { display: flex; align-items: flex-end; gap: 10px; }
-  .col { width: 64px; border-radius: 10px 10px 0 0; position: relative; }
-  .stack { width: 64px; display: flex; flex-direction: column; justify-content: flex-end; border-radius: 10px 10px 0 0; overflow: hidden; }
-  .cap { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; font: 600 16px Fredoka, sans-serif; color: var(--soft); }
-  .xl { position: absolute; font-size: 17px; color: var(--soft); text-align: center; width: 190px; }
-  .mult { font: 600 30px Fredoka, sans-serif; color: var(--pink); margin-bottom: 22px; }
+  .col { width: 72px; border-radius: 10px 10px 0 0; position: relative; }
+  .stack { width: 72px; display: flex; flex-direction: column; justify-content: flex-end; border-radius: 10px 10px 0 0; overflow: hidden; }
+  .cap { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; font: 600 24px Fredoka, sans-serif; color: #5E4550; }
+  .xl { position: absolute; font-size: 24px; font-weight: 700; color: #5E4550; text-align: center; width: 230px; }
+  .mult { font: 600 40px Fredoka, sans-serif; color: #9E3354; margin-bottom: 30px; }
   .target { position: absolute; left: 0; right: 0; border-top: 3px dashed var(--gold); }
-  .target b { position: absolute; left: 0; top: -30px; font: 600 16px Fredoka, sans-serif; color: #B57C1A; }
+  .target b { position: absolute; left: 14px; top: -40px; font: 600 26px Fredoka, sans-serif; color: #8A5A0E; }
   /* ecosystem */
   #eco { width: 1600px; height: 700px; position: relative; }
   .hub { position: absolute; left: 650px; top: 170px; width: 300px; display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -53,18 +53,18 @@
 
 <!-- 1. speed: seconds to answer, before and now -->
 <div class="viz" id="speed">
-  <div class="legend" style="justify-content:flex-end;margin-bottom:10px"><span><i style="background:#F7D2DC"></i>before (the AI decides everything)</span><span><i style="background:#C94F72"></i>now (code first, answers prepared)</span></div>
+  <div class="legend" style="justify-content:flex-end;margin-bottom:10px"><span><i style="background:#F4B9C9"></i>before: the AI decided every step</span><span><i style="background:#C94F72"></i>now: code first</span></div>
 </div>
 
 <!-- 2. value: what a partner pays and what it gets back, THB a month -->
-<div class="viz" id="value" style="width:1060px;height:600px">
+<div class="viz" id="value" style="width:1160px;height:640px">
   <div class="legend" style="position:absolute;left:20px;top:0"><span><i style="background:#F7D2DC"></i>we charge</span><span><i style="background:#C94F72"></i>fewer support contacts</span><span><i style="background:#E9A83B"></i>more first deposits</span></div>
-  <div class="cols" id="valueCols" style="position:absolute;left:0;right:0;top:60px;height:450px"></div>
+  <div class="cols" id="valueCols" style="position:absolute;left:0;right:0;top:110px;height:420px"></div>
 </div>
 
 <!-- 3. margin: our margin as more apps join -->
-<div class="viz" id="margin" style="width:760px;height:560px">
-  <div class="cols" id="marginCols" style="position:absolute;left:0;right:0;top:40px;height:420px;gap:60px;padding:0 40px"></div>
+<div class="viz" id="margin" style="width:760px;height:600px">
+  <div class="cols" id="marginCols" style="position:absolute;left:0;right:0;top:60px;height:420px;gap:60px;padding:0 40px"></div>
 </div>
 
 <!-- 4. ecosystem: layers 1 (hub), 2 (live today), 3 (next) -->
@@ -131,17 +131,17 @@
     const r = document.createElement('div');
     r.className = 'srow';
     r.innerHTML = `<div class="q">${q}</div><div class="bars"><div class="bar before" style="width:${(b / max) * w}px"><span>${b} s</span></div>` +
-      `<div class="bar after" style="width:${Math.max(10, (a / max) * w)}px"><span>${a < 0.1 ? '0.0' + Math.round(a * 100) : a} s${a > 1 ? ' (new question: the AI words it)' : ''}</span></div></div>`;
+      `<div class="bar after" style="width:${Math.max(10, (a / max) * w)}px"><span>${a < 0.1 ? '0.0' + Math.round(a * 100) : a} s${a > 1 ? ' (new: AI words it)' : ''}</span></div></div>`;
     speed.append(r);
   }
   // 2. value (business-plan.md, "listprice" and "value" tables)
   const groups = [
     ['Pilot', '10,000 users', 49000, 32250, 9000, '0.8'],
     ['Launch', '50,000 users', 100000, 161250, 45000, '2.1'],
-    ['U-topia’s size', '130,000 users', 260000, 419250, 117000, '2.1'],
+    ['U-topia (claimed)', '130,000 users', 260000, 419250, 117000, '2.1'],
     ['Scale', '300,000 users', 550000, 967500, 270000, '2.2'],
   ];
-  const vmax = 1300000, vh = 400;
+  const vmax = 1300000, vh = 370;
   const vc = document.getElementById('valueCols');
   for (const [name, users, price, support, deposits, times] of groups) {  // times: as the plan prints it
     const g = document.createElement('div');
@@ -151,20 +151,20 @@
     g.innerHTML = `<div class="mult">${times}×</div><div class="pair">` +
       `<div class="col" style="height:${(price / vmax) * vh}px;background:#F7D2DC"><div class="cap" style="top:-26px">${fmt(Math.round(price / 1000))}k</div></div>` +
       `<div class="stack" style="height:${(value / vmax) * vh}px"><div style="height:${(deposits / value) * 100}%;background:#E9A83B"></div><div style="height:${(support / value) * 100}%;background:#C94F72"></div></div>` +
-      `</div><div class="xl" style="bottom:-62px;left:50%;transform:translateX(-50%)"><b style="color:#4A2E36">${name}</b><br>${users}</div>`;
+      `</div><div class="xl" style="bottom:-72px;left:50%;transform:translateX(-50%)"><b style="color:#4A2E36">${name}</b><br>${users}</div>`;
     vc.append(g);
   }
   vc.style.justifyContent = 'space-around';
   // 3. margin (business-plan.md, "portfolios" table)
-  const apps = [['U-topia alone', 7], ['+ one app', 19], ['+ three apps', 33], ['five apps', 38]];
+  const apps = [['U-topia alone', 7], ['+1 app, 30k users', 19], ['+3 apps, 30k each', 33]];
   const mc = document.getElementById('marginCols');
-  const mh = 340, mmax = 45;
+  const mh = 340, mmax = 40;
   for (const [name, pct] of apps) {
     const g = document.createElement('div');
     g.className = 'group';
     g.style.position = 'relative';
-    g.innerHTML = `<div class="mult" style="font-size:28px">${pct}%</div><div class="col" style="width:96px;height:${(pct / mmax) * mh}px;background:linear-gradient(180deg,#D9668A,#C94F72)"></div>` +
-      `<div class="xl" style="bottom:-40px;left:50%;transform:translateX(-50%);width:160px"><b style="color:#4A2E36">${name}</b></div>`;
+    g.innerHTML = `<div class="mult" style="font-size:40px">${pct}%</div><div class="col" style="width:96px;height:${(pct / mmax) * mh}px;background:linear-gradient(180deg,#D9668A,#C94F72)"></div>` +
+      `<div class="xl" style="bottom:-74px;left:50%;transform:translateX(-50%);width:200px"><b style="color:#4A2E36">${name}</b></div>`;
     mc.append(g);
   }
   mc.style.justifyContent = 'space-around';

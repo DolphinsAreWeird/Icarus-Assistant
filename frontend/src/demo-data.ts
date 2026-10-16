@@ -114,7 +114,8 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
     const d24 = dayChange(proto.state.assetId);
     const live = current?.freshness === 'live';
     view.asset = { ...view.asset, price: current ? money(current.price_thb) : 'Unavailable',
-      change24: `${live ? 'Live price' : 'Delayed price'}${d24 === null ? '' : ` · ${d24 >= 0 ? '▲' : '▼'} ${signedPct(d24)} 1D`}`,
+      change24: `${live ? 'Live price' : 'Delayed price'}${d24 === null ? '' : ` · ${d24 >= 0 ? '▲' : '▼'} ${signedPct(d24)}`}`,
+      chColor: d24 === null || d24 >= 0 ? GREEN : RED, chBg: d24 === null || d24 >= 0 ? '#E7F6EE' : '#FDECEC',
       pChange: `${stats.pct.toFixed(2)}%`, lo: money(stats.lo), hi: money(stats.hi), value: money((proto.state.hold[proto.state.assetId] ?? 0) * (current?.price_thb ?? 0)),
       perf: [], info: [{ k: 'Price', v: live ? 'Live, in baht' : 'Delayed' }, { k: 'Account', v: 'Demo, yours only' }, ...(proto.state.assetId === 'XAU' ? [{ k: 'Gold token', v: 'PAXG' }] : [])],
       ...(proto.state.assetId === 'XAU' ? { name: 'PAX Gold', desc: 'PAX Gold (PAXG) is a token backed by real gold: one token is one troy ounce, shown here in baht.' } : {}) };
