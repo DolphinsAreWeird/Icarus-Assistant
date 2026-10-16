@@ -53,6 +53,12 @@ try {
         }
         if (-not $demoReady) { throw "Service did not start: $demoUrl. Check $demoLogs" }
     }
+    $demoHealth = Invoke-RestMethod "http://127.0.0.1:$BackendPort/health" -TimeoutSec 3
+    $demoWantOffline = -not $Gateway
+    if ($demoHealth.engine -ne 'model' -or [bool]$demoHealth.model_offline -ne $demoWantOffline) {
+        throw "Backend runs engine '$($demoHealth.engine)' (model_offline=$($demoHealth.model_offline)), expected engine 'model' (model_offline=$demoWantOffline). Is another backend on port ${BackendPort}?"
+    }
+    Write-Host "Backend: $($demoHealth.assistant) (engine $($demoHealth.engine))"
     Write-Host "Demo: http://localhost:$VoicePort/app/?backend=http://127.0.0.1:$BackendPort&user=$UserId"
     Write-Host "Backend PID $($demoBackend.Id); voice PID $($demoVoice.Id). Stop with Stop-Process -Id $($demoBackend.Id),$($demoVoice.Id)"
     if (-not $RealVoice) { Write-Host 'Voice is FAKE: tones and scripted transcripts. Use -RealVoice with voice/.env for real speech.' }

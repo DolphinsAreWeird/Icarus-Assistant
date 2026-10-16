@@ -79,16 +79,32 @@ if [ "$APP_ONLY" = 0 ]; then
   else
     if [ "$MODEL" = real ]; then
       say "Starting the backend with the real model on port $BACKEND_PORT..."
-      (cd backend && .venv/bin/uvicorn app.main:app --port "$BACKEND_PORT" >"$ROOT/.demo-backend.log" 2>&1) &
+      # The real model is the legacy engine (a provider from backend/.env). Say so: bare app.main defaults to the
+      # model engine in offline-preview mode, which is not a real model.
+      (cd backend && ASSISTANT_ENGINE=legacy .venv/bin/uvicorn app.main:app --port "$BACKEND_PORT" >"$ROOT/.demo-backend.log" 2>&1) &
     else
       say "No model on this machine: starting the backend with its stand-in brain on port $BACKEND_PORT..."
       echo "  Buys, charts and how-to steps come from the backend; other questions get the prototype's scripted answers."
-      (cd backend && .venv/bin/python -m scripts.stand_in_brain --port "$BACKEND_PORT" >"$ROOT/.demo-backend.log" 2>&1) &
+      (cd backend && ASSISTANT_ENGINE=legacy .venv/bin/python -m scripts.stand_in_brain --port "$BACKEND_PORT" >"$ROOT/.demo-backend.log" 2>&1) &
     fi
     PIDS+=($!)
     wait_for "http://localhost:$BACKEND_PORT/health" || { echo "The backend did not start. See .demo-backend.log"; exit 1; }
   fi
-  echo "  Brain: $(curl -s -m 2 "http://localhost:$BACKEND_PORT/health" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("assistant"))' 2>/dev/null || echo unknown)"
+  # Check what is really running against what we announced; fail loudly on a mismatch (also for a backend that was
+  # already running when we started).
+  HEALTH=$(curl -s -m 3 "http://localhost:$BACKEND_PORT/health" || true)
+  ENGINE=$(printf '%s' "$HEALTH" | backend/.venv/bin/python -c 'import json,sys; print(json.load(sys.stdin).get("engine"))' 2>/dev/null || echo unknown)
+  BRAIN=$(printf '%s' "$HEALTH" | backend/.venv/bin/python -c 'import json,sys; print(json.load(sys.stdin).get("assistant"))' 2>/dev/null || echo unknown)
+  echo "  Brain: $BRAIN (engine: $ENGINE)"
+  if [ "$ENGINE" != legacy ]; then
+    echo "ERROR: the backend on port $BACKEND_PORT runs engine '$ENGINE', but this launcher announced the '$MODEL' brain (engine legacy)." >&2
+    echo "       Stop whatever is on that port, or set BACKEND_PORT to a free one, and run ./demo.sh again." >&2
+    exit 1
+  fi
+  if [ "$MODEL" = real ] && { [ "$BRAIN" = "not set up" ] || [ "$BRAIN" = unknown ] || [ "$BRAIN" = None ]; }; then
+    echo "ERROR: announced a real model, but the backend reports its brain as '$BRAIN'. See .demo-backend.log and backend/.env." >&2
+    exit 1
+  fi
   URL="$APP_URL?backend=http://localhost:$BACKEND_PORT"
 fi
 

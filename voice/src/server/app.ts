@@ -162,6 +162,32 @@ export function createApp(deps: AppDeps): express.Express {
     });
   });
 
+  // ---- readiness: the hosted health check. Local fake mode (no BACKEND_PROXY_URL) is ready when this server is. ----
+  // With a backend next to this server, it must answer /health quickly, report ready, and run the engine we expect
+  // (ASSISTANT_ENGINE, when set). Down, hung or wrong engine -> 503 with a reason. /api/health stays as it was.
+  app.get('/api/ready', async (_req, res) => {
+    if (!cfg.backendProxyUrl) return void res.json({ ok: true, backend: 'none' });
+    const timeoutMs = Number(process.env.BACKEND_READY_TIMEOUT_MS) > 0 ? Number(process.env.BACKEND_READY_TIMEOUT_MS) : 5000;
+    const unready = (reason: string, extra: Record<string, unknown> = {}) =>
+      void res.status(503).json({ ok: false, reason, ...extra });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const upstream = await fetch(`${cfg.backendProxyUrl}/health`, { signal: controller.signal });
+      if (!upstream.ok) return unready('backend_unhealthy', { status: upstream.status });
+      const body = await upstream.json() as { ready?: boolean; engine?: string; prices_loaded?: number };
+      if (body.ready === false) return unready('backend_not_ready', { engine: body.engine, pricesLoaded: body.prices_loaded });
+      const expected = process.env.ASSISTANT_ENGINE;
+      if (expected && body.engine !== expected) return unready('backend_wrong_engine', { expected, engine: body.engine });
+      res.json({ ok: true, backend: 'ready', engine: body.engine });
+    } catch (e) {
+      const timedOut = controller.signal.aborted;
+      unready(timedOut ? 'backend_timeout' : 'backend_unreachable', timedOut ? { timeoutMs } : {});
+    } finally {
+      clearTimeout(timer);
+    }
+  });
+
   // ---- speech-to-text token ----
   app.post('/api/scribe-token', limit('stt', 12), async (req, res) => {
     const language: LangSetting = ['en', 'th', 'auto'].includes(req.body?.language) ? req.body.language : 'en';

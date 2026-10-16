@@ -115,9 +115,29 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
     app.state.cache, app.state.demo = cache, state
     app.state.assistant = assistant
 
+    reported_offline = model_offline if engine == "model" else None  # meaningless under legacy: say so
+
+    def readiness():
+        """Cheap: the first price pass has finished and the cache holds at least one price."""
+        loaded = len(cache.prices)
+        ready = first_poll.is_set() and loaded > 0
+        return ready, loaded
+
+    @app.get("/ready")
+    def ready():
+        """200 only when this backend can answer: started, prices loaded. 503 with the reason otherwise."""
+        ok, loaded = readiness()
+        body = {"ready": ok, "engine": engine, "model_offline": reported_offline, "offline": offline,
+                "prices_loaded": loaded}
+        if not ok:
+            raise HTTPException(503, detail={**body, "reason": "prices_not_loaded"})
+        return body
+
     @app.get("/health")
     def health():
-        return {"offline": offline, "engine": engine,
+        ok, loaded = readiness()
+        return {"offline": offline, "engine": engine, "model_offline": reported_offline,
+                "ready": ok, "prices_loaded": loaded,
                 "assistant": ("model/offline-preview" if model_offline else "model/gateway") if engine == "model"
                              else f"{llm.provider}/{llm.model}" if llm else "not set up",
                 "llm_cooling": llm.cooling() if engine == "legacy" and hasattr(llm, "cooling") else {},

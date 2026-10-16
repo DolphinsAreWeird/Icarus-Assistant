@@ -23,7 +23,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 - [x] **I07: Make QA failures enforceable.** High-severity scans and failed phone confirmation must produce failing run/exit status.
 - [x] **I08: Separate hosted request budgets.** Avoid shared-IP starvation of account reads and confirmations; test multiple visitors and bursts.
 - [x] **I09: Refresh and age visible market data.** Old observations cannot remain labeled live; cover idle/focus/reconnect and quote-review interactions.
-- [ ] **I10: Align launcher engines and readiness.** Explicit engine choice, accurate health/readiness, failed backend startup/hang checks.
+- [x] **I10: Align launcher engines and readiness.** Explicit engine choice, accurate health/readiness, failed backend startup/hang checks.
 - [x] **I11: Settle failed fallback speech.** Clean up and settle every terminal playback outcome while keeping interrupted read-back unapproved.
 - [x] **I12: Fix Windows build/fake startup.** Portable npm invocation, nonzero spawn failure and cross-platform fake-mode launch.
 - [x] **I13: Refresh dashboard after ring rollover.** Detect replacement events when event count remains 400; retain truthful browser-local analytics labeling.
@@ -62,6 +62,8 @@ The issue's commit subject identifies its checkpoint. Hashes will be collected a
 | I04 | `fix: isolate cached assistant answers by user, session and context`: 312 full backend tests (OFFLINE pinned env); two-user different-history, same user new session, same-session repeat, screen-context and account/snapshot-change regressions; generic first-turn reuse still works | Opus 5.5 Medium approved after fix (personal key includes snapshot/account data). Follow-ups for I14/I16: README 5-minute wording; snapshot visitors sharing a session_id share history |
 
 | I09 | `fix: refresh and age visible market prices`: 137 frontend tests, typecheck and build passed; fake-timer coverage for aging past 120 s with no network, poll/focus/visibility/online refresh, hidden pause, no overlap, future/skewed as_of, unchanged reviewed preview terms, aged screen copy, trade card and reply sources | Opus 5.5 High approved after fixes (skew rule); Opus 5.5 Medium approved follow-up after fixes ("live at HH:MM" sources, loading copy, expired card). Product-copy "live" lines in JUDGE_COPY and tour left for I14 |
+
+| I10 | `fix: align launcher engines with health and readiness checks`: 316 backend tests, 28 voice test files (498 pass, 1 win32 skip), typecheck, `bash -n`; manual start-hosted runs (hung, crashed, SIGTERM-ignoring, real uvicorn), run-demo.ps1 and demo.sh engine checks against live local uvicorn. /api/ready timeout default raised to 5 s by orchestrator | Opus 5.5 Medium approved after fixes (legacy model_offline null, demo.sh venv python, crash-aware wait, signal trap and forced cleanup) |
 
 ## Execution notes
 
