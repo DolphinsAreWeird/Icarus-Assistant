@@ -71,6 +71,10 @@ async function runJob(pw, job, opts, scanContext, log) {
   return json;
 }
 
+function hasFailures(results) {
+  return results.some((r) => r.status === 'FAIL' || statusOf(r) === 'FAIL');
+}
+
 async function main() {
   const opts = parseArgs(process.argv);
   if (opts.help) {
@@ -128,11 +132,15 @@ async function main() {
   const gridStart = md.indexOf('## Pass/fail grid');
   console.log(`\n${md.slice(gridStart, md.indexOf('\nPASS: every check', gridStart))}`);
   console.log(`Summary: ${path.join(opts.out, 'summary.md')}`);
-  const failed = results.some((r) => r.status === 'FAIL');
+  const failed = hasFailures(results);
   process.exitCode = failed ? 1 : 0;
 }
 
-main().catch((e) => {
-  console.error(`QA run failed: ${e.message}`);
-  process.exitCode = 2;
-});
+if (require.main === module) {
+  main().catch((e) => {
+    console.error(`QA run failed: ${e.message}`);
+    process.exitCode = 2;
+  });
+}
+
+module.exports = { hasFailures };

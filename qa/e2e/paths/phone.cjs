@@ -116,7 +116,7 @@ module.exports = {
       run.check('Answer and typing box fit on the phone screen together', after && after.y + after.height <= vp.height, after ? `typing box at y=${Math.round(after.y)} of ${vp.height}` : '', 'soft');
     });
 
-    await run.step(page, 'Ask Icarus to buy, then tap Confirm purchase', async () => {
+    const purchaseConfirmed = await run.step(page, 'Ask Icarus to buy, then tap Confirm purchase', async () => {
       await app.openChat(page);
       const input = page.getByPlaceholder(app.INPUT_PLACEHOLDER);
       await input.click();
@@ -134,9 +134,16 @@ module.exports = {
         done = false;
       }
       run.data.buyByVoiceOnPhone = done;
-      run.check('A purchase Icarus set up can be confirmed on a phone', done, done ? '' : `tapping Confirm purchase did nothing (still on ${await app.screenName(page)})`, 'soft');
+      run.check('A purchase Icarus set up can be confirmed on a phone', done, done ? '' : `tapping Confirm purchase did nothing (still on ${await app.screenName(page)})`);
       (done ? can : cannot).push(done ? 'buy gold through Icarus and confirm it' : 'confirm a purchase that Icarus set up (Confirm purchase does nothing)');
+      return done;
     }, { critical: false });
+    // A thrown setup/click error must also fail the purchase, while later layout checks can still run.
+    if (purchaseConfirmed === undefined) {
+      run.data.buyByVoiceOnPhone = false;
+      run.check('Phone purchase confirmation completed', false, 'purchase step failed or was skipped');
+      cannot.push('confirm a purchase that Icarus set up (the purchase step failed)');
+    }
 
     await run.step(page, 'Find the race console and the stopwatch', async () => {
       const L = await page.evaluate(layoutInPage);

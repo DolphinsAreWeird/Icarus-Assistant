@@ -20,7 +20,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 - [ ] **I04: Isolate cached contextual answers.** Prevent reuse across users, sessions or different relevant conversation histories.
 - [x] **I05: Preserve reviewed server preview terms.** Carry preview identity/terms into native review; never silently create and execute an unseen replacement.
 - [x] **I06: Protect public administrative reset.** Public visitors cannot globally reset other accounts or previews.
-- [ ] **I07: Make QA failures enforceable.** High-severity scans and failed phone confirmation must produce failing run/exit status.
+- [x] **I07: Make QA failures enforceable.** High-severity scans and failed phone confirmation must produce failing run/exit status.
 - [ ] **I08: Separate hosted request budgets.** Avoid shared-IP starvation of account reads and confirmations; test multiple visitors and bursts.
 - [ ] **I09: Refresh and age visible market data.** Old observations cannot remain labeled live; cover idle/focus/reconnect and quote-review interactions.
 - [ ] **I10: Align launcher engines and readiness.** Explicit engine choice, accurate health/readiness, failed backend startup/hang checks.
@@ -46,6 +46,8 @@ The issue's commit subject identifies its checkpoint. Hashes will be collected a
 | I05 | `fix: confirm only the reviewed server purchase preview`: 115 frontend tests, typecheck and build passed; expiry, repricing, retries and edited-order regressions | SOL 6.1 High approved; independently reran 53 purchase tests |
 
 | I02 | `fix: suppress ungrounded bilingual financial figures`: 275 full pinned backend tests passed; 175 focused guard tests, including English/Thai digit and spelled amounts, voice/history/cache | SOL 6.1 High approved after bilingual bypass corrections; independently reran 175 tests |
+
+| I07 | `fix: make QA scan and phone confirmation failures fail the run`: 9 node:test gate tests (high finding → FAIL + exit 1, phone confirm hard check, thrown step), `node --check` on changed .cjs, `--help` exit 0, unstartable run exit 2. No browser run (Playwright browsers absent) | Opus 5.5 High approved after fixes (deduplicated high findings in report, phone fallback data, README exit codes) |
 
 ## Execution notes
 
