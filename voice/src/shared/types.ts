@@ -222,7 +222,11 @@ export interface VoiceEvents {
   assistantReply: AskResponse;
   /** A local command was handled without calling the assistant. `back` needs the UI to act. */
   command: { name: LocalCommand; text: string };
-  /** The user talked over Icarus and playback stopped. `ms` is from the start of their speech. */
+  /**
+   * The user talked over Icarus and playback stopped. `ms` is from the start of their speech.
+   * Speech only stops Icarus when it is loud, sustained AND has real words (client/barge-in.ts). `source` says which
+   * of those arrived last: 'energy' (the loudness), 'transcript' (a partial) or 'final'. Or the push-to-talk button.
+   */
   bargeIn: { source: 'energy' | 'transcript' | 'final' | 'push-to-talk'; ms: number | null };
   /** A final transcript was dropped as noise, echo or low confidence. For the test page. */
   transcriptIgnored: { text: string; reason: string; confidence: number | null };

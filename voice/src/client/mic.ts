@@ -4,6 +4,9 @@
 // An AudioWorklet does the work off the main thread. Its code is kept in a string and loaded
 // from a Blob, so there is no extra file to host.
 
+/** Every mic frame is this long (320 samples at 16 kHz). The noise floor and barge-in count time in frames. */
+export const MIC_FRAME_MS = 20;
+
 export interface MicFrame {
   /** 320 samples = 20 ms at 16 kHz. */
   pcm: Int16Array;

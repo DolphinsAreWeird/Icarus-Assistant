@@ -98,7 +98,7 @@ Constructor options: `serverUrl`, `userId`, `language`, `mode`, `config` (any nu
 | `confirmIntent` | `{ previewId, source: 'voice', requiresTap }` | The user said confirm and did not cancel in 3 seconds. **An intent only** |
 | `countdown` | `{ phase, secondsLeft, remainingMs, cancelledBy?, wasCounting? }` | `start`, `tick`, `done` or `cancelled`. Show it. See below |
 | `command` | `{ name, text }` | A local voice command ran. For `back`, **the UI must navigate back** |
-| `bargeIn` | `{ source, ms }` | The user talked over Icarus. `ms` is from the first loud sound to silence |
+| `bargeIn` | `{ source, ms }` | The user talked over Icarus: loud, sustained speech with real words (see Settings). `ms` is from their first loud sound to silence |
 | `transcriptIgnored` | `{ text, reason }` | A fragment was dropped as noise, echo or low confidence |
 | `turnMetrics` | `{ sttFinalMs, assistantMs, ttsFirstByteMs, timeToFirstAudioMs, ttsCache }` | Per-turn timing |
 | `usage` | `{ sttSeconds, ttsCharacters, ttsCharactersFromCache }` | Running credit use |
@@ -298,6 +298,8 @@ Noise, confirmation and barge-in numbers are in `src/config/defaults.ts`.
 
 **Confidence.** Scribe's per-word confidence is low even for perfect speech (about 0.49 in English, 0.36 in Thai, measured live). We divide by a per-language reference so clean speech is about 1.0. That is `confidenceReference` in `defaults.ts`. It was measured with **macOS voices, not human voices**. The test page shows both numbers for every sentence (`confidence 0.93 (raw 0.44)`). Say a few sentences into a real mic and adjust the references if clean speech does not reach about 1.0.
 
+**Barge-in** (`bargeIn` in `defaults.ts`, logic in `src/client/barge-in.ts`). Icarus stops talking only when the user's speech is (a) loud: above 3 times the room's noise floor and above 0.02 RMS, where the floor is the 20th percentile of the mic level over the last 5 s, learned while listening and while speaking; (b) sustained: about 300 ms, with short dips bridged; and (c) real words from Scribe: 2 words, or 1 word of 4 or more letters, or a stop word ("stop", "wait", "หยุด", "เดี๋ยว"), not fillers and not an echo of Icarus's own line. A sentence that arrives while Icarus talks without passing this rule is dropped as background (`transcriptIgnored`, reason `background`). Tapping the mascot (`stopSpeaking()`) and push to talk always stop Icarus at once. When Icarus is quiet the rule does not apply, so turn-taking is unchanged. Because it waits for Scribe's words, Icarus stops about 1 to 2 seconds after the user starts talking over it.
+
 The loudness and echo numbers for barge-in have **not** been tuned on a real microphone. Expect to adjust them at the venue.
 
 ## Credits
@@ -339,7 +341,7 @@ Read this before you demo.
   | **Total to first audio** | **1231 ms** (1118 to 1309) | **1296 ms** (1236 to 1321) |
 
   The 1.5 s goal is met with 200 to 380 ms to spare, **before** the browser adds about 40 ms of audio start and the device delay, and **only with a fast assistant**. A real LLM that takes 1 second or more breaks it, unless the assistant streams (the contract does not).
-- **Speech-to-text latency has a floor.** Silence 0.7 s gives about 1150 ms to the final transcript, while 0.5 s and 0.3 s both give about 920 ms. The first partial transcript takes about 0.95 s (English) and 0.9 to 1.9 s (Thai), too slow for barge-in on its own. Barge-in therefore uses mic loudness (about 120 ms in a browser test).
+- **Speech-to-text latency has a floor.** Silence 0.7 s gives about 1150 ms to the final transcript, while 0.5 s and 0.3 s both give about 920 ms. The first partial transcript takes about 0.95 s (English) and 0.9 to 1.9 s (Thai). Barge-in used to act on mic loudness alone (about 120 ms in a browser test), but then a cough, a door or people nearby cut Icarus off. It now waits for real words in that partial, so it takes about 1 to 2 s.
 - **Confidence scale.** Scribe's per-word confidence is low even for clean speech (about 0.47 to 0.49 in English, 0.35 in Thai). It does fall with noise. We normalise against those references (see Settings).
 - **A money-safety bug, found and fixed.** With digits, the English voice said **"1,215"** for 1,015 (and "10.15" for 1015). English amounts are now **spoken as words** ("one thousand fifteen"), which came back right every time. The card keeps digits. Thai digits are read correctly by v4 Turbo.
 - Bugs the live API found: `filter_background_audio` cannot be combined with `include_timestamps`, and `commit_strategy=turn_prediction` is refused by `scribe_v2_realtime`. Both fixed.
@@ -390,7 +392,9 @@ voice/
       stt-client.ts       the Scribe socket
       mic.ts              mic capture (AudioWorklet)
       player.ts           streams audio out, stops it instantly
-      vad.ts              local "is the user loud" detector
+      barge-in.ts         when the user's speech stops Icarus (loud, sustained, real words)
+      noise-floor.ts      the room's background level, learned all the time
+      vad.ts              local "is the user loud" detector (timing only)
       api.ts              talks to our server
       fallback-voice.ts   browser voice if ElevenLabs fails
       synthetic-mic.ts    fake mic for the test page
