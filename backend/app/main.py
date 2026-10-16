@@ -21,6 +21,7 @@ from app.market.history import PERIODS, period_rows, summarize
 from app.state import DemoState
 from app.trades import TradeError, confirm_trade, portfolio, prepare_trade
 from app.demo_data import demo_bundle
+from app import mock_demo
 from app.model_service import ModelService, SessionsBusy
 
 ERRORS = {
@@ -62,8 +63,11 @@ def make_llm():
 
 def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
                engine: str | None = None, model_offline: bool | None = None) -> FastAPI:
+    mock = os.getenv("ICARUS_MOCK") == "1"  # live-demo mode: saved prices, fast path only (app/mock_demo.py)
+    offline = offline or mock
     cache = PriceCache(knowledge.assets(), offline=offline)
     state = DemoState()
+    engine = "legacy" if mock and llm is None else engine
     engine = engine or ("legacy" if llm is not None else os.getenv("ASSISTANT_ENGINE", "model"))
     if engine not in ("model", "legacy"):
         raise ValueError("ASSISTANT_ENGINE must be model or legacy")
@@ -199,6 +203,8 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
         if assistant is None:
             fail(503, "no_model")
         try:
+            if mock and (said := mock_demo.canonical(req.text)):
+                req = req.model_copy(update={"text": said})  # the same transcript-proof request every time
             reply = assistant.chat(req)
             friction_log.log_chat(req, reply, resolve_user(req.user_id))
             return reply

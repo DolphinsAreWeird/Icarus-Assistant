@@ -57,3 +57,4 @@ pnpm-workspace.yaml
 # Vercel static output
 vercel-dist/
 .vercel/
+.mock-*.log

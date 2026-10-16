@@ -206,6 +206,8 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
     view.pfChange = invested ? (allLive ? 'Value at live prices' : 'Value at last known prices') : 'Nothing invested yet';
     // The change over the 1D chart the app shows (a % with its colour), instead of a placeholder label.
     const dayChange = (id: string) => { const s = proto.chartStats(id, '1D'); return Number.isFinite(s.pct) && s.start ? s.pct : null; };
+    // No stocks on these screens (the demo only buys gold, Bitcoin and Ethereum), so an empty Stocks tab would look broken.
+    if (Array.isArray(view.filters)) view.filters = view.filters.filter((f: any) => f.label !== 'Stocks');
     view.assetRows = view.assetRows.filter((a: any) => bundle!.assets[a.id]).map((a: any) => {
       const d = dayChange(a.id);
       return { ...a, price: money(bundle!.assets[a.id]!.price_thb), change: d === null ? (freshness(bundle!.assets[a.id]).state === 'live' ? 'Live' : 'Delayed') : `${signedPct(d)} 1D`, color: d === null || d >= 0 ? GREEN : RED };
