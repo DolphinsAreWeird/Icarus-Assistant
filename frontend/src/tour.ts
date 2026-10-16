@@ -92,7 +92,8 @@ export const STEPS: Step[] = [
   {
     ask: 'Should I buy some?',
     lang: 'en',
-    answer: () => reply("That's your call, so I won't pick for you. But I can set up a purchase that you confirm.", [], 'curious'),
+    // No nudge to buy right after refusing to pick (house rule 1): offer facts instead.
+    answer: () => reply("That's your call, so I won't pick for you. I can show you how gold's price has moved, or explain what it is.", [], 'curious'),
   },
   {
     ask: 'Put 1,000 baht in gold',
