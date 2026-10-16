@@ -122,7 +122,7 @@
 </div>
 
 <div style="background:#fff;border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(150,60,85,.04),0 4px 14px rgba(150,60,85,.04);border:1.5px solid #F6B9C8">
-<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="width:8px;height:8px;border-radius:50%;background:#1E9E55"></span><div style="font-size:17px;font-weight:500;flex:1">This demo session · live</div><div style="font-size:13px;color:#8A6B75">Recorded from the app prototype in this browser</div><div onClick="{{ clear }}" style="height:30px;padding:0 12px;border-radius:15px;border:1px solid #F2DCE2;font-size:13px;display:flex;align-items:center;cursor:pointer">Clear session</div></div>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="width:8px;height:8px;border-radius:50%;background:#1E9E55"></span><div style="font-size:17px;font-weight:500;flex:1">This browser’s local events · live</div><div style="font-size:13px;color:#8A6B75">Read from this browser’s local storage (last 400 events from the app prototype); not partner-wide analytics</div><div onClick="{{ clear }}" style="height:30px;padding:0 12px;border-radius:15px;border:1px solid #F2DCE2;font-size:13px;display:flex;align-items:center;cursor:pointer">Clear local events</div></div>
 <sc-if value="{{ empty }}"><div style="font-size:14.5px;color:#7E636C;padding:18px 0 4px">No events yet. Run scenarios A–D in the <a href="Icarus Prototype.dc.html">app prototype</a>; questions, explain taps and guide steps appear here.</div></sc-if>
 <sc-if value="{{ notEmpty }}">
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px"><sc-for list="{{ live.stats }}" as="x"><div style="background:#FFF2F5;border-radius:16px;padding:12px 14px"><div style="font-size:12.5px;color:#6E5560">{{ x.label }}</div><div style="font-size:24px;font-weight:500">{{ x.value }}</div></div></sc-for></div>
@@ -132,7 +132,7 @@
 </div>
 </sc-if>
 </div>
-<div style="font-size:12.5px;color:#8A6B75;text-align:center">All figures except the live session panel are simulated demo data.</div>
+<div style="font-size:12.5px;color:#8A6B75;text-align:center">All figures except the panel of this browser’s local events are simulated demo data.</div>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script>
@@ -142,9 +142,10 @@ const mk=seed=>()=>{seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed
 const LABELS={'home.balance':'Total balance','invest.portfolio_value':'Portfolio value','invest.chart':'Portfolio chart','asset.chart':'Asset price chart','asset.change24h':'24h change','buy.fee_line':'Transaction fee','portfolio.allocation':'Allocation','card.balance':'Card balance'};
 class Component extends DCLogic {
  state={range:30,events:[]};
- componentDidMount(){this.read();this.iv=setInterval(()=>this.read(),1500);}
- componentWillUnmount(){clearInterval(this.iv);}
- read(){let ev=[];try{ev=JSON.parse(localStorage.getItem(STORE)||'[]');}catch(e){}if(ev.length!==this.state.events.length)this.setState({events:ev});}
+ componentDidMount(){this.read();this.iv=setInterval(()=>this.read(),1500);this.onStorage=e=>{if(!e||e.key===null||e.key===STORE)this.read();};try{window.addEventListener('storage',this.onStorage);}catch(e){}}
+ componentWillUnmount(){clearInterval(this.iv);try{window.removeEventListener('storage',this.onStorage);}catch(e){}}
+ // Compare the raw stored ring, not its length: once 400 events are stored each new event evicts the oldest, so the count stays 400 but the content changes.
+ read(){let raw='';try{raw=localStorage.getItem(STORE)||'';}catch(e){}if(raw===this.raw)return;this.raw=raw;let ev=[];try{ev=JSON.parse(raw||'[]');}catch(e){}if(!Array.isArray(ev))ev=[];ev=ev.filter(e=>e&&typeof e==='object');this.setState({events:ev});}
  renderVals(){
   const s=this.state,days=s.range,k=days/30;
   const r=mk(7);const th=[],en=[];for(let i=0;i<days;i++){const base=420+i/days*140*k+Math.sin(i/2.2)*40;th.push(base*(1+(r()-.5)*.25)+(i%7>4?90:0));en.push(base*.64*(1+(r()-.5)*.3)+(i%7>4?40:0));}
@@ -176,7 +177,7 @@ class Component extends DCLogic {
    empty:ev.length===0,notEmpty:ev.length>0,
    live:{stats:[{label:'Events recorded',value:ev.length},{label:'Questions to Icarus',value:q.length},{label:'Tap-to-explain',value:cnt('explain_tap')},{label:'Guide steps shown',value:cnt('guide_step')},{label:'Previews prepared',value:cnt('preview_shown')},{label:'Purchases (simulated)',value:cnt('purchase')},{label:'Scenario A time',value:ft(tA)},{label:'Scenario B time',value:ft(tB)}],
     questions:q.slice(-8).reverse().map(e=>({text:e.text,where:(e.context||e.screen)+(e.mode==='voice'?' · voice':'')})),noQ:q.length===0,friction:fr,noF:fr.length===0},
-   clear:()=>{try{localStorage.removeItem(STORE);}catch(e){}this.setState({events:[]});}
+   clear:()=>{try{localStorage.removeItem(STORE);}catch(e){}this.raw='';this.setState({events:[]});}
   };
  }
 }

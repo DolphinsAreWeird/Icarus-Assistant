@@ -26,7 +26,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 - [ ] **I10: Align launcher engines and readiness.** Explicit engine choice, accurate health/readiness, failed backend startup/hang checks.
 - [ ] **I11: Settle failed fallback speech.** Clean up and settle every terminal playback outcome while keeping interrupted read-back unapproved.
 - [ ] **I12: Fix Windows build/fake startup.** Portable npm invocation, nonzero spawn failure and cross-platform fake-mode launch.
-- [ ] **I13: Refresh dashboard after ring rollover.** Detect replacement events when event count remains 400; retain truthful browser-local analytics labeling.
+- [x] **I13: Refresh dashboard after ring rollover.** Detect replacement events when event count remains 400; retain truthful browser-local analytics labeling.
 - [ ] **I14: Repair documentation and claims.** Correct stale run paths, historical handoffs, six broken links, data-locality wording and demo scope. Do not fabricate a live URL, deck or human review.
 - [ ] **I15: Restore reproducible validation.** Install locked JS dependencies/browser tooling, run Python/JS suites, typechecks/builds and meaningful offline browser coverage for both engines where feasible.
 - [ ] **I16: Final independent review and regression sweep.** Resolve review findings, verify clean issue commits, record remaining external checks and commit the final ledger.
@@ -48,6 +48,8 @@ The issue's commit subject identifies its checkpoint. Hashes will be collected a
 | I02 | `fix: suppress ungrounded bilingual financial figures`: 275 full pinned backend tests passed; 175 focused guard tests, including English/Thai digit and spelled amounts, voice/history/cache | SOL 6.1 High approved after bilingual bypass corrections; independently reran 175 tests |
 
 | I07 | `fix: make QA scan and phone confirmation failures fail the run`: 9 node:test gate tests (high finding → FAIL + exit 1, phone confirm hard check, thrown step), `node --check` on changed .cjs, `--help` exit 0, unstartable run exit 2. No browser run (Playwright browsers absent) | Opus 5.5 High approved after fixes (deduplicated high findings in report, phone fallback data, README exit codes) |
+
+| I13 | `fix: refresh dashboard after event ring rollover`: 128 frontend tests (6 rollover/label/malformed/clear/unmount), typecheck and build passed; rollover tests fail on old HTML | Opus 5.5 High approved after fixes (junk entries, truthful footer, "Clear local events") |
 
 ## Execution notes
 
