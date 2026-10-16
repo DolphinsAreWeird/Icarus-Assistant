@@ -1,3 +1,6 @@
+> **Historical note (as of 16 Oct 2026, the hackathon).** This file records the first backend integration phase. It records the state at that time: worktree and branch names, commit hashes and test counts below are old (the backend suite on `main` now has 316 tests). For the current state, read [`README.md`](../README.md), [`PLAN.md`](../PLAN.md) and [`SUMMARY.md`](../SUMMARY.md). The integrated code is on `main`.
+
+
 # Backend checkpoints — 2026-10-16
 
 This file records the first integration phase. The subsequent connected demo, latest committed model import, live gateway check and comparison with main are documented in [DEMO_HANDOFF.md](DEMO_HANDOFF.md).

@@ -1,3 +1,6 @@
+> **Historical note (as of 16 Oct 2026, the hackathon).** This summary describes work on the `backend` branch and its worktree. It records the state at that time: worktree and branch names, commit hashes and test counts below are old, and its statements that nothing was merged into `main` are out of date. For the current state, read [`README.md`](../../README.md), [`PLAN.md`](../../PLAN.md) and [`SUMMARY.md`](../../SUMMARY.md). The integrated code is on `main`.
+
+
 # Backend demo summary
 
 Updated: 16 October 2026. This summarizes the work completed in this chat, its verification, and the questions still open.
@@ -132,4 +135,4 @@ This copies only six validated public market/forecast JSON artifacts. Credential
 | `2bf1a45` | Chart-help fixes, consistent fees, tests and launcher |
 | `6ae6f8c` | Final verification and review-instance documentation |
 
-Further details: [demo runbook and comparison](backend/DEMO_HANDOFF.md), [backend setup](backend/README.md), [design](backend/DESIGN.md), and [earlier checkpoints](backend/CHECKPOINTS.md).
+Further details: [demo runbook and comparison](../../backend/DEMO_HANDOFF.md), [backend setup](../../backend/README.md), [design](../../backend/DESIGN.md), and [earlier checkpoints](../../backend/CHECKPOINTS.md).

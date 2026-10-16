@@ -180,6 +180,7 @@ async function main() {
           });
         };
         loadAccount(0);
+        demo.startAutoRefresh();
         installBackend({
           ...backend,
           getInstance: () => instance as PrototypeLike | null,

@@ -11,6 +11,22 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
 /** Aborted requests are what a browser does when speech is interrupted or an image is replaced: not failures. */
 const ABORTED = /ERR_ABORTED|cancelled|NS_BINDING_ABORTED|Load request cancelled/i;
 
+/** Shared grading for recorded runs and their serialized reports. */
+function statusOf(r, part) {
+  if (!r) return null;
+  if (r.fatal) return 'FAIL';
+  const inPart = (x) => part === undefined || (x.part ?? null) === part;
+  const aborted = part === undefined ? Object.keys(r.abortedParts ?? {}).length > 0 : Boolean(r.abortedParts?.[part ?? '_']);
+  if (aborted) return 'FAIL';
+  if ((r.checks ?? []).some((c) => inPart(c) && !c.ok && c.level === 'hard')) return 'FAIL';
+  if ((r.findings ?? []).some((f) => inPart(f) && f.severity === 'high')) return 'FAIL';
+  if ((r.steps ?? []).some((s) => inPart(s) && s.status === 'failed')) return 'WARN';
+  if ((r.checks ?? []).some((c) => inPart(c) && !c.ok && c.level === 'soft')) return 'WARN';
+  if ((r.findings ?? []).some((f) => inPart(f) && ['medium', 'low'].includes(f.severity))) return 'WARN';
+  if ((r.events ?? []).some((e) => inPart(e) && (e.kind === 'pageerror' || e.kind === 'crash'))) return 'WARN';
+  return 'PASS';
+}
+
 class PathRun {
   constructor({ envId, env, pathId, pathTitle, outDir, scanContext, part = null }) {
     this.envId = envId;
@@ -151,7 +167,7 @@ class PathRun {
     const file = await this.shot(page, name, opts);
     try {
       const found = await scanPage(page, this.scanContext);
-      for (const f of found) this.findings.push({ ...f, screenshot: file, step: this.currentStep, env: this.envId, path: this.pathId });
+      for (const f of found) this.findings.push({ ...f, screenshot: file, step: this.currentStep, part: this.part, env: this.envId, path: this.pathId });
     } catch (e) {
       this.note(`scan failed: ${String(e.message).split('\n')[0]}`);
     }
@@ -187,14 +203,7 @@ class PathRun {
 
   /** PASS, WARN or FAIL, for the whole run or one part. */
   statusFor(part) {
-    const inPart = (x) => part === undefined || (x.part ?? null) === part;
-    const aborted = part === undefined ? Object.keys(this.abortedParts).length > 0 : Boolean(this.abortedParts[part ?? '_']);
-    if (aborted) return 'FAIL';
-    if (this.checks.some((c) => inPart(c) && !c.ok && c.level === 'hard')) return 'FAIL';
-    if (this.steps.some((s) => inPart(s) && s.status === 'failed')) return 'WARN';
-    if (this.checks.some((c) => inPart(c) && !c.ok && c.level === 'soft')) return 'WARN';
-    if (this.events.some((e) => inPart(e) && (e.kind === 'pageerror' || e.kind === 'crash'))) return 'WARN';
-    return 'PASS';
+    return statusOf(this, part);
   }
 
   toJSON() {
@@ -204,6 +213,7 @@ class PathRun {
       path: this.pathId,
       title: this.pathTitle,
       status: this.statusFor(undefined),
+      fatal: this.fatal ?? null,
       durationMs: (this.endedAt ?? Date.now()) - this.startedAt,
       abortedParts: this.abortedParts,
       steps: this.steps,
@@ -220,4 +230,4 @@ class PathRun {
   }
 }
 
-module.exports = { PathRun, slug, ABORTED };
+module.exports = { PathRun, statusOf, slug, ABORTED };

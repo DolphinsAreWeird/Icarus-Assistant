@@ -1,11 +1,14 @@
 """What the assistant remembers between turns: model answers for a few minutes, and a log of questions.
 
 AnswerCache keeps replies that needed the model, for the same normalized question on the same screen,
-asset, chart period, tapped element and typed amount, while the facts we would say are unchanged (the
-fact packs' version), for ANSWER_CACHE_TTL_S seconds (default 300; 0 turns it off). Only answers built
-from read-only tools are kept, never trades, cancels or guides, and only for questions that don't lean
-on the conversation ("what about it?", "what do you mean", "and then?"). The model has the user's own
-money in its context, so an answer is kept for that user only, while their money is unchanged.
+asset, chart period, tapped element, visible elements and typed amount, while the facts we would say are
+unchanged (the fact packs' version), for ANSWER_CACHE_TTL_S seconds (default 300; 0 turns it off). Only
+answers built from read-only tools are kept, never trades, cancels or guides, and only for questions that
+don't lean on the conversation ("what about it?", "what do you mean", "and then?"). Only a session's FIRST
+turn is kept or served: with any earlier history the model may have used it, so the answer is never stored
+or reused. The key also holds the journey stage and the snapshot's label. The model has the user's own money
+in its context, so an answer is kept for that user only, while their account and the app's snapshot are
+unchanged. A cached answer is served only if its figures are still backed by the evidence stored with it.
 
 QuestionLog writes one JSON line per question with the route that answered it (prepared, fastpath,
 cache, model) to QUESTION_LOG (default backend/.runtime/questions.jsonl; 0 turns it off). The

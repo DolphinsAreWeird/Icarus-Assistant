@@ -29,7 +29,7 @@ No key or credits yet? `npm run dev:fake` gives fake tones instead of speech and
 | Command | What it does |
 |---|---|
 | `npm run dev` | Server and test page (rebuilds the browser code first) |
-| `npm run dev:fake` | Same, with fake ElevenLabs. No key needed |
+| `npm run dev:fake` | Same, with fake ElevenLabs. No key needed. Works on Windows, macOS and Linux (`scripts/dev-fake.mjs` sets `FAKE_ELEVENLABS=1`) |
 | `npm run check` | Checks the key, models, Thai support, voice IDs, token minting against the live API. Add `-- --speak` to hear a test line |
 | `npm run pregenerate` | Makes the demo audio files in `demo-audio/`. `-- --dry` shows the credit cost first. `-- --verify` checks every clip with the live Scribe, amounts included |
 | `npm run bench` | Measures the pipeline speed with no mic. Reports real numbers |
@@ -333,6 +333,14 @@ The loudness and echo numbers for barge-in have **not** been tuned on a real mic
 - Browser speech-to-text uses a **single-use token** the server mints (valid 15 minutes). The browser connects to Scribe directly with it.
 - Text-to-speech and the assistant go through our server.
 - There is **no login on the voice server**. Anyone who can reach it can use your credits. Run it on localhost or a private network. Set `ALLOWED_ORIGINS` to the real frontend origin if you deploy it.
+
+### Hosted demo request budgets
+
+With `PUBLIC_DEMO=1`, rolling 60-second budgets allow bursts up to each limit. Chat (`/brain/chat` and `/api/ask`) shares 30 requests per visitor, STT tokens allow 12, TTS 60, backend previews 60, reads 600 and confirmations/cancellations 120. Each class also has an independent socket-IP ceiling of 20 times its visitor limit. Chat exhaustion cannot consume the read or confirmation allowance. Local rehearsal has no limits.
+
+The visitor key is the request's `user_id`/`userId` or account-read path ID, together with `x-session-id` when sent (so tabs sharing a default `userId` stay separate). These demo selectors are **not authentication** and can be changed, so the per-visitor limit is fairness only and the socket-IP ceiling is the spending backstop. A request with no selector (for example `/api/utopia/route`, or `/brain/prices`) counts against the socket-IP ceiling alone rather than one small shared anonymous bucket. Malformed percent-encoding under `/brain` is refused with 400 before any budget or backend request; the public reset block runs before budget classification. The server ignores `X-Forwarded-For` and keeps Express proxy trust disabled, because this deployment has no explicit trusted proxy boundary. Behind Render/Vercel, the socket may identify a shared platform proxy, so its higher ceiling can be shared by all visitors. A future deployment should configure verified proxy addresses before using forwarded visitor IPs. No proxy IP/header authenticity is claimed here.
+
+Counters are process-local, expire after 60 seconds, and store at most 5,000 visitor keys and 5,000 socket-IP keys per request class. Active limits are never cleared to make space. When the visitor table is full, new visitors are counted against the socket-IP ceiling only, so one client cannot lock others out by filling it; when the socket-IP table is full, new addresses receive 429 (`Retry-After: 60`) until old entries expire. Otherwise `Retry-After` is the time until the exhausted window frees a slot. Multiple backend replicas would need a shared budget store. These are demo abuse controls, not a production account or billing boundary.
 
 ## What is mocked, and what is verified
 

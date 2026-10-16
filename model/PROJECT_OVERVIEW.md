@@ -2,7 +2,7 @@
 
 English/Thai crypto-app assistant, evidence retrieval, deterministic financial tools, experimental risk baselines, and a validated app-data adapter. This repository candidate contains the model/data-processing work, not a website or trading backend.
 
-Start with [model/START_HERE.md](model/START_HERE.md). Integration contracts are in [model/INTEGRATION.md](model/INTEGRATION.md).
+Start with [model/START_HERE.md](START_HERE.md). Integration contracts are in [model/INTEGRATION.md](INTEGRATION.md).
 
 Python's standard library is sufficient. The live assistant uses a private Orion API key in ignored `model/.env`; do not overwrite an existing configured file. `model/.env.example` is the public template.
 

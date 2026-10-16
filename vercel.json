@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm --prefix frontend ci --no-audit --no-fund",
+  "buildCommand": "node scripts/build-vercel.mjs",
+  "outputDirectory": "vercel-dist",
+  "framework": null,
+  "cleanUrls": false,
+  "redirects": [
+    { "source": "/", "destination": "/app/", "permanent": false },
+    { "source": "/app", "destination": "/app/", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://YOUR-ICARUS-SERVICE.onrender.com/api/:path*" },
+    { "source": "/brain/:path*", "destination": "https://YOUR-ICARUS-SERVICE.onrender.com/brain/:path*" },
+    { "source": "/mock/:path*", "destination": "https://YOUR-ICARUS-SERVICE.onrender.com/mock/:path*" }
+  ]
+}

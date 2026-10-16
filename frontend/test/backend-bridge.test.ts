@@ -96,7 +96,7 @@ describe("the reply: the backend's screen actions, and the exact buy read-back",
     expect(reply.ui_actions).toEqual(BUY_ACTIONS);
     expect(reply.text).toBe(BUY_REPLY.text);
     expect(reply.speech).toBe('one thousand baht into gold. Fee ten baht. Total one thousand ten baht. Tap Confirm purchase when you are ready.');
-    expect(reply.sources).toEqual(['get_prices · binance + frankfurter (live)']);
+    expect(reply.sources).toEqual([expect.stringMatching(/^get_prices · binance \+ frankfurter \(live at \d\d:\d\d\)$/)]);
   });
 
   it('in Thai, the read-back keeps digits', () => {
@@ -183,11 +183,12 @@ describe('the backend\'s cards and screen actions', () => {
 
 describe('showcase: a buy goes through the app\'s own screens, and the backend never dead-ends', () => {
   it('turns a buy card into the app\'s own buy steps, read back from the screen\'s own numbers', () => {
-    const r = toPrototypeReply({ text: "Here's your preview.", ui_actions: [{ type: 'open_asset', asset: 'XAU' }, TRADE_CARD] }, 'en', undefined, fakeProto());
+    const r = toPrototypeReply({ text: "Here's your preview.", ui_actions: [{ type: 'open_asset', asset: 'XAU' }, TRADE_CARD] }, 'en', undefined, { ...fakeProto(), reviewServerPreview: () => true });
     expect(r.trade).toBeNull();
     expect(r.reply.ui_actions.map((a) => a.type)).toEqual(['open_asset', 'start_buy', 'type_amount', 'select_wallet', 'review']);
+    expect(r.reply.ui_actions.at(-1)?.preview).toMatchObject(TRADE_CARD.data);
     expect(r.reply.ui_actions[2]).toEqual({ type: 'type_amount', value: 1000 });
-    expect(r.reply.speech).toBe('one thousand baht into gold. Fee ten baht. Total one thousand ten baht. Tap Confirm purchase when you are ready.');
+    expect(r.reply.speech).toBe('nine hundred ninety-five baht into gold. Fee five baht. Total one thousand baht. Quantity 0.00715118 PAXG. Unit price 139137.82 baht. Tap Confirm purchase when you are ready.');
   });
 
   it('keeps the card for a sale, for an asset the app does not have, and without the app\'s calculator', () => {
@@ -325,7 +326,7 @@ describe("inside the REAL prototype: the backend's buy card is done on Oasis's o
     setMascotFallback(false);
   });
 
-  it('opens gold, types 1,000 and stops on Review purchase; no card covers the screen', async () => {
+  it('keeps the server card when the native preview boundary is unavailable', async () => {
     document.head.innerHTML = '';
     document.body.innerHTML = '<div id="root"></div>';
     setMascotFallback(true);
@@ -340,8 +341,8 @@ describe("inside the REAL prototype: the backend's buy card is done on Oasis's o
     installBackend({ url: 'http://be', userId: 'u_new', getInstance: () => instance, showTrade, hideCards: () => undefined, fetchImpl });
     await act(async () => (window as unknown as { Icarus: { send: (t: string) => void } }).Icarus.send('Put 1,000 baht in gold'));
     await act(async () => sleep(6000));
-    expect(instance!.state).toMatchObject({ view: 'buy', buyStep: 'review', buyAmount: '1000', assetId: 'XAU' });
-    expect(showTrade).not.toHaveBeenCalled();
+    expect(instance!.state).toMatchObject({ view: 'asset', assetId: 'XAU' });
+    expect(showTrade).toHaveBeenCalledWith(expect.objectContaining({ preview_id: 'pv' }), 'en');
   }, 20_000);
 });
 
@@ -376,5 +377,57 @@ describe('the trade card (an older backend that sends cards)', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('freshness never stays live past the threshold', () => {
+  const card = { preview_id: 'pv_abc', asset_id: 'gold', asset_name: 'Tokenized gold (PAX Gold)', side: 'buy', amount_thb: 1000, price_thb: 139137.82, unit: 'PAXG', freshness: 'live', fee_is_mock: true, fee_thb: 5, qty: 0.00715118, you_pay_thb: 1000, expires_in_s: 120, amount: 995, fee: 5, total: 1000, currency: 'THB' };
+  it('ages the trade card label from when the card was received', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] });
+    vi.setSystemTime(Date.parse('2026-10-16T09:00:00Z'));
+    try {
+      const el = showTradeCard({ ...card, freshness: 'live', expires_in_s: 600 }, { lang: 'en', backendUrl: 'http://be', userId: 'u_new', getPhone: () => null });
+      expect(el.textContent).toContain('Live price');
+      await vi.advanceTimersByTimeAsync(130_000);
+      expect(el.textContent).toContain('Delayed price');
+      expect(el.textContent).not.toContain('Live price');
+      hideTradeCard();
+      // At the default 120 s hold the card expires right at the live threshold; its label must keep ageing.
+      const expiring = showTradeCard({ ...card, freshness: 'live', expires_in_s: 120 }, { lang: 'en', backendUrl: 'http://be', userId: 'u_new', getPhone: () => null });
+      await vi.advanceTimersByTimeAsync(180_000);
+      expect(expiring.textContent).toContain('Delayed price');
+      hideTradeCard();
+      vi.setSystemTime(Date.parse('2026-10-16T09:04:00Z'));
+      const old = showTradeCard({ ...card, freshness: 'live', as_of: '2026-10-16T09:00:00Z' }, { lang: 'en', backendUrl: 'http://be', userId: 'u_new', getPhone: () => null });
+      expect(old.textContent).toContain('Delayed price');
+      hideTradeCard();
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('a live source with an hour-old as_of is only ever called live at the reply time', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(Date.parse('2026-10-16T09:00:00Z'));
+    try {
+      const reply = toPrototypeReply({ text: 'x', speak: false, ui_actions: [], suggestions: [], sources: [
+        { tool: 'get_prices', provider: 'binance', freshness: 'live', as_of: '2026-10-16T08:00:00Z' },
+      ] } as any, 'en');
+      const at = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      expect(reply.reply.sources).toEqual([`get_prices · binance (live at ${at})`]);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('reply sources are aged from their own time', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(Date.parse('2026-10-16T09:00:00Z'));
+    try {
+      const reply = toPrototypeReply({ text: 'x', speak: false, ui_actions: [], suggestions: [], sources: [
+        { tool: 'get_prices', provider: 'binance', freshness: 'live', as_of: '2026-10-16T08:56:00Z' },
+        { tool: 'get_prices', provider: 'fx', freshness: 'live', as_of: '2026-10-16T08:59:30Z' },
+      ] } as any, 'en');
+      const at = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      expect(reply.reply.sources).toEqual(['get_prices · binance (delayed)', `get_prices · fx (live at ${at})`]);
+      // The label stays in the chat: it names the reply time, so it never reads as current later.
+      expect(reply.reply.sources.join(' ')).not.toMatch(/\(live\)/);
+    } finally { vi.useRealTimers(); }
   });
 });

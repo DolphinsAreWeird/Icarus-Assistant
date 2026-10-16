@@ -224,16 +224,20 @@ def test_on_golds_page_the_card_comes_without_moving(cache, state):
 
 
 def test_buy_problems_come_back_as_data_with_no_card(cache, state):
-    fake = FakeLLM([calls(("prepare_trade", {"asset_id": "BTC", "side": "buy", "amount_thb": 9000}),
-                          ("prepare_trade", {"asset_id": "BTC", "side": "buy", "amount_thb": 50}),
-                          ("prepare_trade", {"asset_id": "AAPL", "side": "buy", "amount_thb": 500})),
-                    text("You have 5,000 baht, and the minimum is 100.")])
-    reply = ask(Assistant(fake, state, cache), "buy", snapshot=SNAPSHOT)
-    results = tool_results(fake, 1)
-    assert results[0]["data"] == {"ok": False, "reason": "not_enough_cash", "cash_thb": 5000.0}
-    assert results[1]["data"]["reason"] == "below_minimum"
-    assert results[2]["reason"] == "no_data"
-    assert reply.ui_actions == [] and reply.debug["unbacked_numbers"] == []
+    # one grounded request per turn (I03); each reply's figures must be backed by that turn's tool data
+    steps = [("buy 9000 baht of bitcoin", "BTC", 9000, "You have 5,000 baht."),
+             ("buy 50 baht of bitcoin", "BTC", 50, "The minimum is 100 baht."),
+             ("buy 500 baht of apple", "AAPL", 500, "That one can't be bought here yet.")]
+    fake = FakeLLM([x for _, asset, amount, say in steps
+                    for x in (calls(("prepare_trade", {"asset_id": asset, "side": "buy", "amount_thb": amount})),
+                              text(say))])
+    bot = Assistant(fake, state, cache)
+    replies = [ask(bot, msg, snapshot=SNAPSHOT) for msg, *_ in steps]
+    assert tool_results(fake, 1)[0]["data"] == {"ok": False, "reason": "not_enough_cash", "cash_thb": 5000.0}
+    assert tool_results(fake, 3)[-1]["data"]["reason"] == "below_minimum"
+    assert tool_results(fake, 5)[-1]["reason"] == "no_data"
+    assert all(r.ui_actions == [] and r.debug["unbacked_numbers"] == [] for r in replies)
+    assert [r.text for r in replies] == [say for *_, say in steps]
 
 
 def test_cancel_stops_a_late_tap_on_the_card(cache, state):
@@ -419,10 +423,26 @@ def test_bad_arguments_from_a_weak_model_become_tool_errors(cache, state):
     assert reply.ui_actions == [] and reply.text == "Sorry, try again."
 
 
-def test_made_up_number_is_flagged(cache, state):
+def test_made_up_number_is_replaced_before_delivery_and_history(cache, state):
     fake = FakeLLM([calls(("get_prices", {"asset_ids": ["XAU"]})),
                     text("Gold is about 134,000 baht, up 0.5% today. Last week it was 99,999.")])
-    assert ask(Assistant(fake, state, cache), "gold price?").debug["unbacked_numbers"] == [99999.0]
+    reply = Assistant(fake, state, cache).chat(ChatRequest(
+        session_id="s1", user_id="u_new", text="gold price?", input_mode="voice"))
+    assert reply.debug["unbacked_numbers"] == [99999.0]
+    assert reply.status == "unavailable" and reply.speak
+    assert "99,999" not in reply.text and reply.speech is None
+    assert reply.ui_actions == []
+    assert state.sessions["u_new:s1"][-1]["content"] == reply.text
+    assert "99,999" not in json.dumps(state.sessions)
+
+
+def test_grounded_tool_figures_and_user_amounts_survive(cache, state):
+    fake = FakeLLM([calls(("get_prices", {"asset_ids": ["XAU"]})),
+                    text("Gold is about 134,000 baht, up 0.5% today; your budget is 1,000.49 baht.")])
+    reply = ask(Assistant(fake, state, cache), "Explain gold pricing for my 1,000.49 baht budget")
+    assert reply.status == "ok" and reply.debug["unbacked_numbers"] == []
+    assert "134,000" in reply.text and "1,000.49" in reply.text
+    assert {source.tool for source in reply.sources} == {"get_prices"}
 
 
 def test_think_tags_are_removed(cache, state):
@@ -447,6 +467,22 @@ def test_checks():
     assert unbacked_numbers("about 2.7 million baht", [{"p": 2_729_983.59}], "") == []
     assert unbacked_numbers("down about 3%", [{"c": -3.02}], "") == []
     assert unbacked_numbers("in 2 steps", [], "") == []
+    assert unbacked_numbers("ราคา999999บาท", [], "") == [999999.0]
+    assert unbacked_numbers("ราคาหนึ่งล้านบาท", [], "") == [1000000.0]
+    assert unbacked_numbers("ราคาหนึ่งแสนสามหมื่นสี่พันบาท", [{"p": 134000}], "") == []
+    assert unbacked_numbers("ราคาสองจุดเจ็ดล้านบาท", [{"p": 2729983.59}], "") == []
+    assert unbacked_numbers("ค่าธรรมเนียมห้าบาท", [], "") == [5.0]
+    assert unbacked_numbers("เพิ่มขึ้นยี่สิบเอ็ดเปอร์เซ็นต์", [], "") == [21.0]
+    assert unbacked_numbers("ฉันมีหนึ่งร้อยยี่สิบสามบาท", [], "ฉันมี 123 บาท") == []
+    assert unbacked_numbers("หนึ่งขั้นตอนและหลายพันเรื่อง", [], "") == []
+    assert unbacked_numbers("ราคา2.7ล้านบาท", [{"p": 2729983.59}], "") == []
+    assert unbacked_numbers("one million baht", [], "") == [1000000.0]
+    assert unbacked_numbers("two point seven million baht", [{"p": 2729983.59}], "") == []
+    assert unbacked_numbers("five percent", [], "") == [5.0]
+    assert unbacked_numbers("one step and a card", [], "") == []
+    assert unbacked_numbers("Your budget is one thousand baht", [], "My budget is 1000 baht") == []
+    assert unbacked_numbers("The fee is 5 baht", [], "") == [5.0]
+    assert unbacked_numbers("The fee is ฿5", [], "") == [5.0]
     assert unbacked_numbers("over the last 24 hours", [], "") == []
     # caught live: mistral said "up 5 percent" when the tool said 0.2
     assert unbacked_numbers("gold went up 5 percent", [{"c": 0.2}], "") == [5.0]
@@ -571,7 +607,7 @@ def test_steps_card_comes_from_the_reviewed_file(cache, state):
 def test_one_card_per_reply_and_a_trade_wins(cache, state):
     fake = FakeLLM([calls(("show_steps", {"topic": "buy"}), ("show_chart", {"asset_ids": ["BTC"], "period": "1M"}),
                           ("prepare_trade", {"asset_id": "XAU", "side": "buy", "amount_thb": 1000})), text("ok")])
-    reply = ask(Assistant(fake, state, cache), "everything", snapshot=SNAPSHOT)
+    reply = ask(Assistant(fake, state, cache), "show everything, then buy gold 1000 baht", snapshot=SNAPSHOT)
     assert [a["card_type"] for a in reply.ui_actions if a["type"] == "card"] == ["trade_preview"]
 
 
@@ -608,6 +644,107 @@ def test_trade_replies_are_not_trimmed(cache, state):
                     text("Here's your preview. The fee is 5 baht. Tap Confirm on the card.")])
     reply = ask(Assistant(fake, state, cache), "buy gold 1000", snapshot=SNAPSHOT)
     assert reply.text.endswith("Tap Confirm on the card.")
+
+
+# ---------- I03: a trade preview needs the user's own intent, asset, side and amount ----------
+
+def _trade(asset, side, amount):
+    return calls(("prepare_trade", {"asset_id": asset, "side": side, "amount_thb": amount}))
+
+
+def _refused(fake, bot_reply, call_index=1):
+    data = tool_results(fake, call_index)[0]
+    assert data["ok"] is False and data["reason"] == "trade_not_grounded" and data["no_action_executed"] is True
+    assert bot_reply.ui_actions == []
+
+
+def test_explain_bitcoin_cannot_become_a_gold_preview(cache, state):
+    fake = FakeLLM([_trade("XAU", "buy", 4000), text("Bitcoin is a digital currency.")])
+    reply = ask(Assistant(fake, state, cache), "Explain what Bitcoin is", snapshot={**SNAPSHOT, "screen": "home"})
+    _refused(fake, reply)
+    assert state.users["u_new"]["cash_thb"] == 5000.0
+
+
+@pytest.mark.parametrize("msg,call", [
+    ("buy 1000 baht of bitcoin", ("XAU", "buy", 1000)),         # other asset
+    ("buy 1000 baht of gold", ("XAU", "buy", 1000.49)),         # other amount (decimals matter)
+    ("buy 1000.49 baht of gold", ("XAU", "buy", 1000)),
+    ("buy 1000 baht of gold", ("XAU", "sell", 1000)),           # other side
+    ("sell 1000 baht of gold", ("XAU", "buy", 1000)),
+    ("buy 1000 baht of gold and bitcoin", ("XAU", "buy", 1000)),
+    ("what is gold, I do not want to buy 1000 baht of it", ("XAU", "buy", 1000)),
+    ("should I buy 1000 baht of gold?", ("XAU", "buy", 1000)),
+    ("what is 1000 baht of gold worth", ("XAU", "buy", 1000)),  # no buy or sell word
+    ("buy 200 grams of gold", ("XAU", "buy", 200)),             # a quantity is not baht
+    ("buy 2 bitcoin", ("BTC", "buy", 2)),
+    ("ซื้อ 0.5 บิตคอยน์", ("BTC", "buy", 0.5)),
+    ("I bought 1000 baht of gold last year, how is it doing?", ("XAU", "buy", 1000)),  # past, not a request
+])
+def test_mismatched_trade_calls_are_refused(cache, state, msg, call):
+    fake = FakeLLM([_trade(*call), text("I need the details first.")])
+    _refused(fake, ask(Assistant(fake, state, cache), msg, snapshot={**SNAPSHOT, "screen": "home"}))
+
+
+@pytest.mark.parametrize("msg,call,exact", [
+    ("Put 1,000 baht in gold", ("XAU", "buy", 1000), 1000),
+    ("buy 1000.49 baht of bitcoin", ("BTC", "buy", 1000.49), 1000.49),
+    ("ซื้อทอง 1000 บาท", ("XAU", "buy", 1000), 1000),
+    ("ซื้อ บิตคอยน์ 1,500 บาท", ("BTC", "buy", 1500), 1500),
+    ("buy one thousand baht of bitcoin", ("BTC", "buy", 1000), 1000),
+    ("Buy 1000 baht of gold", ("XAU", "buy", 1000), 1000),
+    ("ซื้อทองคำ 1,000 บาท", ("XAU", "buy", 1000), 1000),
+    ("ซื้อทอง ๑,๐๐๐ บาท", ("XAU", "buy", 1000), 1000),
+    ("invest 500 in bitcoin", ("BTC", "buy", 500), 500),
+    ("ลงทุนทอง 1000", ("XAU", "buy", 1000), 1000),
+])
+def test_grounded_trade_calls_still_preview(cache, state, msg, call, exact):
+    fake = FakeLLM([_trade(*call), text("Tap Confirm on the card.")])
+    reply = ask(Assistant(fake, state, cache), msg, snapshot={**SNAPSHOT, "screen": "home"})
+    card = next(a for a in reply.ui_actions if a["type"] == "card")
+    assert card["card_type"] == "trade_preview" and card["data"]["you_pay_thb"] == exact
+
+
+def test_a_sell_with_the_users_words_previews(cache, state):
+    fake = FakeLLM([_trade("XAU", "sell", 500), text("ok")])
+    reply = ask(Assistant(fake, state, cache), "sell 500 baht of gold", snapshot=SNAPSHOT)
+    data = tool_results(fake, 1)[0]
+    assert data.get("reason") != "trade_not_grounded"  # grounded; the account may still lack gold to sell
+
+
+def test_amount_from_the_previous_turn_needs_this_turn_to_be_a_trade_followup(cache, state):
+    fake = FakeLLM([text("Which asset?"), _trade("XAU", "buy", 1000), text("Tap Confirm.")])
+    bot = Assistant(fake, state, cache)
+    ask(bot, "I want to buy gold", snapshot={**SNAPSHOT, "screen": "home"})
+    reply = ask(bot, "1000 baht", snapshot={**SNAPSHOT, "screen": "home"})
+    assert [a["card_type"] for a in reply.ui_actions if a["type"] == "card"] == ["trade_preview"]
+
+
+def test_a_stale_previous_turn_cannot_authorise_an_unrelated_question(cache, state):
+    fake = FakeLLM([text("ok"), _trade("XAU", "buy", 1000), text("Bitcoin is a coin.")])
+    bot = Assistant(fake, state, cache)
+    ask(bot, "buy 1000 baht of gold", snapshot={**SNAPSHOT, "screen": "home"})
+    reply = ask(bot, "Explain what Bitcoin is", snapshot={**SNAPSHOT, "screen": "home"})
+    _refused(fake, reply, 2)
+
+
+@pytest.mark.parametrize("follow_up", ["yes", "what is 1000 baht in grams?"])
+def test_a_reply_or_question_after_a_trade_request_is_not_a_new_request(cache, state, follow_up):
+    fake = FakeLLM([text("Which asset?"), _trade("XAU", "buy", 1000), text("ok")])
+    bot = Assistant(fake, state, cache)
+    ask(bot, "buy 1000 baht of gold" if follow_up == "yes" else "I want to buy gold",
+        snapshot={**SNAPSHOT, "screen": "home"})
+    _refused(fake, ask(bot, follow_up, snapshot={**SNAPSHOT, "screen": "home"}), 2)
+
+
+def test_on_an_asset_page_the_page_is_the_asset(cache, state):
+    fake = FakeLLM([_trade("XAU", "buy", 500), text("Tap Confirm on the card.")])
+    reply = ask(Assistant(fake, state, cache), "buy 500 baht", snapshot=SNAPSHOT)  # SNAPSHOT is gold's page
+    assert [a["card_type"] for a in reply.ui_actions if a["type"] == "card"] == ["trade_preview"]
+
+
+def test_on_an_asset_page_another_asset_still_needs_naming(cache, state):
+    fake = FakeLLM([_trade("BTC", "buy", 500), text("ok")])
+    _refused(fake, ask(Assistant(fake, state, cache), "buy 500 baht", snapshot=SNAPSHOT))
 
 
 def test_a_frozen_card_blocks_a_buy_up_front(cache, state):

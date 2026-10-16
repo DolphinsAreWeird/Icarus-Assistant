@@ -6,6 +6,7 @@
 
 import { STRINGS } from '../../voice/src/config/strings';
 import { placeOverPhone } from './handoff-card';
+import { agedFreshness } from './demo-data';
 
 const CARD_ID = 'icarus-trade';
 
@@ -94,10 +95,14 @@ export function showTradeCard(card: Record<string, unknown>, o: TradeCardOptions
     row.append(line(fill(label, { asset: shortAsset }), ''), line(values[i] ?? '', 'text-align:right'));
     rows.append(row);
   });
-  const detail = line(
-    `${fill(t.qty, { qty, unit, price: money(card.price_thb) })} · ${t.freshness[String(card.freshness)] ?? String(card.freshness ?? '')}`,
-    'font-size:11.5px;color:#8A6B75;margin-top:6px',
-  );
+  // The preview carries no quote time, so a "live" label is aged from when this card was received; never live past the threshold.
+  const receivedAt = Date.now();
+  const detailText = () => {
+    const raw = String(card.freshness ?? '');
+    const label = raw === 'live' ? agedFreshness(raw, (card.as_of ?? card.quoted_at) as string | undefined, receivedAt).state : raw;
+    return `${fill(t.qty, { qty, unit, price: money(card.price_thb) })} · ${t.freshness[label] ?? raw}`;
+  };
+  const detail = line(detailText(), 'font-size:11.5px;color:#8A6B75;margin-top:6px');
   const status = line('', 'font-size:12px;color:#8A6B75;margin-top:6px;min-height:1.2em');
 
   const buttons = document.createElement('div');
@@ -121,11 +126,13 @@ export function showTradeCard(card: Record<string, unknown>, o: TradeCardOptions
   // The backend holds the price for a short time. Show it, and stop offering Confirm when it is gone.
   let left = Number(card.expires_in_s ?? 120);
   const tick = () => {
+    detail.textContent = detailText();
     if (left <= 0) {
       status.textContent = t.expired;
       confirm.disabled = true;
       confirm.style.opacity = '.5';
-      window.clearInterval(timer);
+      // Keep ticking (cleanup stops it): the price label must still age after the hold ends, or an expired card
+      // shown at the default 120 s hold would freeze on "Live price".
       return;
     }
     status.textContent = fill(t.held, { time: `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` });

@@ -32,6 +32,7 @@ from app.assistant.memo import AnswerCache, QuestionLog, reusable, standalone
 from app.assistant.normalize import normalize
 from app.assistant.prepared import PreparedAnswers, default as prepared_answers, sample_questions
 from app.assistant.prompt import FALLBACK_REPLY, REFUSAL_REPLY, SAFETY_REPLY, SYSTEM_PROMPT, turn_context
+from app.assistant.trade_grounding import check as trade_check
 from app.contracts import ChatReply, ChatRequest, SourceRef
 from app.facts import FactPacks, name as asset_name
 from app.market.cache import PriceCache
@@ -143,10 +144,11 @@ class Assistant:
             if done is None:
                 return None
             text, calls = done
-            history.extend([{"role": "user", "content": req.text}, {"role": "assistant", "content": text}])
+            reply = self._finish(req, ctx, text, started, norm, turn | info, route=route, model_calls=calls,
+                                 **self._who(calls))
+            history.extend([{"role": "user", "content": req.text}, {"role": "assistant", "content": reply.text}])
             trim(history)
-            return self._finish(req, ctx, text, started, norm, turn | info, route=route, model_calls=calls,
-                                **self._who(calls))
+            return reply
 
         reply = None
         if fastpath.enabled():
@@ -205,6 +207,9 @@ class Assistant:
                                  req.snapshot, given, where=(start.screen, start.asset) if told else None,
                                  text=req.text)}
         start_len = len(history)
+        first_turn = start_len == 0  # nothing said before: the answer can't lean on the conversation
+        previous = next((m["content"] for m in reversed(history) if m["role"] == "user"
+                         and isinstance(m.get("content"), str)), None)
         history.append({"role": "user", "content": req.text})
 
         text, calls, finish, used, results, done = None, 0, None, [], [], set()
@@ -216,7 +221,7 @@ class Assistant:
                     text = REFUSAL_REPLY[lang]
                     history.append({"role": "assistant", "content": text})
                     break
-                history.append(msg)
+                history.append(dict(msg))
                 if not msg.get("tool_calls"):
                     text = THINK_TAGS.sub("", msg["content"]).strip()
                     break
@@ -225,8 +230,13 @@ class Assistant:
                     try:
                         args = parse_arguments(call["function"]["arguments"])
                         key = (call["function"]["name"], json.dumps(args, sort_keys=True))
-                        # caught live: a model highlighting the same thing four times in one turn
-                        content = REPEATED if key in done else run_tool(ctx, call["function"]["name"], args)
+                        # a trade preview needs the user's own words for it (asset, side, amount): checked first
+                        refused = (trade_check(args, req.text, previous, here)
+                                   if call["function"]["name"] == "prepare_trade" else None)
+                        if refused:
+                            content = json.dumps(refused)
+                        else:  # caught live: a model highlighting the same thing four times in one turn
+                            content = REPEATED if key in done else run_tool(ctx, call["function"]["name"], args)
                         done.add(key)
                     except Exception as e:  # a broken tool call must not break the turn
                         content = json.dumps({"error": f"{type(e).__name__}: {e}"})
@@ -235,8 +245,6 @@ class Assistant:
         except Exception:
             del history[start_len:]  # drop this turn so the session stays valid
             raise
-        trim(history)
-
         if not text:  # the model said nothing: say what its tools did, if they said it themselves
             text = said_by_tools(results, lang) or FALLBACK_REPLY[lang]
         guard = {}
@@ -250,30 +258,48 @@ class Assistant:
                 cited, unbacked = cited + [envelope], left
         reply = self._finish(req, ctx, text, started, norm, turn, extra=cited, route="model", model_calls=calls,
                              finish_reason=finish, **self._who(calls), **guard)
-        if (reusable(used) and fastpath.enabled() and standalone(norm) and finish != "content_filter"
-                and text != FALLBACK_REPLY[lang]):
+        # Only the checked response may become conversational memory. Tool-call messages
+        # retain their pairing, but their optional generated prose is never trusted.
+        for message in history[start_len:]:
+            if message["role"] == "assistant":
+                message["content"] = "" if message.get("tool_calls") else reply.text
+        if history[-1]["role"] != "assistant" or history[-1].get("tool_calls"):
+            history.append({"role": "assistant", "content": reply.text})
+        trim(history)
+        # Only a session's first turn is kept (no history to lean on), and only a checked, ungated answer.
+        if (reusable(used) and first_turn and fastpath.enabled() and standalone(norm) and finish != "content_filter"
+                and text != FALLBACK_REPLY[lang] and reply.status == "ok" and not reply.debug.get("guard")):
             self.answers.put(self._cache_key(req, user, lang, norm, start, facts),
                              {"text": reply.text, "ui_actions": reply.ui_actions,
-                              "sources": [s.model_dump() for s in reply.sources], "model": reply.debug["model"]})
+                              "sources": [s.model_dump() for s in reply.sources], "model": reply.debug["model"],
+                              "grounding": [*ctx.results.values(), *cited]})
         return reply
 
     # ---------- the answer cache ----------
 
     def _cache_key(self, req, user, lang, norm, start, facts) -> tuple:
-        """What a model answer depends on: the question, the screen (with what's tapped or typed on it), the
-        facts, and whose money and how much: the model has the user's money in its context, so an answer is
-        kept for that user only, until their money changes."""
+        """Everything a model answer depends on besides the question: the screen and asset, what's on it (chart
+        period, tapped element, visible elements, typed amount, the snapshot's label), the facts, the journey
+        stage, and whose money and how much. The model has the user's money in its context, so an answer is
+        kept for that user only, while their account and the app's snapshot are unchanged: a trade (or another
+        visitor's app, all mapped to the demo user) never gets an old reply. Entries exist only for a
+        session's first turn (no history to lean on)."""
         screen = req.screen_context
-        on_screen = (screen.chart_period, screen.focused_element, screen.entered_amount) if screen else None
-        money = json.dumps([user["cash_thb"], user["holdings"], (req.snapshot or {}).get("portfolio")],
-                           sort_keys=True, default=str)
-        return norm, lang, start.screen, start.asset, on_screen, facts.version, user["user_id"], money
+        on_screen = ((screen.chart_period, screen.focused_element, tuple(screen.visible_elements),
+                      screen.entered_amount) if screen else None)
+        seen = (user["journey"]["stage"], (req.snapshot or {}).get("label"))
+        money = json.dumps([req.snapshot, user], sort_keys=True, default=str)
+        return norm, lang, start.screen, start.asset, on_screen, facts.version, seen, user["user_id"], money
 
     def _from_cache(self, req, user, lang, norm, start, facts, history, started, turn) -> ChatReply | None:
-        if not standalone(norm):
+        if history or not standalone(norm):  # with history the model may have used it: never reuse
             return None
         hit = self.answers.get(self._cache_key(req, user, lang, norm, start, facts))
         if hit is None:
+            return None
+        # Source labels alone cannot prove a cached figure. Old entries without the
+        # original tool evidence must go through the model again if they contain figures.
+        if unbacked_numbers(hit["text"], hit.get("grounding", []), req.text):
             return None
         history.extend([{"role": "user", "content": req.text}, {"role": "assistant", "content": hit["text"]}])
         trim(history)
@@ -294,6 +320,16 @@ class Assistant:
                 "model": getattr(self.llm, "last_model", None) or self.llm.model}
 
     def _finish(self, req, ctx, text, started, norm, turn, extra=(), **debug) -> ChatReply:
+        envelopes = list(ctx.results.values()) + list(extra)
+        # advice or "it's bought" never reaches the user, whichever route wrote it; checked on the whole reply
+        # first, so the rule it broke is the one reported (the safe sentences carry no figures)
+        text, broke_rule = guard_text(text, ctx.lang)
+        unbacked = unbacked_numbers(text, envelopes, req.text)
+        if unbacked:
+            text = ("I can't verify those figures. Please ask for a current price or account summary."
+                    if turn["lang"] == "en" else
+                    "ยังตรวจสอบตัวเลขเหล่านั้นไม่ได้ กรุณาถามราคาหรือสรุปบัญชีอีกครั้ง")
+            ctx.ui_actions = []
         text = plain_reply(DASH.sub(", ", text), ctx.lang)
         ctx.ui_actions = ui.finalize(ctx.ui_actions)
         cards = {a["card_type"] for a in ctx.ui_actions if a["type"] == "card"}
@@ -301,18 +337,19 @@ class Assistant:
             text = first_sentence(text)  # the card shows the details; say just the headline
         elif "trade_preview" not in cards:
             text = brief(text, ctx.lang)  # never long; a trade keeps its "tap Confirm"
-        text, broke_rule = guard_text(text, ctx.lang)  # advice or "it's bought" never reaches the user, whichever route wrote it
+        text, late = guard_text(text, ctx.lang)  # and again on what is actually said, after trimming
+        broke_rule = broke_rule or late
         for action in ctx.ui_actions:  # last gate: only the closed set ever leaves the backend
             ui.validate(action)
-        envelopes = list(ctx.results.values()) + list(extra)
         return ChatReply(
             text=text,
+            status="unavailable" if unbacked else "ok",
             speak=req.input_mode == "voice",
             ui_actions=ctx.ui_actions,
             sources=[SourceRef(result_id=e["result_id"], tool=e["tool"], **e["source"]) for e in envelopes],
             debug=turn | {"finish_reason": None} | debug | {
                 "screen_after": ctx.ui_state.screen, "asset_after": ctx.ui_state.asset, "guard": broke_rule or debug.get("guard"),
-                "unbacked_numbers": unbacked_numbers(text, envelopes, req.text),
+                "unbacked_numbers": unbacked,
                 "latency_ms": round((time.perf_counter() - started) * 1000)},
         )
 

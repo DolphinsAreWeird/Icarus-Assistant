@@ -14,7 +14,9 @@ cd ../voice && npm run dev                       # the voice server (needs voice
 
 `npm run dev` in `voice/` also rebuilds the app when `frontend/node_modules` exists. While working on the app, `cd frontend && npm run watch` rebuilds on every change (reload the page).
 
-No ElevenLabs key? `cd voice && npm run dev:fake`. Same app, with beeps instead of speech.
+No ElevenLabs key? `cd voice && npm run dev:fake`. Same app, with beeps instead of speech. This works on any platform. To run the whole demo with a backend, see the root [README](../README.md) (`./demo.sh`, or `scripts/run-demo.ps1` on Windows).
+
+Hosting: a `Dockerfile` and `render.yaml` (Render) exist at the repo root, and a Vercel guide is in [`../docs/hosting-vercel.md`](../docs/hosting-vercel.md). None has been verified on a real host, and there is no public URL yet.
 
 ## What is paired with what
 
@@ -85,7 +87,7 @@ Only what the prototype uses (checked against the real file): `{{ name }}` and `
 
 This runs on your laptop: the voice server serves the app at `/app/`, same origin as the voice API, so there is no CORS to configure and the microphone works on `localhost`.
 
-Putting it on a public URL is **not set up**, on purpose. The voice server holds the ElevenLabs key and has **no login**, so anyone who can reach it can spend your credits. Before a public deploy, add authentication or a rate limit to the voice server. For a quick demo from another device, a tunnel to your laptop (Cloudflare Tunnel or ngrok) works, and you would be sharing that URL with whoever you give it to.
+Hosting config exists (a `Dockerfile` and `render.yaml` for Render, and a Vercel guide in `../docs/hosting-vercel.md`), but no deployment has been verified and there is no public URL. Be careful before you expose one. The voice server holds the ElevenLabs key and has **no login**, so anyone who can reach it can spend your credits. Before a public deploy, add authentication or a rate limit to the voice server. For a quick demo from another device, a tunnel to your laptop (Cloudflare Tunnel or ngrok) works, and you would be sharing that URL with whoever you give it to.
 
 ## Tests
 

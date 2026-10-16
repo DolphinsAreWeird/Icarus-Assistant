@@ -34,7 +34,8 @@ inconsistency it saw on screen. It never changes the app: it only clicks, types 
    ```
 
    About 9 minutes (16 runs, one at a time; the four tours are most of it). It prints the grid at the end and exits 1
-   if any path failed. Then stop the voice server.
+   if any path failed, including a high-severity scan finding or a phone purchase that could not be confirmed (exit 2
+   means the run itself could not start). Then stop the voice server.
 
 Needs Playwright with Chromium and WebKit. The runner finds it in `node_modules`, in `$PLAYWRIGHT_PATH`, or in the
 npx cache (`~/.npm/_npx/*/node_modules/playwright`, newest with installed browsers first). To install it:
@@ -90,7 +91,10 @@ only, and lists that render empty.
 
 PASS means every check passed. WARN means the path worked but something soft failed (slow, wording, layout) or the
 page threw an error. FAIL means the path broke or a must-have check failed. P8 is FAIL when a high-severity finding is
-on screen.
+on screen; that finding also fails the path (and part) whose screenshot showed it, and so the exit status. Medium and
+low findings only warn.
+
+The grading and exit gate have offline unit tests (no browser or server needed): `node --test qa/test/*.test.cjs`.
 
 ### What you get
 

@@ -320,7 +320,7 @@ function showIntro(onPlay: () => void, onSkip: () => void): void {
   const row = el('div', 'display:flex;flex-direction:column;gap:8px');
   const play = button('▶  Watch the 1-minute tour', true);
   const later = button("I'll explore on my own", false);
-  const note = el('div', 'font-size:11.5px;color:#AE939B;margin-top:10px', 'Sound on. Prices are live; the account is a demo, nothing real is bought.');
+  const note = el('div', 'font-size:11.5px;color:#AE939B;margin-top:10px', 'Sound on. Real market prices when connected; the account is a demo, nothing real is bought.');
   row.append(play, later);
   card.append(img, title, body, row, note);
   back.append(card);

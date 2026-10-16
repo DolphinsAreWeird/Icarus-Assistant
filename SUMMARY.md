@@ -1,148 +1,158 @@
-# Icarus modelling summary
+# Icarus project review
 
-Updated: 16 October 2026. Branch: `assistant-model`.
+Reviewed 16 October 2026, Bangkok time. Checkout: `main`, commit `b2b879fc79979ad95e5df0a3d8bae9de6deef566`.
 
-## Current status
+The model team's own status summary is in [model/SUMMARY.md](model/SUMMARY.md).
 
-The model/data-processing prototype runs locally and connects to the configured Orion model. It combines an English/Thai assistant, source-backed knowledge retrieval, user context, deterministic financial tools and a separate statistical prediction experiment.
+## Overall assessment
 
-The latest engineering checkpoint passed 83 automated tests, both retrieval development suites, six local numeric scenarios and the offline conversation suite. A final six-case bilingual live smoke run passed structural checks. These checks establish implementation behavior for the tested cases; they do not establish professional financial approval, universal answer accuracy or prediction reliability.
+Icarus has a substantial integrated demo: English/Thai voice, backend-driven navigation, deterministic financial tools, simulated purchases with tap confirmation, charts, guides, U-Bot handoff, a mascot tour and deployment configuration. It is beyond a collection of disconnected prototypes.
 
-The financial review is prepared but **not completed**. No reviewer approval has been recorded.
+However, passing unit tests do not establish demo readiness. This review reproduced several gaps in financial-output handling and isolation, and found purchase-review inconsistencies in the frontend. Fix these before relying on arbitrary judge questions or opening the hosted demo to multiple visitors. A fresh browser run and real audio rehearsal are still needed.
 
-## What was built
+The commit summary was read first, followed by project Markdown before implementation exploration. Three `gpt-6.1-sol` subagents with **high** reasoning reviewed backend/model, frontend/voice, and QA/deployment. Findings below combine their work with the primary review. This was a review task: application source was not changed, no deployment was performed, no live provider calls were made, and private credential values were not inspected.
 
-### Assistant and user context
+## Project structure and actual runtime
 
-- Connected the OpenAI-compatible Orion gateway at `https://api.orion.cmkl.ai/v1`, using the verified model ID `Qwen 3.8-27B-NVFP4`.
-- Added Thai and English responses, a CLI and a Python interface. Qwen is used through inference; it has not been fine-tuned.
-- Prepared 12 bilingual knowledge records with source URLs, checking dates and draft review status. Topics include BTC/ETH, fees, PAXG, goal/risk fit, diversification, history/forecast limitations, price impact, slippage, platform custody risk and stablecoin mechanics, plus explicitly mock app rules.
-- Added explicit profile intake, corrections, per-field provenance, conversation memory, language switching and optional local session persistence. Five fictional profiles are available for demonstrations.
-- Kept hypothetical or ambiguous statements from silently becoming user facts. Loss capacity and willingness to take risk are separate fields.
-- Changed normal calculation dates to the current local day. Fixed dates remain available for reproducible demonstrations and evaluations; new runtime sessions advance across midnight/resume.
+| Area | Responsibility | Main entry points |
+|---|---|---|
+| `frontend/` | Runs Oasis's HTML prototypes through a small React runtime; connects account state, assistant actions, purchase screens, cards, tour and voice | [main.ts](frontend/src/main.ts), [dc-runtime.ts](frontend/src/dc-runtime.ts), [backend-bridge.ts](frontend/src/backend-bridge.ts), [demo-data.ts](frontend/src/demo-data.ts) |
+| `voice/` | Node/Express server serving the app; ElevenLabs STT tokens/TTS, audio cache, interruption handling, U-topia glossary, U-Bot routing and optional backend proxy | [index.ts](voice/src/server/index.ts), [app.ts](voice/src/server/app.ts), `src/client/`, `src/shared/` |
+| `backend/` | FastAPI HTTP boundary, market/FX cache, history, fictional accounts, checked UI tools, trade previews and confirmation; two assistant engines | [main.py](backend/app/main.py), [model_service.py](backend/app/model_service.py), [loop.py](backend/app/assistant/loop.py), [trades.py](backend/app/trades.py) |
+| `model/` | Standalone bilingual conversation/retrieval system, validated data adapters, grounded calculation tools, historical data processing and experimental risk estimates | [START_HERE.md](model/START_HERE.md), [session.py](model/session.py), [assistant.py](model/assistant.py), [data_adapter.py](model/data_adapter.py) |
+| `qa/` | Browser golden paths, failure drills, risk register and hallway-test kit | [README.md](qa/README.md), [run.cjs](qa/e2e/run.cjs) |
+| `docs/` | Business plan, cost calculator, architecture, presentation figures/media and historical team notes | [business-plan.md](docs/business-plan.md), [cost_model.py](docs/cost_model.py), `media/`, `team-notes/` |
+| Root / `scripts/` | Windows/Bash launchers and single-container hosting | [run-demo.ps1](scripts/run-demo.ps1), [demo.sh](demo.sh), [Dockerfile](Dockerfile), [render.yaml](render.yaml) |
 
-### Financial tools and numerical grounding
+Normal app flow: browser voice or typed text → U-topia/U-Bot router when relevant → Python `/chat` → checked actions/cards → frontend → Node TTS. A purchase changes only a simulated backend account after a confirmation request initiated by a tap. The model module itself has no execution endpoint.
 
-- Implemented mock platform fees, no-interest savings contributions, visible portfolio concentration, historical summaries, common-period comparisons, historical what-if calculations and experimental risk outputs.
-- Rendered financial figures directly from named tool fields in bilingual numerical summaries. Model-generated prose containing digits is rejected; spelled-out quantities and qualitative claims still need semantic review.
-- Bound monetary arguments to explicitly stated amounts/currencies or an explicitly referenced saved budget. New bare amounts cannot silently inherit an older currency.
-- Checked savings target/current roles, historical dates and what-if asset identity. Unsupported arguments produce an error for clarification rather than a fabricated calculation.
-- Added deterministic routes for complete, focused natural-language calculations and essential near-term money guidance. Mixed advice and ambiguous requests retain model planning.
-- Added missing-evidence handling for focused Thai tax-form questions and stronger instructions for unsupported facts.
-- Derived historical/synthetic/saved-reference/experimental labels from successful tool provenance rather than model-selected labels.
-- Kept tool calls allowlisted and execution-free. The prototype cannot buy, sell or confirm a transaction.
+### Two engines need separate verification
 
-### Data processing and prediction
-
-- Obtained and checksum-verified 99 Binance monthly archives for BTCUSDT, ETHUSDT and PAXGUSDT.
-- Prepared 1,004 daily observations per asset from **2024-01-01 through 2026-09-30**, with no missing days in the saved series. Normalized archive timestamp-unit differences.
-- Validated asset identity, USDT currency, daily continuity, coverage endpoints and finite candle values whenever historical data is consumed.
-- Added atomic artifact publication. An incomplete refresh preserves the affected asset's previous valid series and reports failure.
-- Evaluated rolling/EWMA variance baselines and empirical return intervals. Interval candidates have separate chronological selection, calibration and test periods, with causal rolling updates and input hashes.
-- Checked robustness across three non-overlapping historical test windows per asset. The evaluation does not silently retune production artifacts after seeing test results.
-- Labeled forecasts as historical-cutoff experiments. PAXG is an exchange-traded gold token proxy; it is not a physical-gold spot index. USDT observations are not USD or THB returns.
-
-### Interaction with the team's systems
-
-- Added a validated, frozen snapshot adapter for caller-bound account values, reference prices and exact displayed-chart points/versions.
-- Rejected changed chart versions, missing account data and unsupported currency pairs. An absent app account cannot fall back to fictional seed holdings.
-- Invalidated remembered dynamic prices, charts and account values between turns.
-- Added an optional public Binance USDT reference-price loader. Saved observations are labeled snapshots; they are not executable quotes.
-- Documented the Python integration contract. Application authentication, frontend/voice behavior and transaction execution remain owned by the relevant team systems.
-
-### Reliability, evaluation and review preparation
-
-- Added explicit fallbacks for malformed provider responses, invalid model output and unreadable local data.
-- Added a 28-query retrieval regression set, a 16-query everyday-language challenge, a 12-scenario bilingual stress suite and six numeric scenarios.
-- Fixed observed retrieval misses, irrelevant fee/gas matches, unsupported tax prose, unnecessary tool calls, Thai output failures and incorrect origin labels.
-- Added a network-blocked offline verification command.
-- Prepared a financial review packet containing **12 topics and 24 English/Thai answers**, with expected behavior, numerical summaries, sources, sample provenance and a decision sheet for Luka and First. All verdicts remain pending.
-
-## Performance and prediction findings
-
-| Finding | What it means |
+| Start path | Actual engine / behavior |
 |---|---|
-| Six explicit numeric scenarios ran with zero model calls; measured median 0.0025 s and maximum 0.006 s | Clear calculations can be effectively immediate locally. This does not measure general conversational latency. |
-| Earlier model-loop execution of those scenarios had median 15.9245 s and maximum 30.189 s | Avoiding unnecessary model round trips materially helps these specific requests. |
-| Final live smoke run: four model turns, median 11.4905 s, maximum 17.61 s | Open-ended explanations still have noticeable and variable delay. |
-| Latest saved interval test coverage: BTC 91.04%, ETH 95.02%, PAXG 89.05%, against a 90% target | Nominal coverage is a target, not a guaranteed probability or maximum loss. |
-| Selected calibrated intervals beat the rolling reference in only one of nine historical asset/window checks | The prediction experiment has not demonstrated consistent improvement or trading advantage. |
+| Bare `app.main:app` | Defaults to `ASSISTANT_ENGINE=model`, with `ICARUS_MODEL_OFFLINE=1`: deterministic commands and labeled offline retrieval previews |
+| `scripts/run-demo.ps1` | Explicitly selects `model`, saved market observations and fake voice; `-Gateway` and `-RealVoice` opt into those services separately |
+| Docker / Render | Docker explicitly selects `legacy`: prepared answers, regex fast path, answer cache and provider hedging/failover |
+| `demo.sh` | Detects older provider settings to decide whether a model exists, but its real-model branch starts bare uvicorn without explicitly selecting the corresponding engine |
 
-The retrieval sets were used during development. Their passing results are regression evidence, not an independent measure of broad language understanding. The historical test windows have already informed development; a genuinely new forward period is still needed.
+Sources: [backend/app/main.py](backend/app/main.py), [scripts/run-demo.ps1](scripts/run-demo.ps1), [Dockerfile](Dockerfile), [demo.sh](demo.sh).
 
-## What is left or missing
+The newer model's input grounding and bounded sessions do not automatically protect the hosted legacy path. Likewise, the hosted path's prepared-answer speed and failover should not be claimed for the Windows model launcher without measuring it. Confirm the selected engine through backend `/health` before any test or demonstration.
 
-| Item | Owner / dependency | Priority and current workaround |
+## Prioritized engineering findings
+
+These are agent-owned fixes. None requires you to operate the system manually.
+
+### P1: Correctness and isolation
+
+1. **Decimal buy amounts change during the animated input.** The bridge forwards the requested amount, but the prototype's `type_amount` action uses `String(Math.round(a.value))`. Direct evaluation reproduces `1000.49 → "1000"` and `1000.50 → "1001"`. The read-back can be calculated from the original amount while the review screen and subsequent confirmation use the rounded amount. Preserve cents throughout the action, review and confirmation chain. Add end-to-end checks for both values, including the spoken amount and final account debit. Evidence: `frontend/src/backend-bridge.ts:79–88,192–199`; `frontend/prototype/Icarus Prototype.dc.html:733`; `frontend/src/demo-data.ts:163–173`.
+
+2. **Hosted legacy responses can display unsupported financial numbers.** A scripted provider response, “Bitcoin costs 999999 baht today,” returned `status="ok"`; the unsupported number appeared only in `debug.unbacked_numbers`. `_finish` reports the problem but does not reject or replace the text. Gate unsupported financial output before display, speech and caching; deterministic tool results should supply figures. Add a regression that requires rejection rather than merely checking a debug flag. Evidence: `backend/app/assistant/loop.py:247–266`; existing flag-only assertion in `backend/tests/test_brain.py:412–415`.
+
+3. **Hosted legacy tool arguments are not bound to the user's purchase request.** In a scripted reproduction, the user asked “Explain what Bitcoin is,” but a model call to `prepare_trade(XAU, buy, 4000)` produced an actionable gold preview. Cash remained unchanged until a tap, so the tap boundary held, but the asset, amount and purchase intent were invented. Validate explicit intent, asset, side and amount before creating action-bearing previews. The model engine already has a monetary-argument validation boundary that the legacy engine lacks. Evidence: `backend/app/tools.py:274–299,416`; `model/assistant.py:387`.
+
+4. **The hosted answer cache can cross user/conversation boundaries.** A scripted `u_new` conversation containing a private fictional goal generated an answer to “How does my financial situation look?” A different `u_small` conversation asking the same question received that cached answer with no second model call. Cache privacy is inferred from tools used; a model reply using conversation history and no tools is treated as globally reusable. Scope such replies to the user/session and relevant context, or decline to cache them. Add a two-user, different-history regression. Evidence: `backend/app/assistant/loop.py:208–226`; `backend/app/assistant/memo.py:23–40`.
+
+5. **The reviewed preview is not consistently the preview executed.** When a buy card becomes native screen actions, the original preview identity is dropped and the UI calculates terms locally. Confirm can create a fresh preview and immediately execute it after checking only asset and budget. A changed market price can change quantity without another review; the same budget is insufficient proof that all reviewed terms match. Keep the server preview through review, display its exact terms, and require renewed review when it expires or changes. Add a price-change-between-review-and-confirm test. Evidence: `frontend/src/backend-bridge.ts:190–199`; `frontend/src/demo-data.ts:155–173`.
+
+6. **A hosted visitor can reset everyone else's demo state.** The generic public `/brain/*` proxy exposes unauthenticated `POST /demo/reset`, which resets all accounts, previews and conversations. Restrict this administrative route or make reset visitor-specific. Test that one visitor cannot invalidate another visitor's pending purchase. Evidence: `voice/src/server/app.ts:284–291`; `backend/app/main.py:185–194`; `backend/app/state.py:62–67`.
+
+### P2: Reliability, QA and claims
+
+7. **Browser QA can report a failed consistency scan while exiting successfully.** High-severity scan findings make P8 fail in the report, but the runner's exit predicate uses path statuses that ignore those findings. An in-memory reproduction produced path `PASS` and a false failure predicate for a high-severity dollar-amount finding. A failed phone purchase confirmation is also only a soft warning. Make these hard failures before using the suite as a release gate. Evidence: `qa/e2e/lib/report.cjs:89–96`; `qa/e2e/lib/recorder.cjs:189–197`; `qa/e2e/run.cjs:131–132`; `qa/e2e/paths/phone.cjs:137`.
+
+8. **Public limits are shared by IP and include account reads and confirmation.** The entire `/brain` proxy shares 40 requests/minute per IP. Judges on the same venue network can exhaust one bucket through ordinary reads and interactions. Test the public configuration with multiple visitor IDs behind one IP; separate expensive requests from account reads and confirmation. The existing browser runbook disables public limits, so it does not test this behavior. Evidence: `voice/src/server/app.ts:50–64,284`; `qa/README.md:21`.
+
+9. **A long-open screen can keep calling an old price live.** Account/price bundles refresh at load and after trades, while display labels reuse the fetched `freshness` value. There is no periodic refresh or client-side aging. Add refresh/aging behavior and a test that advances time beyond the live threshold without a trade. Evidence: `frontend/src/demo-data.ts:36–42,115–120,188`; `frontend/src/main.ts:180–189`.
+
+10. **Launch and health signals can overstate readiness.** Fix `demo.sh` to select and verify its intended engine instead of announcing a real model while the default can remain an offline preview. Render's `/api/health` reports Node configuration rather than Python readiness; the hosted startup script also proceeds after exhausting backend startup retries. Add backend-unavailable and backend-hung readiness tests. Evidence: `demo.sh:72–89`; `backend/app/main.py:59–65`; `render.yaml:11`; `voice/src/server/app.ts:102–116`; `scripts/start-hosted.sh:11–21`.
+
+11. **A browser speech fallback error can leave a turn waiting indefinitely.** Browser synthesis errors resolve as `stopped`, but the controller's completion handler ignores that outcome without settling the outer speech promise or clearing playback. If provider TTS and browser synthesis both fail, action pacing can remain stuck. Test this double-failure path and settle every terminal outcome without treating an interrupted read-back as successfully completed. Evidence: `voice/src/client/fallback-voice.ts:24`; `voice/src/client/icarus-voice.ts:935–960`. This is a code-path finding; the browser scenario was not run here.
+
+12. **Windows startup can silently skip rebuilding the app.** `voice/scripts/build-app.mjs:15–16` spawns `npm` without a shell and exits successfully when `status` is null, including spawn errors. Windows normally exposes `npm.cmd`; this can serve missing or stale assets. The `dev:fake` package script also uses Unix environment-assignment syntax. Add Windows-compatible invocation and fail on spawn errors.
+
+## What is genuinely missing versus already implemented
+
+**Implemented, despite older open-item lists:** connected THB prices/accounts, a shared backend fee policy (0.25%, minimum 5 THB, included in the budget), manual/assistant simulated purchases, reply emotion/suggestions, server-owned chart versions, provider failover in the legacy engine, public deployment configuration and failure fallback behavior. Do not spend time asking the team to decide those old integration questions again. The purchase issues above are remaining correctness gaps in that implementation.
+
+**Still incomplete or limited:**
+
+- `README.md:9` still contains `LIVE_DEMO_URL`. Hosting configuration exists, but an actual reachable deployment was not established by this local review.
+- No complete presentation PDF/PPTX was found in `docs/`. Tour videos, architecture images and deck figures exist. The actual deck's visibility remains unknown.
+- The business dashboard combines simulated metrics with a live panel reading this browser's local event history. It does not aggregate server friction logs across visitors. This is a demonstrated UI, not yet a partner-wide analytics service. Its reader also refreshes only when event count changes, so the live view stops updating when the app's 400-event ring is full. Add a rollover regression as well as any future aggregation work. Evidence: `frontend/prototype/Icarus Business Dashboard.dc.html:125–179`; `frontend/prototype/Icarus Prototype.dc.html:657`; `voice/src/server/friction.ts`.
+- U-Bot is a prompt-and-link handoff requiring the user to sign in and paste. A real U-Bot API adapter cannot be validated without an actual API. This does not block the existing link-based demo.
+- Human Thai/financial-language review and unfamiliar-user hallway results are not recorded as complete. [HUMAN_REVIEW.md](model/evaluation/HUMAN_REVIEW.md) is still pending.
+- Accounts/trades remain fictional and in memory. Broader ledger/payment/card features, durable shared state and production authentication are outside the implemented demo. Historical risk experiments are not current trading signals.
+- The business plan's personal-data locality claim needs qualification: full transcripts and identifiers are logged locally, and provider requests leave the app. Cost arithmetic can be checked locally; current external pricing, user-count claims and business uplift require separate evidence.
+
+### Documentation drift
+
+`INTEGRATION.md`, `backend/DEMO_HANDOFF.md`, `backend/CHECKPOINTS.md` and `docs/team-notes/SUMMARY.md` contain historical worktree/branch states and older test counts. Git now shows the integrated code on main; `.worktrees/backend` is a separate older checkout. Use this report's reviewed commit as the baseline.
+
+Root README still broadly promises scripted fallback, while later failure drills describe honest unavailable responses. Frontend README says public hosting is not set up, although Docker/Render configuration now exists. Demo-audio metadata includes a Thai clip, while the named WAV set described in its README is English; neither establishes completed Thai audio review. These docs should become clearly dated history or be updated to the actual run paths.
+
+A static audit of all 33 tracked Markdown files found **six missing relative link targets**: four backend links in `docs/team-notes/SUMMARY.md:135` and two model links in `model/PROJECT_OVERVIEW.md:5`. These are documentation fixes an agent can make.
+
+## Verification performed in this review
+
+| Check | Current result | Limits |
 |---|---|---|
-| Financial meaning and Thai review | Luka and First; specialist questions may require further evidence | Review the examples intended for the demo. The packet is ready; approval is pending. |
-| Actual fees, minimum amounts and supported asset identities | Product/app owner supplies authoritative rules | Mock rules can remain clearly labeled for a demonstration. They must not be presented as real product rules. |
-| Actual screen/account/price payloads | Team app/backend/frontend owners supply data; model work connects the existing adapter | Snapshot fixtures work now. Real integration requires agreement on identity, versions, units and data freshness. |
-| Current price/FX policy | Product/data owners choose sources and acceptable staleness | Public USDT references are optional. There is no implemented automatic THB/USDT conversion or executable quote service. |
-| Faster open-ended model responses | Model measurement plus supported options from the Orion operator | Deterministic calculations are already fast. No reliable supported no-thinking setting has been established. |
-| Better prediction evidence | Model/data work on new observations and predeclared evaluation criteria | Keep saved outputs experimental and historical. Further model complexity is not justified by the current scores alone. |
-| Broader independent assistant evaluation | Model developer; reviewers can contribute natural questions | Expand paraphrases, unsupported topics and multi-turn situations beyond the examples used to develop fixes. |
-| Broader profile language coverage | Model developer, supported by language review | Explicit supported clauses and `/set` work. Unknown wording is intentionally not silently persisted as a fact. |
+| Backend offline pytest suite | **265 passed**, two installed-dependency deprecation warnings; 9.70 s | Required approved execution outside the Windows socket sandbox; scripted providers, not live services |
+| Model unittest suite | **79 passed**, no skips; about 1 s | Local behavior and fixtures |
+| Retrieval regression | **28 cases passed** | Expected recall@5 passed in both languages; negatives empty |
+| Retrieval challenge | **16 cases passed** | Retrieval correctness does not establish Thai naturalness or financial meaning |
+| Focused legacy reproductions | Confirmed unsupported numbers, unrequested trade preview and cross-user cached reply | Scripted model, no API calls |
+| Decimal action reproduction | Confirmed `1000.49 → 1000`, `1000.50 → 1001` | Evaluated exact rounding expression; no browser run |
+| QA JavaScript syntax | All **15 `.cjs` files passed** `node --check`; runner help passed | Syntax only |
+| Windows launcher parsing | **Passed** PowerShell AST parsing | Services were not launched |
+| Cost-model/table consistency | All **seven generated table blocks matched** | Recomputes repository assumptions; does not verify external prices or commercial claims |
+| Tracked Markdown links | 33 files checked; **six missing targets** | Local relative links only |
+| Frontend/voice tests, typechecks, builds | **Not run successfully** | Dependencies absent; offline installation attempts failed |
+| Browser E2E | **Not run** | Playwright package available, Chromium/WebKit executables absent; app bundle absent |
+| Container build/runtime | **Not run** | Docker daemon unavailable |
+| Live model, real microphone/TTS, deployed service | **Not verified in this review** | Separate hardware/account/provider checks required |
 
-For use with real users, the team systems must also provide authenticated account/profile binding, appropriate storage/privacy behavior and handling of late responses after navigation. The model interface does not implement these application responsibilities.
+Frontend/voice setup attempts encountered a global npm `minizlib` failure and a pnpm Windows symlink `EPERM`. These are environment/setup blockers, not passing tests or demonstrated application failures. The old reported frontend/voice pass counts in the commit summary were not reproduced here.
 
-## Questions still requiring an answer
+Installed Python dependencies also differ from `backend/requirements.txt`: FastAPI 0.141.1 versus pinned 0.143.1, uvicorn 0.52.4 versus 0.54.0, and pytest 9.1.1 versus 8.3.4. A clean pinned installation needs its own verification.
 
-| Question | Who should answer | What remains usable meanwhile |
-|---|---|---|
-| Which exact advice scenarios will the first demo present? | Product/team | The prepared review topics cover the current broad prototype scope. |
-| Is explaining trade-offs sufficient, or are exact personalized allocations expected? If allocations are expected, what reviewed policy supports them? | Product owner and appropriate financial reviewer | The current assistant asks for missing context and explains risks; it does not invent exact allocations. |
-| Should the prediction feature expose uncertainty/volatility, or is directional price/return prediction actually required? | Product/model owner | The implemented experiment estimates daily risk/return intervals, not a profitable buy/sell strategy. |
-| What improvement and coverage criteria would justify accepting a new prediction model? | Model/product owner | Retain the simple reference and report current failures honestly. |
-| What are the real fee schedule, purchase minimum, supported tokens and gold product/redemption rules? | App/product owner | Use explicitly synthetic rules and source-backed PAXG education without claiming they describe the actual product. |
-| Which data source, currency, refresh interval and freshness limit should real prices and FX use? | App/data owner | Use the supplied snapshot's explicit units and observation time; do not infer conversions. |
-| What do real screen/chart/account payloads look like, and who binds them to the user/session? | Team integration owners | Use the documented fixture contract. |
-| What response delay is acceptable for the intended text/voice demo? | Product/team; Orion operator for supported provider options | Fast calculations and variable-latency open-ended explanations can be demonstrated separately. |
-| Which review corrections do Luka and First require, and which examples can they approve? | Luka and First | Leave every review status pending until an actual decision is recorded. |
-
-These questions do not all block the labeled local prototype. They become necessary when making the corresponding product claim or replacing the relevant fixture with real behavior.
-
-## Suggested next sequence
-
-1. Luka and First review the prepared examples and record exact corrections or missing evidence.
-2. Apply corrections and regenerate affected examples before marking them reviewed.
-3. Confirm the demo's advice/prediction scope and keep unsupported claims out of the presentation.
-4. Connect real app rules/payloads when supplied, using the existing model adapter.
-5. Continue independent language testing and forward prediction validation. Investigate provider latency if it is unacceptable for the chosen interaction.
-
-## Run and reproduce
-
-From the `assistant-model` checkout:
+Commands used for the successful Python checks:
 
 ```powershell
-# Offline engineering verification; gateway calls are blocked.
-python model/verify_checkpoint.py
+# From backend/, with a precreated writable basetemp parent:
+$env:OFFLINE='1'
+$env:ICARUS_MODEL_OFFLINE='1'
+$env:QUESTION_LOG='0'
+$env:PYTHONDONTWRITEBYTECODE='1'
+python -m pytest -q -p no:cacheprovider --basetemp=D:/Uhackathon/.review-tmp/backend-model-tests-final
 
-# Interactive assistant; local model/.env is loaded automatically.
-python model/assistant.py --interactive --lang th
-python model/assistant.py --interactive --lang en
-
-# On a fresh checkout, prepare ignored data artifacts before market verification.
-python model/prepare_market_data.py --assets btc eth gold --start 2024-01 --end 2026-09
-python model/predict_risk.py --asset all
-python model/evaluate_regimes.py
-
-# Rebuild the review packet from local calculations and recorded answers.
-python model/prepare_financial_review.py
-# Add --refresh-live only when refreshing the eight open-ended Orion samples.
+# From repository root:
+python -m unittest discover -s model/tests -q
+python model/evaluate_retrieval.py
+python model/evaluate_retrieval.py --suite challenge
 ```
 
-Archive preparation needs network access; cached verified archives are reused. Interactive/model refresh routes can consume Orion quota. Downloaded data, generated experiment reports, local sessions and credentials are ignored by Git. They are not transferred merely by cloning this branch. The curated financial-review packet is committed deliberately so reviewers can access it.
+The temporary test output is not a deliverable; create its parent before rerunning, or use the existing ignored `.test-tmp/` convention.
 
-## Documents to start with
+## Next work, in order
 
-- [Model usage and setup](model/START_HERE.md)
-- [Financial review decision sheet](model/evaluation/FINANCIAL_REVIEW.md)
-- [Prepared bilingual review answers](model/evaluation/review/FINANCIAL_REVIEW_PACKET.md)
-- [App integration contract](model/INTEGRATION.md)
-- [Prediction model card](model/MODEL_CARD.md)
-- [Optimization checkpoints and limitations](model/OPTIMIZATION_LOG.md)
-- [Remaining items by owner](model/evaluation/REMAINING_ITEMS.md)
+1. **Fix the six P1 findings and add their behavioral regressions.** Preserve tap-only confirmation and exact user-entered money throughout. Do not treat passing existing tests as evidence these issues are resolved.
+2. **Make QA fail reliably, align launcher engines, refresh/age prices and tighten hosted readiness/limits.** Cover speech-fallback failure, Windows build invocation and dashboard event rollover. Test model and legacy engines independently.
+3. **Restore a reproducible setup.** Install frontend/voice locked dependencies using a working runtime, run `npm test`, `npm run typecheck` and the respective build commands in both directories; verify backend from pinned requirements in a fresh environment. Obtain Playwright Chromium/WebKit. This is agent work, not a manual checklist for you.
+4. **Run browser QA on isolated fake-voice/offline services.** Start with race, questions and phone paths, then all four Chromium/WebKit laptop/phone profiles. Exercise both engines, actual prototype amount animation, changing quotes, stale screens, expired/cancelled previews and repeated taps. Keep reports outside Git.
+5. **Test hosted behavior separately.** Run with `PUBLIC_DEMO=1`, several visitors sharing an IP, reset isolation, backend outage/hang, recovery and rate-limit bursts. Then build/run the real container and verify the deployed market-source behavior and restart recovery.
+6. **Run a bounded live answer battery after the guards are fixed.** Use `backend/scripts/battery100.py` for the served assistant and model stress/numeric suites for the model engine. Inspect tool evidence, figures, advice refusals, Thai and latency. These make provider calls and are not substitutes for human semantic review.
+7. **Finish submission assets.** Verify the real demo URL and public deck, update stale docs, label remaining simulated behavior consistently, and collect hallway evidence before making user-speed or business-uplift claims.
 
-## Branch/worktree separation
+## The smallest set of things you need to do
 
-At preparation time, `D:\Uhackathon` is the `assistant-model` checkout. The separate `D:\Uhackathon\.worktrees\backend` checkout is on `backend`. This summary belongs to the model branch; backend work is left untouched. Modelling/review work through commit `33b967a` was pushed to `origin/assistant-model` before this summary was added. No merge into `main` was performed.
+No intervention is needed merely to accept this report or start the engineering fixes. Missing dependencies, browser installation, config preparation, regressions, builds, URL replacement and deployment verification can be handled by an agent.
+
+| Your involvement | Why it needs a person | Minimum action |
+|---|---|---|
+| Private account access, only where unavailable | This checkout has no `voice/.env`; valid provider/hosting access cannot be invented | Put the ElevenLabs key in a private ignored config or identify an existing private file. `model/.env` and all six local market/forecast artifacts already exist; do not recreate or expose them unnecessarily. If a public demo is wanted, provide authorized hosting access or its existing URL. |
+| One presentation-device voice rehearsal | Automated fake audio cannot establish mic permission, room noise, speaker echo or intelligibility | On the actual device, allow the mic and try English/Thai, an interruption, cancellation and a purchase stopped at a tap. An agent can prepare and observe the technical steps. |
+| Native Thai/financial-language review and unfamiliar users | Tests cannot establish natural wording, meaning or unaided usability | Have a Thai speaker review representative answers/read-backs using the existing checklist, then 3–5 unfamiliar people try the hallway tasks. Record corrections and completion rather than blanket approval. |
+| Deck access, only if private | The actual deck is not available in this checkout | Share an existing accessible link or export the presentation. An agent can audit its claims and replace submission placeholders once it is available. |
+
+There is no need to approve the old fee/currency integration decisions again, obtain a new model key just for offline tests, or operate package/build commands yourself. Production authentication, custody and a real U-Bot API should not become blockers for this explicitly simulated hackathon demo.

@@ -1,6 +1,7 @@
 // summary.md: the pass/fail grid, per-path notes, grouped errors, timings, typed answers, and the scan findings.
 
 const { ENVIRONMENTS } = require('./env.cjs');
+const { statusOf } = require('./recorder.cjs');
 
 const GRID = [
   { id: 'P1', title: 'First visit: Meet Icarus card, tour to the end, chat with starter chips', path: 'tour' },
@@ -20,19 +21,6 @@ const short = (s, n = 160) => {
   const t = cell(s);
   return t.length > n ? `${t.slice(0, n - 1)}…` : t;
 };
-
-function statusOf(r, part) {
-  if (!r) return null;
-  if (r.fatal) return 'FAIL';
-  const inPart = (x) => part === undefined || (x.part ?? null) === part;
-  const aborted = part === undefined ? Object.keys(r.abortedParts ?? {}).length > 0 : Boolean(r.abortedParts?.[part ?? '_']);
-  if (aborted) return 'FAIL';
-  if (r.checks.some((c) => inPart(c) && !c.ok && c.level === 'hard')) return 'FAIL';
-  if (r.steps.some((s) => inPart(s) && s.status === 'failed')) return 'WARN';
-  if (r.checks.some((c) => inPart(c) && !c.ok && c.level === 'soft')) return 'WARN';
-  if (r.events.some((e) => inPart(e) && (e.kind === 'pageerror' || e.kind === 'crash'))) return 'WARN';
-  return 'PASS';
-}
 
 function median(xs) {
   const a = xs.filter((x) => typeof x === 'number').sort((x, y) => x - y);
@@ -90,8 +78,8 @@ function metricFor(gridRow, r, envId, allRuns) {
   if (gridRow.scan) {
     const envRuns = allRuns.filter((x) => x.env === envId);
     const screens = envRuns.reduce((sum, x) => sum + x.steps.filter((s) => s.screenshot).length, 0);
-    if (!screens) return { status: 'n/a', text: 'nothing was scanned' };
     const findings = groupFindings(envRuns);
+    if (!screens && !findings.length) return { status: 'n/a', text: 'nothing was scanned' };
     const n = (s) => findings.filter((f) => f.severity === s).length;
     return { status: n('high') ? 'FAIL' : n('medium') || n('low') ? 'WARN' : 'PASS', text: `${n('high')} high, ${n('medium')} medium, ${n('low')} low` };
   }
@@ -171,12 +159,20 @@ function render({ opts, info, scanContext, runs, envIds, startedAt, endedAt, pat
   for (const r of runs) {
     const bad = r.checks.filter((c) => !c.ok && c.level !== 'info');
     const badSteps = r.steps.filter((s) => s.status === 'failed');
-    if (!bad.length && !badSteps.length && !r.fatal) continue;
+    // One line per distinct high finding in this run (a stuck placeholder is seen on every later screenshot).
+    const highByKey = new Map();
+    for (const f of r.findings ?? []) {
+      const key = `${f.part ?? ''}|${f.rule}|${f.text}`;
+      if (f.severity === 'high' && !highByKey.has(key)) highByKey.set(key, f);
+    }
+    const highFindings = [...highByKey.values()];
+    if (!bad.length && !badSteps.length && !highFindings.length && !r.fatal) continue;
     anyFailed = true;
     p(`- **${r.env} / ${r.path}**`);
     if (r.fatal) p(`  - run error: ${cell(r.fatal)}`);
     for (const s of badSteps) p(`  - step failed: "${cell(s.name)}": ${short(s.error, 300)}${s.screenshot ? ` (${s.screenshot})` : ''}`);
     for (const c of bad) p(`  - ${c.level === 'hard' ? 'FAIL' : 'warn'}${c.part ? ` [${c.part}]` : ''}: ${cell(c.name)}${c.detail ? `: ${short(c.detail, 260)}` : ''}`);
+    for (const f of highFindings) p(`  - FAIL${f.part ? ` [${f.part}]` : ''}: scan ${cell(f.title)}: ${short(f.text, 260)}${f.screenshot ? ` (${f.screenshot})` : ''}`);
   }
   if (!anyFailed) p('None.');
   p();
