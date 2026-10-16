@@ -1,0 +1,5 @@
+# QA run output (screenshots, videos, logs) belongs outside git. Pass --out to a folder outside the repo;
+# if one ends up in here anyway, keep it out of commits.
+runs/
+*.webm
+e2e/out/

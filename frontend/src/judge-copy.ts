@@ -56,6 +56,7 @@ export const PRODUCT_POLISH: ReadonlyArray<readonly [string, string]> = [
 
 export const LIVE_DATA_COPY: ReadonlyArray<readonly [string, string]> = [
   ['Demo prices · not live', 'Live prices, in baht'],
+  ['Prices shown are demo data, not live market prices.', 'Prices are live, in baht; the account is a demo.'],
   // the asset page's change pill: the backend's change is over the 1D chart the app shows, so say 1D, not 24h
   ['{{ asset.change24 }}<span style="font-weight:400;opacity:.8">24h</span>', '{{ asset.change24 }}<span style="font-weight:400;opacity:.8">1D</span>'],
   ['Prices are demo data. The final quantity may differ slightly when the order fills.',

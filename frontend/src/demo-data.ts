@@ -158,8 +158,14 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
         pending = await request('/trades/preview', { user_id: userId, asset_id: ids[appAsset], amount_thb: amount });
         proto.setState({ buyStep: 'review' });
       } else {
-        if (!pending || ids[proto.state.assetId] !== pending.asset_id || Number(proto.state.buyAmount) !== pending.amount_thb) throw new Error('Review the amount again before confirming.');
-        const preview = pending;
+        // Icarus fills the buy screen and moves it to Review without a tap there, so make the preview now if needed
+        // (the race's Confirm did nothing after Icarus filled the screen).
+        const amount = Number(proto.state.buyAmount), appAsset = proto.state.assetId;
+        if (!pending || ids[appAsset] !== pending.asset_id || amount !== pending.amount_thb) {
+          if (!proto.calc(appAsset, amount, 'thb').ok) throw new Error('Check the amount and available balance.');
+          pending = await request('/trades/preview', { user_id: userId, asset_id: ids[appAsset], amount_thb: amount });
+        }
+        const preview = pending as Record<string, any>;
         await request(`/trades/${encodeURIComponent(preview.preview_id)}/confirm`, { user_id: userId });
         pending = null;
         proto.setState({ buyStep: 'done', lastBuy: { asset: proto.state.assetId, amt: preview.amount_thb - preview.fee_thb, fee: preview.fee_thb, total: preview.amount_thb, qty: preview.qty } });
