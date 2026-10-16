@@ -1,0 +1,10 @@
+{
+  "voiceId": "mYcpTKg1oj1H5CtzUZNO",
+  "model": "eleven_v4_turbo",
+  "speed": 1,
+  "text": "นี่คือราคาทองคำวันนี้ค่ะ ดูการเปลี่ยนแปลงได้ตรงนี้เลย.",
+  "outputFormat": "pcm_24000",
+  "sampleRate": 24000,
+  "bytes": 192000,
+  "createdAt": "2026-10-16T01:00:16.890Z"
+}

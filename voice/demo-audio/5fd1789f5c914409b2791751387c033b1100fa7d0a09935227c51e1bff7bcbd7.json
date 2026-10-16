@@ -1,0 +1,10 @@
+{
+  "voiceId": "XiPS9cXxAVbaIWtGDHDh",
+  "model": "eleven_flash_v2_5",
+  "speed": 1,
+  "text": "That's your call, so I won't pick for you. But I can set up a purchase that you confirm.",
+  "outputFormat": "pcm_24000",
+  "sampleRate": 24000,
+  "bytes": 245202,
+  "createdAt": "2026-10-16T00:59:58.696Z"
+}
