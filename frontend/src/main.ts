@@ -83,7 +83,11 @@ async function main() {
   routePageLinks();
   const res = await fetch(PAGE_URL);
   if (!res.ok) throw new Error(`Could not load the page (${res.status}).`);
-  const html = await res.text();
+  // With ?backend the fee follows the backend's rule (demo-data.ts), so the design's fixed "(1%)" label would be
+  // wrong next to the amount. The amount on the screen is the backend's; the label just says what it is.
+  const html = backendFromLocation(location.search)
+    ? (await res.text()).replaceAll('Transaction fee (1%)', 'Transaction fee')
+    : await res.text();
 
   // Use the real mascot images if they are served next to the app. If not, draw placeholders.
   const hasMascots = await fetch('mascot/bow/hero.png', { method: 'HEAD' }).then((r) => r.ok && (r.headers.get('content-type') ?? '').startsWith('image/'), () => false);
