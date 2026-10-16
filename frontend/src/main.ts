@@ -127,7 +127,7 @@ async function main() {
   // With a backend the fee follows the backend's rule (demo-data.ts), so the design's fixed "(1%)" label would be
   // wrong next to the amount. The amount on the screen is the backend's; the label just says what it is.
   // The side console speaks to visitors on their own, not to a presenter (judge-copy.ts).
-  const page = withJudgeCopy(await res.text());
+  const page = withJudgeCopy(await res.text(), { liveData: Boolean(backend) });
   const html = backend ? page.replaceAll('Transaction fee (1%)', 'Transaction fee') : page;
 
   // Use the real mascot images if they are served next to the app. If not, draw placeholders.

@@ -1,13 +1,25 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { JUDGE_COPY, withJudgeCopy } from '../src/judge-copy';
+import { JUDGE_COPY, LIVE_DATA_COPY, PRODUCT_POLISH, withJudgeCopy } from '../src/judge-copy';
 
 const PROTOTYPE = readFileSync(path.join(__dirname, '..', 'prototype', 'Icarus Prototype.dc.html'), 'utf8');
 
 describe('judge copy', () => {
-  it('finds every presenter line in the current design (a new export from Oasis would show up here)', () => {
-    for (const [from] of JUDGE_COPY) expect(PROTOTYPE, from).toContain(from);
+  it('finds every line it changes in the current design (a new export from Oasis would show up here)', () => {
+    for (const [from] of [...JUDGE_COPY, ...PRODUCT_POLISH, ...LIVE_DATA_COPY]) expect(PROTOTYPE, from).toContain(from);
+  });
+
+  it('leaves no design placeholder, no John Doe and no dollar amounts on screen', () => {
+    const out = withJudgeCopy(PROTOTYPE, { liveData: true });
+    for (const gone of ['network logo', 'brand logo', '>photo<', 'John Doe', 'JOHN DOE', 'Hi John', '$8,448.60', 'Demo prices · not live', 'Balance 2,140.00'])
+      expect(out, gone).not.toContain(gone);
+    expect(out).toContain('VISA');
+    expect(out).toContain('Mint Srisuk');
+  });
+
+  it('keeps the honest prototype labels when there is no backend', () => {
+    expect(withJudgeCopy(PROTOTYPE)).toContain('Demo prices · not live');
   });
 
   it('replaces the presenter words and keeps the buttons and their actions', () => {

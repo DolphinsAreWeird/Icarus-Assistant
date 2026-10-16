@@ -13,6 +13,15 @@ export interface DemoBundle {
 type Prototype = Record<string, any>; // The design runtime exports a dynamic logic class.
 const money = (n: number) => `฿${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const ids: Record<string, string> = { BTC: 'btc', ETH: 'eth', XAU: 'gold' };
+const GREEN = '#1E9E55', RED = '#C8312E';
+// For the account's history rows (the design's own asset badges).
+const BADGES: Record<string, { name: string; mono: string; bg: string; unit: string }> = {
+  BTC: { name: 'Bitcoin', mono: 'B', bg: '#F7931A', unit: 'BTC' },
+  ETH: { name: 'Ethereum', mono: 'E', bg: '#627EEA', unit: 'ETH' },
+  XAU: { name: 'PAX Gold', mono: 'Au', bg: '#C9A227', unit: 'PAXG' },
+};
+const day = (ts: string) => new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+const signedPct = (p: number) => `${p >= 0 ? '+' : '−'}${Math.abs(p).toFixed(2)}%`;
 
 export function installDemoData(proto: Prototype, url: string, userId: string, onError: (message: string) => void, fetchImpl: typeof fetch = fetch) {
   let bundle: DemoBundle | null = null;
@@ -88,12 +97,25 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
     view.cryptoBal = money(pf.value); view.spendBal = money(proto.state.thbBal);
     view.walletRows = view.walletRows.filter((w: any) => w.name === 'THB Wallet' || w.name === 'Investments');
     view.walletRows.forEach((w: any) => { if (w.name === 'Investments') { w.bal = money(pf.value); w.sub = 'BTC, ETH and PAX Gold · simulated'; } });
-    view.pfValue = money(pf.value); view.pfChange = 'Current holdings · no portfolio return history';
-    view.assetRows = view.assetRows.filter((a: any) => bundle!.assets[a.id]).map((a: any) => ({ ...a, price: money(bundle!.assets[a.id]!.price_thb), change: 'Saved reference' }));
-    view.asset = { ...view.asset, price: current ? money(current.price_thb) : 'Unavailable', change24: 'Saved reference · approximate THB',
+    const invested = Object.values(proto.state.hold as Record<string, number>).some(q => q > 0);
+    view.pfValue = money(pf.value); view.pfChange = invested ? 'Value at live prices' : 'Nothing invested yet';
+    // The change over the 1D chart the app shows (a % with its colour), instead of a placeholder label.
+    const dayChange = (id: string) => { const s = proto.chartStats(id, '1D'); return Number.isFinite(s.pct) && s.start ? s.pct : null; };
+    view.assetRows = view.assetRows.filter((a: any) => bundle!.assets[a.id]).map((a: any) => {
+      const d = dayChange(a.id);
+      return { ...a, price: money(bundle!.assets[a.id]!.price_thb), change: d === null ? 'Live' : `${signedPct(d)} 1D`, color: d === null || d >= 0 ? GREEN : RED };
+    });
+    const d24 = dayChange(proto.state.assetId);
+    const live = current?.freshness === 'live';
+    view.asset = { ...view.asset, price: current ? money(current.price_thb) : 'Unavailable',
+      change24: `${live ? 'Live price' : 'Delayed price'}${d24 === null ? '' : ` · ${d24 >= 0 ? '▲' : '▼'} ${signedPct(d24)} 1D`}`,
       pChange: `${stats.pct.toFixed(2)}%`, lo: money(stats.lo), hi: money(stats.hi), value: money((proto.state.hold[proto.state.assetId] ?? 0) * (current?.price_thb ?? 0)),
-      perf: [], info: [{ k: 'Data', v: current?.freshness ?? 'unavailable' }, { k: 'Account', v: 'Simulated' }, { k: 'Gold proxy', v: 'PAXG' }],
-      ...(proto.state.assetId === 'XAU' ? { name: 'PAX Gold', desc: 'Tokenized gold proxy (PAXG). Saved observations converted approximately to THB.' } : {}) };
+      perf: [], info: [{ k: 'Price', v: live ? 'Live, in baht' : 'Delayed' }, { k: 'Account', v: 'Demo, yours only' }, ...(proto.state.assetId === 'XAU' ? [{ k: 'Gold token', v: 'PAXG' }] : [])],
+      ...(proto.state.assetId === 'XAU' ? { name: 'PAX Gold', desc: 'PAX Gold (PAXG) is a token backed by real gold: one token is one troy ounce, shown here in baht.' } : {}) };
+    // The swap starts from the THB wallet (judge-copy.ts LIVE_DATA_COPY puts these in the design).
+    const btc = bundle.assets.BTC?.price_thb;
+    view.swapBtc = btc ? (500 / btc).toFixed(6) : '–';
+    view.btcThb = btc ? money(btc) : 'unavailable';
     view.buy.unitPrice = `1 unit ≈ ${money(current?.price_thb ?? 0)}`;
     if (proto.state.assetId === 'XAU') {
       view.asset.qty = `${Number(proto.state.hold.XAU ?? 0).toFixed(8)} PAXG`;
@@ -106,7 +128,16 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
     for (const key of ['aChart', 'pfChart']) {
       if (view[key]) { view[key].val = view[key].val?.replace('$', '฿'); view[key].periods = view[key].periods.filter((p: any) => ['1D', '1W', '1M', '1Y'].includes(p.label)); }
     }
-    view.txList = [];
+    // The account's own history, newest first: the top-up it started with, then any buys and sells.
+    view.txList = [...bundle.transactions].reverse().slice(0, 6).map((t, i) => {
+      const border = i ? '1px solid #F8E8EC' : 'none';
+      if (t.type === 'deposit') return { mono: '฿', bg: '#C94F72', fg: '#fff', title: 'Top up from bank', sub: `${day(t.ts)} • PromptPay`, amt: `+${money(t.amount_thb)}`, color: GREEN, border };
+      const id = Object.keys(ids).find(k => ids[k] === t.asset_id) ?? '';
+      const b = BADGES[id] ?? { name: id, mono: '•', bg: '#4A2E36', unit: id };
+      const sell = t.type === 'sell';
+      return { mono: b.mono, bg: b.bg, fg: '#fff', title: `${sell ? 'Sold' : 'Bought'} ${b.name}`, sub: `${day(t.ts)} • ${Number(t.qty ?? 0).toFixed(6)} ${b.unit}`,
+        amt: `${sell ? '+' : '−'}${money(t.amount_thb)}`, color: sell ? GREEN : RED, border };
+    });
     return view;
   };
   const manual = async (confirm: boolean) => {
