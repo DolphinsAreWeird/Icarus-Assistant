@@ -1,6 +1,6 @@
 # Icarus business plan
 
-Draft, night of 15 Oct 2026. Every table below comes from [`cost_model.py`](cost_model.py): change an assumption there and run `python3 docs/cost_model.py --update` to rewrite the tables here. [`pricing-calculator.html`](pricing-calculator.html) is the same model with sliders. Assumptions that are ours (not a price list) are marked as ours. Prices were checked on 15 Oct 2026; sources are at the end.
+16 Oct 2026. Every table below comes from [`cost_model.py`](cost_model.py): change an assumption there and run `python3 docs/cost_model.py --update` to rewrite the tables here. [`pricing-calculator.html`](pricing-calculator.html) is the same model with sliders. Assumptions that are ours (not a price list) are marked as ours. Prices were checked on 15 Oct 2026; sources are at the end.
 
 ## 1. The short version
 
@@ -9,6 +9,8 @@ Draft, night of 15 Oct 2026. Every table below comes from [`cost_model.py`](cost
 - **How many machines:** **no GPU of our own.** The model, **Qwen3.8-27B** (the current 27B Qwen, released 14 Aug 2026), runs on a pay-per-token API, plus two small app servers. Two dedicated H100 GPUs would cost about 196,000 THB a month, and at these prices they never beat the API: a GPU sized for the evening peak sits idle most of the day. We rent GPUs only for a partner that needs its data kept in Thailand. Section 3.
 - **The price you asked for** (our full cost plus a 20% margin, all charged to U-topia): **214,000 to 424,000 THB a month**, depending on how many people use the app. At U-topia's claimed size (130,000 monthly users, not verified) it is **300,733 THB a month** (about US$9,000).
 - **Is that viable?** Only if U-topia has at least about **61,000 monthly active users**. Then Icarus is worth more to them than it costs (about 1.8 times at 130,000 users). Below that, the team cost is too big for one app to carry. U-topia's real size is unknown (its site says "Join thousands" and the app relaunches this week), so betting the business on one price for one partner is risky.
+- **Every profit figure here is after paying the team.** The team's 150,000 THB a month is a cost line in every table, from month 1, so "profit" is what is left once all four of us are paid.
+- **When we make money (section 6, cash plan):** the U-topia pilot costs us money for its first 3 months; with a new partner app every 3 months, the most cash we need is about 182,000 THB, every month is profitable from month 4, and month 24 runs at a 40% margin. If U-topia is small and partners sign slowly, we need about 1 million THB, or about 168,000 THB if the team takes half pay.
 - **What we recommend instead:** sell the same product to several finance apps at **2 THB per active user per month** (1.5 THB above 200,000 users, minimum 49,000 THB, 4 questions per user included). The partner gets back about 2 times what it pays. **A 20% margin needs about 162,000 paying users across all partners**: U-topia's claimed size plus one 30,000-user app is 19%, plus three such apps is 33%. Section 6.
 
 ## 2. Who pays and why
@@ -83,7 +85,7 @@ Where the GPUs would come from, if a partner needs them:
 | Servers and tools, THB | 15,000 | 15,000 | 15,000 | 15,000 |
 | **Total cost, THB/month** | 170,814 | 194,072 | 240,587 | 339,431 |
 | **Price at 20% margin, THB/month** | 213,518 | 242,590 | 300,733 | 424,288 |
-| Profit, THB/month | 42,704 | 48,518 | 60,147 | 84,858 |
+| Profit after paying the team, THB/month | 42,704 | 48,518 | 60,147 | 84,858 |
 | Price per monthly active user, THB | 21.35 | 4.85 | 2.31 | 1.41 |
 | Price per conversation, THB | 28.47 | 6.47 | 3.08 | 1.89 |
 <!-- /model:api -->
@@ -102,7 +104,7 @@ Where the GPUs would come from, if a partner needs them:
 | Servers and tools, THB | 15,000 | 15,000 | 15,000 | 15,000 |
 | **Total cost, THB/month** | 363,355 | 374,425 | 396,564 | 443,610 |
 | **Price at 20% margin, THB/month** | 454,194 | 468,031 | 495,705 | 554,513 |
-| Profit, THB/month | 90,839 | 93,606 | 99,141 | 110,903 |
+| Profit after paying the team, THB/month | 90,839 | 93,606 | 99,141 | 110,903 |
 | Price per monthly active user, THB | 45.42 | 9.36 | 3.81 | 1.85 |
 | Price per conversation, THB | 60.56 | 12.48 | 5.08 | 2.46 |
 <!-- /model:gpu -->
@@ -155,7 +157,7 @@ Break-even: the full-cost price pays for itself for an app with at least **61,00
 How many partners we need (team and servers counted once):
 
 <!-- model:portfolios -->
-| Partner apps | Revenue, THB/month | Cost, THB/month | Profit, THB/month | Margin |
+| Partner apps | Revenue, THB/month | Cost, THB/month (team included) | Profit after the team, THB/month | Margin |
 |---|---|---|---|---|
 | U-topia alone (130,000) | 260,000 | 240,587 | 19,413 | 7% |
 | U-topia + one 30,000-user app | 320,000 | 258,030 | 61,970 | 19% |
@@ -164,6 +166,29 @@ How many partners we need (team and servers counted once):
 
 A 20% margin needs about **162,000 paying active users across all partners** (team and servers, 165,000 THB a month, counted once).
 <!-- /model:portfolios -->
+
+### When we make money: the 24-month cash plan
+
+U-topia starts on the pilot (3 months at half price, plus the setup fee); each new partner app pays the setup fee once (150,000 THB, the low end) and then the per-user price. Costs start in month 1 and include the team's pay. Partner sizes and signing dates are our assumptions; the downside row shows what happens if they are wrong.
+
+<!-- model:cashflow -->
+| Quarter | Partner apps live | Their active users | Revenue, THB | Cost, THB (team included) | Profit, THB | Cash at quarter end, THB |
+|---|---|---|---|---|---|---|
+| Q1 (months 1-3) | 1 | 130,000 | 540,000 | 721,760 | -181,760 | -181,760 |
+| Q2 (months 4-6) | 2 | 160,000 | 1,110,000 | 774,089 | 335,911 | 154,151 |
+| Q3 (months 7-9) | 3 | 190,000 | 1,290,000 | 826,418 | 463,582 | 617,734 |
+| Q4 (months 10-12) | 4 | 220,000 | 1,470,000 | 878,747 | 591,253 | 1,208,986 |
+| Q5 (months 13-15) | 5 | 270,000 | 1,770,000 | 965,962 | 804,038 | 2,013,024 |
+| Q6 (months 16-18) | 5 | 270,000 | 1,620,000 | 965,962 | 654,038 | 2,667,062 |
+| Q7 (months 19-21) | 5 | 270,000 | 1,620,000 | 965,962 | 654,038 | 3,321,099 |
+| Q8 (months 22-24) | 5 | 270,000 | 1,620,000 | 965,962 | 654,038 | 3,975,137 |
+
+**Base case** (U-topia at its claimed 130,000 users, a new app every 3 months): the cash we need is at most **181,760 THB** (lowest in month 3), every month is profitable from month 4, and the cash is back above zero in month 4; month 24 makes 218,013 THB (40% margin).
+
+**Downside** (U-topia at 30,000 users, new apps every 6 months): the cash we need is at most **1,020,950 THB** (lowest in month 18), every month is profitable from month 19, and the cash is not back above zero within 24 months; month 24 makes 5,228 THB (2% margin).
+
+**If the downside happens**, the four of us take half pay (75,000 THB a month): then the most cash we need is 167,658 THB, and every month is profitable from month 13.
+<!-- /model:cashflow -->
 
 ### What if we are wrong?
 
@@ -210,6 +235,7 @@ What to watch: voice and token prices move the number of paying users we need mo
 
 | Question | Our answer |
 |---|---|
+| "Do you make money after paying yourselves?" | Yes: every profit figure here is after the team's 150,000 THB a month. U-topia alone at the list price leaves 7%; its 3-month pilot loses about 110,000 THB a month. With a new app every 3 months, the cash we need tops out near 182,000 THB and every month is profitable from month 4 (section 6, cash plan). |
 | "What if U-topia is small?" | Then the full-cost price does not pay for itself (section 5), so U-topia starts on the pilot and the per-user price. The business is sized for about 162,000 paying users across several apps, not one partner. |
 | "Why would they pay when U-Bot exists?" | U-Bot is a general assistant for payments and shopping. Icarus lives on the app's own screens for first-week users, prepares buys on a preview card with an exact read-back, draws charts and step-by-step help, and gives the business the friction map. We hand U-Bot what it does best (travel, rides, groceries). |
 | "Can it recommend investments?" | No, on purpose. It explains, compares on facts and calculates. A licensed partner can show its own approved picks. |

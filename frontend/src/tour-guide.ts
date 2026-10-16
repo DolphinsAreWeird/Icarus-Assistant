@@ -82,6 +82,14 @@ const MIC = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke=
 // An arrow pointing right (+x); the wrapper turns it toward the target.
 const ARROW = `<svg viewBox="0 0 64 64" width="64" height="64"><path d="M6 24h28V11l26 21-26 21V40H6z" fill="${PINK}" stroke="#fff" stroke-width="4" stroke-linejoin="round" style="filter:drop-shadow(0 4px 6px rgba(150,60,85,.35))"/></svg>`;
 
+// The arrow, in its own 64 px box: the tip is 28 px ahead of the middle, and the tail, poked back 14 px, 40 px behind.
+const ARROW_TIP = 28;
+const ARROW_REACH = 68;
+// The mascot's body, as a share of its box, measured from the middle (the picture has some empty space around it).
+const BODY = 0.42;
+// Room the arrow needs between the mascot's body and the target.
+const ARROW_ROOM = ARROW_REACH + 12;
+
 const NS = 'http://www.w3.org/2000/svg';
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi < lo ? lo : hi, v));
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -199,7 +207,10 @@ export function createGuide(getPhone: () => Element | null): Guide {
   let lastFlash: string | null = null;
   let side: 'left' | 'right' = 'left';
   let hole: Box & { a: number } = { x: 0, y: 0, w: 0, h: 0, a: 0 };
-  let ptr = { x: 0, y: 0, angle: 0, shown: false };
+  let ptr = { x: 0, y: 0, angle: 0, scale: 1, shown: false };
+  let trailA = 0;
+  let trickUntil = 0;
+  let bubbleHiddenAt = 0;
   let lastSpark = 0;
   let nextRipple = 0;
   let trickIndex = 0;
@@ -236,6 +247,9 @@ export function createGuide(getPhone: () => Element | null): Guide {
   }
 
   function doTrick(kind?: (typeof TRICKS)[number]) {
+    const now = performance.now();
+    if (now < trickUntil) return; // never cut one off halfway: that reads as a jerk
+    trickUntil = now + 850;
     const k = kind ?? TRICKS[trickIndex++ % TRICKS.length];
     trick.className = '';
     void trick.offsetWidth; // restart the animation
@@ -290,31 +304,35 @@ export function createGuide(getPhone: () => Element | null): Guide {
     bendSign = -bendSign; // curve one way, then the other
     flight = {
       from: { ...pos }, to: { ...to }, bend: Math.min(200, d * 0.4) * bendSign, t0: now,
-      dur: clamp(520 + d * 0.85, 700, 1350), spin: spin || d > 520, long: d > 200,
+      dur: clamp(560 + d * 0.9, 750, 1400), spin, long: d > 200,
     };
     faceGoal = to.x >= pos.x ? 1 : -1;
   }
 
   /** Where the mascot stands to show `t`, on the current side of the phone (or inside it, on a phone). */
-  function standFor(t: DOMRect, phone: DOMRect, outside: boolean): { at: Pt; tip: Pt; dir: number } {
+  function standFor(t: DOMRect, phone: DOMRect, outside: boolean): { at: Pt; tip: Pt } {
     const cy = t.top + Math.min(t.height, 150) / 2;
+    const y = clamp(cy - size / 2, 70, innerHeight - size - 16);
+    const tipY = clamp(cy, t.top + 10, t.bottom - 10);
+    // The arrow sits between the mascot and the target, never on the mascot: stand at least an arrow away.
     if (outside) {
       if (side === 'left') {
-        const at = { x: phone.left - size - 30, y: clamp(cy - size / 2, 70, innerHeight - size - 16) };
-        return { at, tip: { x: t.left + 4, y: clamp(cy, t.top + 10, t.bottom - 10) }, dir: 0 };
+        const tip = { x: t.left + 4, y: tipY };
+        return { at: { x: Math.max(8, Math.min(phone.left - size - 30, tip.x - ARROW_ROOM - size * (0.5 + BODY))), y }, tip };
       }
-      const at = { x: phone.right + 30, y: clamp(cy - size / 2, 70, innerHeight - size - 16) };
-      return { at, tip: { x: t.right - 4, y: clamp(cy, t.top + 10, t.bottom - 10) }, dir: Math.PI };
+      const tip = { x: t.right - 4, y: tipY };
+      return { at: { x: Math.min(innerWidth - size - 8, Math.max(phone.right + 30, tip.x + ARROW_ROOM - size * (0.5 - BODY))), y }, tip };
     }
-    // On a phone there is no room beside it: perch above the target, on the current side, and point down at it.
-    const x = side === 'left' ? t.left + 6 : t.right - size - 6;
-    const above = t.top - size - 18 > phone.top + 90;
+    // On a phone there is no room beside it: perch above (or below) the target, off to one side, toward the middle
+    // of the phone, so the arrow runs diagonally from the mascot down to the target.
+    const above = t.top - size - 24 > phone.top + 90;
+    const tipX = clamp(side === 'left' ? t.left + Math.min(40, t.width / 2) : t.right - Math.min(40, t.width / 2), phone.left + 20, phone.right - 20);
+    const toward = tipX < phone.left + phone.width / 2 ? 1 : -1;
     const at = {
-      x: clamp(x, phone.left + 4, phone.right - size - 4),
-      y: above ? t.top - size - 18 : clamp(t.bottom + 18, phone.top + 90, phone.bottom - size - 70),
+      x: clamp(tipX + toward * size * 0.95 - size / 2, phone.left + 4, phone.right - size - 4),
+      y: above ? t.top - size - 24 : clamp(t.bottom + 24, phone.top + 90, phone.bottom - size - 70),
     };
-    const tipX = clamp(at.x + size / 2, t.left + 16, t.right - 16);
-    return { at, tip: { x: tipX, y: above ? t.top + 4 : t.bottom - 4 }, dir: above ? Math.PI / 2 : -Math.PI / 2 };
+    return { at, tip: { x: tipX, y: above ? t.top + 4 : t.bottom - 4 } };
   }
 
   function frame(now: number) {
@@ -359,7 +377,7 @@ export function createGuide(getPhone: () => Element | null): Guide {
     const newQuestion = phase === 'hearing' && lastPhase !== 'hearing';
     if (newQuestion) side = side === 'left' ? 'right' : 'left'; // a new question: cross the phone
     let want: Pt;
-    let point: { tip: Pt; dir: number } | null = null;
+    let point: { tip: Pt } | null = null;
     if (phase === 'hearing' || (phase === 'thinking' && !tOk)) {
       want = outside
         ? { x: side === 'left' ? phone.left - size - 30 : phone.right + 30, y: askBox.y - size / 3 }
@@ -367,7 +385,7 @@ export function createGuide(getPhone: () => Element | null): Guide {
     } else if (tOk) {
       const s = standFor(tOk, phone, outside);
       want = s.at;
-      if (phase === 'speaking' || phase === 'listening') point = { tip: s.tip, dir: s.dir };
+      if (phase === 'speaking' || phase === 'listening') point = { tip: s.tip };
     } else {
       want = outside
         ? { x: side === 'left' ? phone.left - size - 30 : phone.right + 30, y: phone.top + phone.height * 0.38 }
@@ -400,7 +418,7 @@ export function createGuide(getPhone: () => Element | null): Guide {
     const vx = (pos.x - prev.x) / (dt / 16.7);
     tilt = approach(tilt, flight ? clamp(vx * 1.3, -18, 18) : 0, 0.15, dt);
     if (flight) faceGoal = flight.to.x >= flight.from.x ? 1 : -1;
-    else if (point) faceGoal = Math.cos(point.dir) >= 0 ? 1 : -1;
+    else if (point) faceGoal = point.tip.x >= pos.x + size / 2 ? 1 : -1;
     face = approach(face, faceGoal, 0.2, dt);
     const spinDeg = flight?.spin ? ease(clamp((now - flight.t0) / flight.dur, 0, 1)) * 360 : 0;
 
@@ -447,28 +465,46 @@ export function createGuide(getPhone: () => Element | null): Guide {
       ring.setAttribute('d', inner);
       ring.setAttribute('opacity', Math.min(1, hole.a * 1.4).toFixed(3));
     }
+    let gap = 0;
     if (point && tOk) {
-      const len = 60;
-      const want = { x: point.tip.x - Math.cos(point.dir) * len, y: point.tip.y - Math.sin(point.dir) * len };
-      if (!ptr.shown) ptr = { x: want.x, y: want.y, angle: point.dir, shown: true };
-      ptr.x = approach(ptr.x, want.x, 0.22, dt);
-      ptr.y = approach(ptr.y, want.y, 0.22, dt);
-      ptr.angle = approachAngle(ptr.angle, point.dir, 0.22, dt);
-    }
-    pointer.style.opacity = pointing ? '1' : '0';
-    if (ptr.shown) pointer.style.transform = `translate(${(ptr.x - 32).toFixed(1)}px, ${(ptr.y - 32).toFixed(1)}px) rotate(${ptr.angle.toFixed(3)}rad)`;
-    if (pointing && point) {
-      const from = { x: shown.x + size / 2 + Math.cos(ptr.angle) * size * 0.4, y: shown.y + size * 0.55 + Math.sin(ptr.angle) * size * 0.3 };
-      const tail = { x: ptr.x - Math.cos(ptr.angle) * 30, y: ptr.y - Math.sin(ptr.angle) * 30 };
-      const cx = (from.x + tail.x) / 2;
-      const cyc = Math.min(from.y, tail.y) - 36;
-      trail.setAttribute('d', `M${from.x.toFixed(1)},${from.y.toFixed(1)} Q${cx.toFixed(1)},${cyc.toFixed(1)} ${tail.x.toFixed(1)},${tail.y.toFixed(1)}`);
-      if (now > nextRipple && phase === 'speaking') {
-        nextRipple = now + 1500;
-        ripple(point.tip.x, point.tip.y);
+      // Aim from the mascot's middle at the target; the arrow's tip touches the target and its tail (even when it
+      // pokes back) stays clear of the mascot's body. Less room: a smaller arrow, never an overlap.
+      const c = { x: shown.x + size / 2, y: shown.y + size / 2 };
+      const d = Math.max(1, dist(c, point.tip));
+      const u = { x: (point.tip.x - c.x) / d, y: (point.tip.y - c.y) / d };
+      const body = size * BODY;
+      const scale = clamp((d - body - 8) / ARROW_REACH, 0.45, 1);
+      const want = { x: point.tip.x - u.x * ARROW_TIP * scale, y: point.tip.y - u.y * ARROW_TIP * scale };
+      const angle = Math.atan2(u.y, u.x);
+      if (!ptr.shown) ptr = { x: want.x, y: want.y, angle, scale, shown: true };
+      ptr.x = approach(ptr.x, want.x, 0.2, dt);
+      ptr.y = approach(ptr.y, want.y, 0.2, dt);
+      ptr.angle = approachAngle(ptr.angle, angle, 0.2, dt);
+      ptr.scale = approach(ptr.scale, scale, 0.2, dt);
+      gap = d - body - ARROW_REACH * ptr.scale;
+      if (pointing) {
+        // The dotted trail fills the space between the mascot and the arrow's tail, when there is any.
+        const from = { x: c.x + u.x * body, y: c.y + u.y * body };
+        const back = (ARROW_REACH - ARROW_TIP) * ptr.scale;
+        const tail = { x: ptr.x - Math.cos(ptr.angle) * back, y: ptr.y - Math.sin(ptr.angle) * back };
+        const bulge = Math.min(30, Math.max(0, gap) * 0.25);
+        const mid = { x: (from.x + tail.x) / 2 - u.y * bulge, y: (from.y + tail.y) / 2 + u.x * bulge };
+        trail.setAttribute('d', `M${from.x.toFixed(1)},${from.y.toFixed(1)} Q${mid.x.toFixed(1)},${mid.y.toFixed(1)} ${tail.x.toFixed(1)},${tail.y.toFixed(1)}`);
+        if (now > nextRipple && phase === 'speaking') {
+          nextRipple = now + 1500;
+          ripple(point.tip.x, point.tip.y);
+        }
       }
     }
-    trail.setAttribute('opacity', pointing ? '1' : '0');
+    // Fade in, but vanish at once: a fading arrow left over the mascot as it flies off looks broken.
+    const showArrow = pointing && gap > -4;
+    pointer.style.transition = showArrow ? 'opacity .3s ease' : 'none';
+    pointer.style.opacity = showArrow ? '1' : '0';
+    if (ptr.shown) {
+      pointer.style.transform = `translate(${(ptr.x - 32).toFixed(1)}px, ${(ptr.y - 32).toFixed(1)}px) rotate(${ptr.angle.toFixed(3)}rad) scale(${ptr.scale.toFixed(3)})`;
+    }
+    trailA = pointing && gap > 14 ? approach(trailA, 1, 0.12, dt) : 0;
+    trail.setAttribute('opacity', trailA.toFixed(3));
     if (!point) ptr.shown = false;
 
     // ---- the bubble, in step with the voice, next to the mascot ----
@@ -509,7 +545,9 @@ export function createGuide(getPhone: () => Element | null): Guide {
       bx = phone.left + (phone.width - bw) / 2;
       by = shown.y < phone.top + phone.height * 0.5 ? phone.bottom - bubbleH - 96 : phone.top + 104;
     }
-    if (!bubbleAt || !visible) bubbleAt = { x: bx, y: by };
+    if (visible) bubbleHiddenAt = 0;
+    else if (!bubbleHiddenAt) bubbleHiddenAt = now;
+    if (!bubbleAt || (!visible && now - bubbleHiddenAt > 400)) bubbleAt = { x: bx, y: by };
     bubbleAt = { x: approach(bubbleAt.x, bx, 0.2, dt), y: approach(bubbleAt.y, by, 0.2, dt) };
     bubble.style.transform = `translate(${bubbleAt.x.toFixed(1)}px, ${bubbleAt.y.toFixed(1)}px)`;
 
@@ -526,7 +564,8 @@ export function createGuide(getPhone: () => Element | null): Guide {
       goal = null;
       flight = null;
       hole = { x: 0, y: 0, w: 0, h: 0, a: 0 };
-      ptr = { x: 0, y: 0, angle: 0, shown: false };
+      ptr = { x: 0, y: 0, angle: 0, scale: 1, shown: false };
+      trailA = 0;
       bubbleAt = null;
       lastNow = 0;
       poseName = '';
@@ -562,6 +601,7 @@ export function createGuide(getPhone: () => Element | null): Guide {
       cancelAnimationFrame(raf);
       bubble.style.opacity = '0';
       ask.style.opacity = '0';
+      pointer.style.transition = 'none';
       pointer.style.opacity = '0';
       trail.setAttribute('opacity', '0');
       shade.setAttribute('opacity', '0');

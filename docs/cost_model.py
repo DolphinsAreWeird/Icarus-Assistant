@@ -212,7 +212,7 @@ def table(how: str) -> str:
     row("Servers and tools, THB", "platform_thb")
     row("**Total cost, THB/month**", "cost_thb")
     row("**Price at 20% margin, THB/month**", "price_thb")
-    row("Profit, THB/month", "profit_thb")
+    row("Profit after paying the team, THB/month", "profit_thb")
     row("Price per monthly active user, THB", "price_per_mau_thb", 2)
     row("Price per conversation, THB", "price_per_conversation_thb", 2)
     return "\n".join(lines)
@@ -269,13 +269,73 @@ def list_price_table() -> str:
 
 
 def portfolio_table() -> str:
-    lines = ["| Partner apps | Revenue, THB/month | Cost, THB/month | Profit, THB/month | Margin |", "|---|---|---|---|---|"]
+    lines = ["| Partner apps | Revenue, THB/month | Cost, THB/month (team included) | Profit after the team, THB/month | Margin |", "|---|---|---|---|---|"]
     for label, maus in PORTFOLIOS:
         p = portfolio(maus)
         lines.append(f"| {label} | {fmt(p['revenue'])} | {fmt(p['cost'])} | {fmt(p['profit'])} | {p['margin']:.0%} |")
     lines.append("")
     lines.append(f"A 20% margin needs about **{fmt(paying_users_for_margin())} paying active users across all partners** "
                  f"(team and servers, {fmt(OPS_THB + PLATFORM_THB)} THB a month, counted once).")
+    return "\n".join(lines)
+
+
+SETUP_FEE_THB = 150_000  # the low end of the one-time setup fee (section 6), once per new partner
+PILOT_RATE = 0.5  # the launch partner's first months: half the per-user price (never below the minimum)
+PLAN_MONTHS = 24
+# Partner apps joining: (name, monthly active users, first month, months at the pilot price). Our assumption.
+LAUNCH = [("U-topia", 130_000, 1, 3), ("App 2", 30_000, 4, 0), ("App 3", 30_000, 7, 0), ("App 4", 30_000, 10, 0),
+          ("App 5", 50_000, 13, 0)]
+# The downside: U-topia is a quarter of its claimed size, and the other apps take twice as long to sign.
+LAUNCH_DOWNSIDE = [("U-topia", 30_000, 1, 3), ("App 2", 30_000, 7, 0), ("App 3", 30_000, 13, 0), ("App 4", 30_000, 19, 0)]
+
+
+def cash_plan(launch=None, months: int = PLAN_MONTHS) -> list[dict]:
+    """Month by month: what comes in (setup fees and the per-user price), what goes out (the team, servers and
+    usage of every live app), and the cash position. The team's pay is a cost from month 1, so every profit here
+    is after paying the team."""
+    launch = LAUNCH if launch is None else launch
+    rows, cash = [], 0.0
+    for m in range(1, months + 1):
+        live = [(n, u, start, pilot) for n, u, start, pilot in launch if m >= start]
+        revenue = sum(SETUP_FEE_THB for _, _, start, _ in live if start == m)
+        for _, users, start, pilot in live:
+            price = list_price_thb(users)
+            revenue += max(MIN_MONTHLY_FEE, price * PILOT_RATE) if m < start + pilot else price
+        cost = OPS_THB + PLATFORM_THB + sum(usage_cost_thb(users) for _, users, _, _ in live)
+        cash += revenue - cost
+        rows.append({"month": m, "apps": len(live), "users": sum(u for _, u, _, _ in live), "revenue": revenue,
+                     "cost": cost, "profit": revenue - cost, "cash": cash})
+    return rows
+
+
+def cash_summary(rows: list[dict]) -> dict:
+    low = min(rows, key=lambda r: r["cash"])
+    steady = next((r["month"] for i, r in enumerate(rows) if all(x["profit"] > 0 for x in rows[i:])), None)
+    back = next((r["month"] for r in rows if r["month"] > low["month"] and r["cash"] >= 0), None)
+    return {"need": max(0.0, -low["cash"]), "low_month": low["month"], "profit_from": steady, "cash_back": back,
+            "last": rows[-1]}
+
+
+def cash_table() -> str:
+    rows = cash_plan()
+    lines = ["| Quarter | Partner apps live | Their active users | Revenue, THB | Cost, THB (team included) | Profit, THB | Cash at quarter end, THB |",
+             "|---|---|---|---|---|---|---|"]
+    for q in range(PLAN_MONTHS // 3):
+        part = rows[q * 3:q * 3 + 3]
+        lines.append(f"| Q{q + 1} (months {q * 3 + 1}-{q * 3 + 3}) | {part[-1]['apps']} | {fmt(part[-1]['users'])} | "
+                     f"{fmt(sum(r['revenue'] for r in part))} | {fmt(sum(r['cost'] for r in part))} | "
+                     f"{fmt(sum(r['profit'] for r in part))} | {fmt(part[-1]['cash'])} |")
+    base, down = cash_summary(rows), cash_summary(cash_plan(LAUNCH_DOWNSIDE))
+    def say(c):
+        return (f"the cash we need is at most **{fmt(c['need'])} THB** (lowest in month {c['low_month']}), every month is profitable "
+                f"from month {c['profit_from']}" + (f", and the cash is back above zero in month {c['cash_back']}" if c["cash_back"] else
+                                                     ", and the cash is not back above zero within 24 months") +
+                f"; month 24 makes {fmt(c['last']['profit'])} THB ({c['last']['profit'] / c['last']['revenue']:.0%} margin).")
+    with changed(OPS_THB=OPS_THB / 2):
+        half = cash_summary(cash_plan(LAUNCH_DOWNSIDE))
+    lines += ["", f"**Base case** (U-topia at its claimed 130,000 users, a new app every 3 months): {say(base)}", "", f"**Downside** (U-topia at 30,000 users, new apps every 6 months): {say(down)}", "",
+              f"**If the downside happens**, the four of us take half pay ({fmt(OPS_THB / 2)} THB a month): "
+              f"then the most cash we need is {fmt(half['need'])} THB, and every month is profitable from month {half['profit_from']}."]
     return "\n".join(lines)
 
 
@@ -318,7 +378,8 @@ def sensitivity_table() -> str:
 
 
 BLOCKS = {"instances": instances_table, "api": lambda: table("api"), "gpu": lambda: table("gpu"), "value": value_table,
-          "listprice": list_price_table, "portfolios": portfolio_table, "sensitivity": sensitivity_table}
+          "listprice": list_price_table, "portfolios": portfolio_table, "sensitivity": sensitivity_table,
+          "cashflow": cash_table}
 
 
 def update(path: str) -> None:

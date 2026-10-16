@@ -68,8 +68,9 @@ ADVICE = re.compile(r"\b(you should (buy|sell|hold|invest)|i (recommend|suggest)
 NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
 
 
-def ask(url, lang, text, snapshot, i):
-    body = json.dumps({"user_id": "demo-user", "session_id": f"b100-{int(time.time())}-{i}", "text": text, "lang": lang,
+def ask(url, lang, text, snapshot, i, session=None):
+    session = session or f"b100-{int(time.time())}-{i}"
+    body = json.dumps({"user_id": "demo-user", "session_id": session, "text": text, "lang": lang,
                        "input_mode": "text", "snapshot": snapshot}).encode()
     req = urllib.request.Request(url.rstrip("/") + "/chat", body, {"Content-Type": "application/json"})
     t = time.perf_counter()
@@ -82,7 +83,7 @@ def ask(url, lang, text, snapshot, i):
         return time.perf_counter() - t, None, type(e).__name__
 
 
-def flags(question, reply, secs):
+def flags(question, reply, secs, slow=6):
     text = (reply or {}).get("text") or ""
     out = []
     if not text.strip() or "got stuck" in text or "ติดขัด" in text:
@@ -97,7 +98,7 @@ def flags(question, reply, secs):
     sentences = [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if s]
     if len(sentences) > 2 or len(text.split()) > 45:
         out.append("LONG")
-    if secs > 6:
+    if secs > slow:
         out.append("SLOW")
     return out
 
