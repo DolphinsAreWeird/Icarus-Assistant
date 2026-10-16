@@ -29,7 +29,7 @@ No key or credits yet? `npm run dev:fake` gives fake tones instead of speech and
 | Command | What it does |
 |---|---|
 | `npm run dev` | Server and test page (rebuilds the browser code first) |
-| `npm run dev:fake` | Same, with fake ElevenLabs. No key needed |
+| `npm run dev:fake` | Same, with fake ElevenLabs. No key needed. Works on Windows, macOS and Linux (`scripts/dev-fake.mjs` sets `FAKE_ELEVENLABS=1`) |
 | `npm run check` | Checks the key, models, Thai support, voice IDs, token minting against the live API. Add `-- --speak` to hear a test line |
 | `npm run pregenerate` | Makes the demo audio files in `demo-audio/`. `-- --dry` shows the credit cost first. `-- --verify` checks every clip with the live Scribe, amounts included |
 | `npm run bench` | Measures the pipeline speed with no mic. Reports real numbers |

@@ -25,7 +25,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 - [ ] **I09: Refresh and age visible market data.** Old observations cannot remain labeled live; cover idle/focus/reconnect and quote-review interactions.
 - [ ] **I10: Align launcher engines and readiness.** Explicit engine choice, accurate health/readiness, failed backend startup/hang checks.
 - [x] **I11: Settle failed fallback speech.** Clean up and settle every terminal playback outcome while keeping interrupted read-back unapproved.
-- [ ] **I12: Fix Windows build/fake startup.** Portable npm invocation, nonzero spawn failure and cross-platform fake-mode launch.
+- [x] **I12: Fix Windows build/fake startup.** Portable npm invocation, nonzero spawn failure and cross-platform fake-mode launch.
 - [x] **I13: Refresh dashboard after ring rollover.** Detect replacement events when event count remains 400; retain truthful browser-local analytics labeling.
 - [ ] **I14: Repair documentation and claims.** Correct stale run paths, historical handoffs, six broken links, data-locality wording and demo scope. Do not fabricate a live URL, deck or human review.
 - [ ] **I15: Restore reproducible validation.** Install locked JS dependencies/browser tooling, run Python/JS suites, typechecks/builds and meaningful offline browser coverage for both engines where feasible.
@@ -56,6 +56,8 @@ The issue's commit subject identifies its checkpoint. Hashes will be collected a
 | I03 | `fix: ground legacy trade previews in the user request`: 306 full backend tests passed (OFFLINE pinned env); refusals for invented asset/amount/side, quantities as baht, past tense, question follow-ups; EN/TH/decimal/Thai-digit positives | Opus 5.5 High approved after fixes (quantity units, past tense, question follow-ups, restored unbacked_numbers assertion) |
 
 | I08 | `fix: separate hosted request budgets by class and visitor`: 483 voice tests and typecheck passed; multi-visitor bursts, chat exhaustion leaving reads/preview/confirm open, spoofed X-Forwarded-For, bounded tables, malformed paths (400) | Opus 5.5 High approved after fixes (table-full lockout, ID-less shared bucket, per-tab session key, malformed path 400). Shared Render proxy IP ceiling remains documented |
+
+| I12 | `fix: portable npm invocation and fake-mode launch on Windows`: 489 voice tests (1 POSIX-only skipped), typecheck; build-app exit 0 on Windows, bogus npm exits 1; `npm run dev:fake` served /api/health with fakeElevenLabs on Windows. POSIX SIGTERM forwarding test not run (no Linux here) | Opus 5.5 High approved after fixes (signal forwarding, no DEP0190 shell args, test path escapes) |
 
 ## Execution notes
 
