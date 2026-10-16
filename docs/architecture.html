@@ -1,136 +1,160 @@
 <!doctype html>
-<!-- How Icarus works, as one picture for the deck and the README.
-     Render: node docs/render-architecture.cjs  (writes docs/media/architecture.png) -->
+<!-- How Icarus works, drawn with symbols instead of boxes, for the deck and the README.
+     Render: PLAYWRIGHT=/path/to/node_modules/playwright node docs/render-architecture.cjs
+     It writes docs/media/architecture.png (whole picture) and architecture-1/2/3.png (transparent layers that the
+     deck reveals one after the other). ?layer=1|2|3 shows one layer only. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>How Icarus works</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@500;700&display=swap">
 <style>
-  :root { --pink: #C94F72; --rose: #F7D2DC; --blush: #FDE3EA; --paper: #FFF7F9; --ink: #4A2E36; --soft: #6E5560; --gold: #E9A83B; }
+  :root { --pink: #C94F72; --deep: #A8385A; --rose: #F7D2DC; --blush: #FDE3EA; --paper: #FFF7F9; --ink: #4A2E36; --soft: #6E5560; --gold: #E9A83B; }
   * { box-sizing: border-box; margin: 0; }
-  body { width: 1692px; height: 760px; background: var(--paper); font-family: Nunito, system-ui, sans-serif; color: var(--ink); position: relative; overflow: hidden;
-    background-image: radial-gradient(#F9DCE4 1.6px, transparent 1.7px); background-size: 30px 30px; }
-  .card { position: absolute; background: #FFFDFE; border: 2px solid var(--rose); border-radius: 28px; padding: 18px 20px 16px;
-    box-shadow: 0 10px 26px rgba(201, 79, 114, .13); }
-  .head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-  .badge { width: 50px; height: 50px; border-radius: 50%; background: var(--pink); display: flex; align-items: center; justify-content: center; flex: none;
-    box-shadow: 0 4px 10px rgba(201, 79, 114, .3); }
-  .badge svg { width: 27px; height: 27px; }
-  .num { position: absolute; top: -14px; left: -10px; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: #fff;
-    font: 600 18px/34px Fredoka, sans-serif; text-align: center; box-shadow: 0 3px 8px rgba(74, 46, 54, .3); }
-  h3 { font: 600 24px/1.15 Fredoka, sans-serif; color: var(--ink); }
-  p { font-size: 17px; line-height: 1.38; color: var(--soft); }
+  body { width: 1692px; height: 760px; background: var(--paper); font-family: Nunito, system-ui, sans-serif; color: var(--ink); position: relative; overflow: hidden; }
+  body.layers { background: transparent; }
+  .layer { position: absolute; left: 0; top: 0; width: 1692px; height: 760px; }
+  .node { position: absolute; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .disc { width: 112px; height: 112px; border-radius: 50%; background: var(--pink); display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 24px rgba(201, 79, 114, .28); }
+  .disc svg { width: 54px; height: 54px; }
+  .num { font: 600 15px Fredoka, sans-serif; letter-spacing: 1.5px; color: var(--pink); margin-top: 16px; }
+  h3 { font: 600 27px/1.15 Fredoka, sans-serif; color: var(--ink); margin-top: 2px; }
+  p { font-size: 17px; line-height: 1.4; color: var(--soft); margin-top: 6px; }
   p b { color: var(--ink); font-weight: 700; }
-  .small { font-size: 15.5px; }
-  .brain { background: linear-gradient(160deg, #FDE3EA 0%, #FFF7F9 70%); border: 2.5px solid var(--pink); }
-  .mascot { position: absolute; width: 112px; height: 112px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(150, 60, 85, .25)); }
-  .row-label { position: absolute; font: 600 15px Fredoka, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pink); }
-  .pill { position: absolute; display: flex; align-items: center; gap: 14px; background: #FFFDFE; border: 2px dashed #EBB3C3; border-radius: 999px; padding: 12px 22px 12px 12px; }
-  .pill .badge { width: 44px; height: 44px; background: var(--gold); }
-  .pill p { font-size: 17px; }
-  .tag { display: inline-block; font: 600 13px Fredoka, sans-serif; color: var(--pink); background: var(--blush); border-radius: 999px; padding: 3px 10px; margin-top: 8px; }
-  svg.wires { position: absolute; left: 0; top: 0; }
+  .tag { font: 600 13.5px Fredoka, sans-serif; color: var(--deep); margin-top: 8px; letter-spacing: .3px; }
+  .label { position: absolute; font: 600 15px Fredoka, sans-serif; letter-spacing: 2px; text-transform: uppercase; color: var(--pink); }
+  .exit { position: absolute; display: flex; align-items: center; gap: 14px; }
+  .exit .mini { width: 46px; height: 46px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; flex: none; }
+  .exit .mini svg { width: 24px; height: 24px; }
+  .exit p { margin: 0; font-size: 18px; }
 </style>
 </head>
 <body>
 
-<div style="position:absolute;left:14px;top:44px;width:1664px;height:712px">
-<!-- wires first, cards paint over them -->
-<svg class="wires" width="1664" height="712" viewBox="0 0 1664 712">
-  <defs>
-    <marker id="tip" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#C94F72"/></marker>
-    <symbol id="heart" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 5.3 3.1 1.7-1.9 3.2-3.1 5.3-3.1 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z" fill="#E97A9A"/></symbol>
-  </defs>
-  <g fill="none" stroke="#C94F72" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 11">
-    <!-- row A: 1 > 2 > 3 > 4 > 5 (cards 296 wide at lefts 0, 342, 684, 1026, 1368; middle y 92) -->
-    <path d="M300 104 L334 104" marker-end="url(#tip)"/>
-    <path d="M642 104 L676 104" marker-end="url(#tip)"/>
-    <path d="M984 104 L1018 104" marker-end="url(#tip)"/>
-    <path d="M1326 104 L1360 104" marker-end="url(#tip)"/>
-    <!-- the brain's bus down to its four helpers (centres 220, 628, 1036, 1444) -->
-    <path d="M832 214 L832 290"/>
-    <path d="M220 290 L1444 290"/>
-    <path d="M220 290 L220 344" marker-end="url(#tip)"/>
-    <path d="M628 290 L628 344" marker-end="url(#tip)"/>
-    <path d="M1036 290 L1036 344" marker-end="url(#tip)"/>
-    <path d="M1444 290 L1444 344" marker-end="url(#tip)"/>
-  </g>
-  <use href="#heart" x="820" y="278" width="24" height="24"/>
-</svg>
+<!-- ===== layer 1: the conversation, five stations ===== -->
+<div class="layer" data-layer="1">
+  <svg width="1692" height="760" viewBox="0 0 1692 760" style="position:absolute;left:0;top:0">
+    <defs><marker id="tip" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#C94F72"/></marker></defs>
+    <g fill="none" stroke="#C94F72" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 11">
+      <path d="M232 96 L392 96" marker-end="url(#tip)"/>
+      <path d="M574 96 L734 96" marker-end="url(#tip)"/>
+      <path d="M958 96 L1118 96" marker-end="url(#tip)"/>
+      <path d="M1300 96 L1440 96" marker-end="url(#tip)"/>
+    </g>
+  </svg>
 
-<!-- row A: the conversation -->
-<div class="card" style="left:0;top:0;width:296px;height:214px">
-  <div class="num">1</div>
-  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg></div><h3>You ask</h3></div>
-  <p>Say it or type it, in <b>English or Thai</b>. Or tap anything on screen and ask what it means.</p>
-  <span class="tag">web app, phone or laptop</span>
+  <div class="node" style="left:36px;top:40px;width:240px">
+    <div class="disc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg></div>
+    <div class="num">1</div><h3>You ask</h3>
+    <p>By voice or text, in <b>English or Thai</b>, about anything on screen.</p>
+  </div>
+
+  <div class="node" style="left:378px;top:40px;width:250px">
+    <div class="disc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></div>
+    <div class="num">2</div><h3>It listens</h3>
+    <p>Speech becomes text as you talk.</p>
+    <div class="tag">ElevenLabs Scribe</div>
+  </div>
+
+  <div class="node" style="left:718px;top:4px;width:280px">
+    <div style="width:184px;height:184px;border-radius:50%;background:#fff;border:5px solid var(--pink);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 30px rgba(201,79,114,.25)">
+      <img src="../frontend/public/mascot/bow/working.png" alt="" style="width:150px;height:150px;object-fit:contain">
+    </div>
+    <div class="num">3</div><h3>It thinks</h3>
+    <p><b>Code works out what you want</b> first. The AI only finds the words.</p>
+    <div class="tag">Python · FastAPI</div>
+  </div>
+
+  <div class="node" style="left:1104px;top:40px;width:250px">
+    <div class="disc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/><path d="M12 6.5v5m-2.5-2.5h5" stroke-width="1.8"/></svg></div>
+    <div class="num">4</div><h3>It shows</h3>
+    <p>One sentence <b>out loud</b> while it moves the screens and fills in the form.</p>
+    <div class="tag">TypeScript app · ElevenLabs voice</div>
+  </div>
+
+  <div class="node" style="left:1430px;top:58px;width:240px">
+    <div style="height:76px;padding:0 30px;border-radius:38px;background:var(--ink);color:#fff;display:flex;align-items:center;gap:12px;font:600 26px Fredoka,sans-serif;box-shadow:0 10px 24px rgba(74,46,54,.3)">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Confirm</div>
+    <div class="num" style="margin-top:34px">5</div><h3>You tap</h3>
+    <p>Icarus <b>never buys</b> for you. Voice can't approve anything.</p>
+  </div>
 </div>
 
-<div class="card" style="left:342px;top:0;width:296px;height:214px">
-  <div class="num">2</div>
-  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></div><h3>Icarus listens</h3></div>
-  <p><b>ElevenLabs</b> Scribe v2 Realtime turns your voice into text as you speak.</p>
-  <span class="tag">ElevenLabs · Node voice server</span>
+<!-- ===== layer 2: what it thinks with ===== -->
+<div class="layer" data-layer="2">
+  <svg width="1692" height="760" viewBox="0 0 1692 760" style="position:absolute;left:0;top:0">
+    <defs><marker id="tip2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#C94F72"/></marker></defs>
+    <g fill="none" stroke="#C94F72" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 11">
+      <path d="M858 376 L858 404"/>
+      <path d="M246 404 L1446 404"/>
+      <path d="M246 404 L246 440" marker-end="url(#tip2)"/>
+      <path d="M646 404 L646 440" marker-end="url(#tip2)"/>
+      <path d="M1046 404 L1046 440" marker-end="url(#tip2)"/>
+      <path d="M1446 404 L1446 440" marker-end="url(#tip2)"/>
+    </g>
+    <!-- database: prepared answers -->
+    <g transform="translate(206 452)">
+      <path d="M0 14 v52 c0 8 18 14 40 14 s40-6 40-14 V14" fill="#F48FB1"/>
+      <path d="M0 40 c0 8 18 14 40 14 s40-6 40-14" fill="none" stroke="#fff" stroke-width="3"/>
+      <ellipse cx="40" cy="14" rx="40" ry="14" fill="#C94F72"/>
+    </g>
+    <!-- cloud with a spark: the AI -->
+    <g transform="translate(596 460)">
+      <path d="M22 70 h62 a22 22 0 0 0 2-44 a30 30 0 0 0-57-6 a24 24 0 0 0-7 50z" fill="#C94F72"/>
+      <path d="M52 30 l5 13 13 5-13 5-5 13-5-13-13-5 13-5z" fill="#fff"/>
+    </g>
+    <!-- a chart on a screen: live data -->
+    <g transform="translate(1000 458)">
+      <rect x="0" y="0" width="92" height="66" rx="10" fill="#C94F72"/>
+      <path d="M14 48 l18-17 13 10 20-22 13 9" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M34 74 h24" stroke="#C94F72" stroke-width="6" stroke-linecap="round"/>
+    </g>
+    <!-- shield: house rules -->
+    <g transform="translate(1410 452)">
+      <path d="M36 0 L72 13 v25 c0 22-15 37-36 44 C15 75 0 60 0 38 V13z" fill="#C94F72"/>
+      <path d="m21 39 10 10 20-21" fill="none" stroke="#fff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </svg>
+  <div class="label" style="left:884px;top:380px">what it thinks with</div>
+
+  <div class="node" style="left:96px;top:552px;width:300px">
+    <h3>Prepared answers</h3>
+    <p>Fact sheets for every asset and user, <b>ready before you ask</b>. It grows with every new question.</p>
+  </div>
+  <div class="node" style="left:496px;top:552px;width:300px">
+    <h3>AI in the cloud</h3>
+    <p>An open model (<b>Qwen 3.8-27B</b>) words new answers. If it's slow, a <b>backup model</b> answers.</p>
+  </div>
+  <div class="node" style="left:896px;top:552px;width:300px">
+    <h3>Live data</h3>
+    <p>Market prices, the baht rate and <b>your account</b>. Every number comes from here.</p>
+  </div>
+  <div class="node" style="left:1296px;top:552px;width:300px">
+    <h3>House rules</h3>
+    <p><b>No buy or sell advice.</b> No made-up numbers. No claims it can't back.</p>
+  </div>
 </div>
 
-<div class="card brain" style="left:684px;top:0;width:296px;height:214px">
-  <div class="num">3</div>
-  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="#fff"><path d="M13.5 2 5 13.5h6L9.8 22 19 10h-6.2z"/></svg></div><h3>Icarus thinks</h3></div>
-  <p>Code works out <b>what you want</b> first (milliseconds), then picks the facts.</p>
-  <span class="tag">Python · FastAPI</span>
-  <img class="mascot" src="../frontend/public/mascot/bow/working.png" alt="" style="right:-30px;top:-46px;width:92px;height:92px">
+<!-- ===== layer 3: what goes out ===== -->
+<div class="layer" data-layer="3">
+  <div class="exit" style="left:96px;top:702px;width:720px">
+    <div class="mini"><svg viewBox="0 0 24 24" fill="#fff"><path d="M21.5 2.5 2.8 10.3l7 2.6 2.6 7z"/></svg></div>
+    <p><b>Not finance?</b> Rides, flights, shopping: Icarus writes the request for <b>U-Bot</b>.</p>
+  </div>
+  <div class="exit" style="left:896px;top:702px;width:720px">
+    <div class="mini"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V4"/></svg></div>
+    <p><b>Every question</b> lands on a friction map: where users get stuck.</p>
+  </div>
 </div>
 
-<div class="card" style="left:1026px;top:0;width:296px;height:214px">
-  <div class="num">4</div>
-  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.6-2.2L4.6 15.6a1.6 1.6 0 0 1 2.4-2.1L9 15.5"/></svg></div><h3>Icarus shows</h3></div>
-  <p>One short sentence <b>out loud</b>, while it moves the screens, points and fills in the form.</p>
-  <span class="tag">TypeScript app · ElevenLabs voice</span>
-</div>
-
-<div class="card" style="left:1368px;top:0;width:296px;height:214px">
-  <div class="num">5</div>
-  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12.3 2.7 2.7L16.2 9.5"/></svg></div><h3>You confirm</h3></div>
-  <p>Icarus <b>never buys</b> for you. The amount, fee and total are on screen; you tap.</p>
-  <span class="tag">simulated purchase</span>
-</div>
-
-<div class="row-label" style="left:870px;top:240px">what Icarus thinks with</div>
-
-<!-- row B: what the brain uses (cards 360 wide at lefts 40, 448, 856, 1264) -->
-<div class="card" style="left:40px;top:352px;width:360px;height:210px">
-  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6.5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V5.5M4.5 12v6.5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V12"/></svg></div><h3>Prepared answers</h3></div>
-  <p class="small">Fact sheets for every asset and every user, <b>ready before you ask</b>, refreshed with each price. The 40 most-asked questions answered in English and Thai.</p>
-  <span class="tag">grows with every new question</span>
-</div>
-
-<div class="card" style="left:448px;top:352px;width:360px;height:210px">
-  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="#fff"><path d="M10 2.5 11.6 7.4 16.5 9 11.6 10.6 10 15.5 8.4 10.6 3.5 9 8.4 7.4z"/><path d="M17.5 13 18.4 15.6 21 16.5 18.4 17.4 17.5 20 16.6 17.4 14 16.5 16.6 15.6z"/></svg></div><h3>AI model chain</h3></div>
-  <p class="small">Only for new questions, to word one sentence. <b>Qwen 3.8-27B</b> on CMKL Orion (about 2 s). Slow or down? <b>Gemini</b> and <b>Groq</b> step in; the first answer wins.</p>
-</div>
-
-<div class="card" style="left:856px;top:352px;width:360px;height:210px">
-  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 18.5 9 12.5l4 3.5 7.5-9"/><path d="M15.5 7h5v5"/></svg></div><h3>Live data</h3></div>
-  <p class="small">Prices from <b>Binance</b>, the baht rate from <b>Frankfurter</b>. Every visitor gets their own demo account. Numbers only ever come from here.</p>
-</div>
-
-<div class="card" style="left:1264px;top:352px;width:360px;height:210px">
-  <div class="head"><div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 4.5 5.8v5.7c0 4.7 3.2 8.3 7.5 9.7 4.3-1.4 7.5-5 7.5-9.7V5.8z"/><path d="m8.8 12 2.3 2.3 4.3-4.6"/></svg></div><h3>House rules</h3></div>
-  <p class="small"><b>No buy or sell advice</b>, ever. Every number from data, never from the AI. Voice never approves anything: a tap does.</p>
-</div>
-
-<!-- row C: what goes out -->
-<div class="pill" style="left:40px;top:612px;width:772px">
-  <div class="badge"><svg viewBox="0 0 24 24" fill="#fff"><path d="M21.5 2.5 2.8 10.3l7 2.6 2.6 7z"/><path d="m21.5 2.5-11.7 10.4" stroke="#E9A83B" stroke-width="1.6"/></svg></div>
-  <p><b>Not finance?</b> Rides, flights, shopping: Icarus writes the request and hands it to <b>U-Bot</b>, U-topia’s own assistant.</p>
-</div>
-<div class="pill" style="left:852px;top:612px;width:772px">
-  <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V4"/></svg></div>
-  <p><b>For the business:</b> every question lands on a <b>friction map</b>, showing where new users get stuck.</p>
-</div>
-
-<img class="mascot" src="../frontend/public/mascot/bow/happy.png" alt="" style="left:1530px;top:222px;width:104px;height:104px;transform:scaleX(-1)">
-</div>
+<script>
+  // ?layer=N shows one layer on a transparent page (for the deck's step-by-step reveal).
+  const n = new URLSearchParams(location.search).get('layer');
+  if (n) {
+    document.body.classList.add('layers');
+    for (const l of document.querySelectorAll('.layer')) l.style.display = l.dataset.layer === n ? '' : 'none';
+  }
+</script>
 </body>
 </html>

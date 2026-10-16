@@ -25,6 +25,12 @@ Built for U-Hackathon 2026 (FLOW Summit, Bangkok, 15 to 16 Oct 2026), AI track, 
 
 **What is real:** live prices (Binance, Frankfurter for baht), ElevenLabs voice (Scribe v2 Realtime listening, Flash v2.5 and v4 Turbo speaking), the AI answers, and the U-Bot link. **What is demo:** the account (every visitor gets their own 5,000 baht), the fee rule (0.25%, at least 5 baht), and the purchases: no real money moves.
 
+## How it works
+
+![How Icarus works: you ask (voice or text, English or Thai); it listens (ElevenLabs Scribe); it thinks (code works out what you want first, the AI only finds the words); it shows (one sentence out loud while it moves the screens); you tap Confirm. It thinks with prepared answers, an AI model in the cloud with a backup, live data and house rules. Non-finance requests are written up for U-Bot, and every question feeds a friction map.](docs/media/architecture.png)
+
+Code does the work, the AI finds the words. The backend works out what the user wants and gets the numbers first (prepared fact sheets, refreshed with every price), so plain requests never wait for an AI: the 8 most common questions went from 42 s to 3 s in total, and 33 of 40 tricky judge-style questions answer in under 2 s (`backend/scripts/judge_battery.py`). New questions get one short AI call; a backup model answers if the first is slow. Drawn in [`docs/architecture.html`](docs/architecture.html).
+
 ## The problem
 
 When people open a finance app, the screens, charts and terms are hard to get into. That friction makes platforms lose users before they do anything.
