@@ -895,7 +895,7 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
       pb.handle = handle;
       void this.pump(res.body, pb);
       const result = await handle.finished;
-      this.onPlaybackDone(pb, result);
+      this.onPlaybackDone(pb, handle, result);
     } catch (err) {
       if (pb.ended) return;
       this.onTtsFailed(pb, err);
@@ -932,8 +932,16 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
     if (pb.turnId !== null) this.sendMetrics(this.deps.timers.now());
   }
 
-  private onPlaybackDone(pb: ActivePlayback, result: 'finished' | 'stopped'): void {
-    if (this.playback !== pb || pb.ended || result !== 'finished') return;
+  private onPlaybackDone(pb: ActivePlayback, handle: PlaybackHandle, result: 'finished' | 'stopped'): void {
+    // Only the handle now speaking this line decides how it ends. After a mid-stream TTS error the cut provider
+    // handle reports 'stopped' while the browser voice carries on with the same line: that is not the end.
+    if (this.playback !== pb || pb.ended || pb.handle !== handle) return;
+    // 'stopped' while we did not stop it: the output died (browser synthesis error). Settle it as
+    // an error so turn-taking continues, and never count it as a heard read-back.
+    if (result !== 'finished') {
+      this.endWithoutSound(pb);
+      return;
+    }
     pb.ended = true;
     this.playback = null;
     if (this.lastSpeech) this.lastSpeech.endedAt = this.deps.timers.now();
@@ -957,14 +965,23 @@ export class IcarusVoice extends Emitter<VoiceEvents> {
       );
       if (handle) {
         pb.handle = handle;
-        void handle.finished.then((r) => this.onPlaybackDone(pb, r));
+        void handle.finished.then((r) => this.onPlaybackDone(pb, handle, r));
         return;
       }
     }
-    // No sound at all.
+    this.endWithoutSound(pb);
+  }
+
+  /** Terminal failure: the line could not be spoken to the end. Settles once, clears playback, never unlocks "confirm". */
+  private endWithoutSound(pb: ActivePlayback): void {
     pb.ended = true;
     pb.settle('error');
     if (this.playback === pb) this.playback = null;
+    if (pb.started) {
+      // Some of it was heard before the output died: close the speakingStart we sent, and let echo timing see the end.
+      if (this.lastSpeech) this.lastSpeech.endedAt = this.deps.timers.now();
+      this.emit('speakingEnd', { reason: 'error' });
+    }
     if (pb.isReadback && this.confirm.phase) {
       // We could not read the preview aloud, so voice confirmation is off. The card on screen still works.
       this.confirm.resolved();

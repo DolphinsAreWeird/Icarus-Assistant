@@ -24,7 +24,7 @@ Source brief: [SUMMARY.md](SUMMARY.md).
 - [ ] **I08: Separate hosted request budgets.** Avoid shared-IP starvation of account reads and confirmations; test multiple visitors and bursts.
 - [ ] **I09: Refresh and age visible market data.** Old observations cannot remain labeled live; cover idle/focus/reconnect and quote-review interactions.
 - [ ] **I10: Align launcher engines and readiness.** Explicit engine choice, accurate health/readiness, failed backend startup/hang checks.
-- [ ] **I11: Settle failed fallback speech.** Clean up and settle every terminal playback outcome while keeping interrupted read-back unapproved.
+- [x] **I11: Settle failed fallback speech.** Clean up and settle every terminal playback outcome while keeping interrupted read-back unapproved.
 - [ ] **I12: Fix Windows build/fake startup.** Portable npm invocation, nonzero spawn failure and cross-platform fake-mode launch.
 - [x] **I13: Refresh dashboard after ring rollover.** Detect replacement events when event count remains 400; retain truthful browser-local analytics labeling.
 - [ ] **I14: Repair documentation and claims.** Correct stale run paths, historical handoffs, six broken links, data-locality wording and demo scope. Do not fabricate a live URL, deck or human review.
@@ -50,6 +50,8 @@ The issue's commit subject identifies its checkpoint. Hashes will be collected a
 | I07 | `fix: make QA scan and phone confirmation failures fail the run`: 9 node:test gate tests (high finding → FAIL + exit 1, phone confirm hard check, thrown step), `node --check` on changed .cjs, `--help` exit 0, unstartable run exit 2. No browser run (Playwright browsers absent) | Opus 5.5 High approved after fixes (deduplicated high findings in report, phone fallback data, README exit codes) |
 
 | I13 | `fix: refresh dashboard after event ring rollover`: 128 frontend tests (6 rollover/label/malformed/clear/unmount), typecheck and build passed; rollover tests fail on old HTML | Opus 5.5 High approved after fixes (junk entries, truthful footer, "Clear local events") |
+
+| I11 | `fix: settle failed fallback speech`: 9 settle regressions (double TTS/fallback failure, interrupted and failed read-back stay unapproved, mid-stream provider drop handed to fallback), 168 focused controller/confirm/barge-in tests, voice typecheck passed | Opus 5.5 High approved after fixes (stale-handle result ignored, speakingEnd on fallback error) |
 
 ## Execution notes
 
