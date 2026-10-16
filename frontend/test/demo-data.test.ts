@@ -183,6 +183,7 @@ it('lists stocks between crypto and gold, with gold last, and a tap asks Icarus 
   const fetcher = vi.fn(async () => Response.json(withWatch));
   const demo = installDemoData(proto, 'http://be', 'u_new', vi.fn(), fetcher);
   await act(async () => demo.refresh());
+  expect(proto.renderVals().filters.map((f: any) => f.label)).toEqual(['All', 'Crypto', 'Stocks']); // no Gold tab
   expect(proto.renderVals().assetRows.map((a: any) => a.id)).toEqual(['BTC', 'ETH', 'NVDA', 'AAPL', 'XAU']); // gold last, the broken entry left out
   await act(async () => proto.setState({ filter: 'Stocks' }));
   const rows = proto.renderVals().assetRows;
