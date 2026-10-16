@@ -30,3 +30,26 @@ voice/auditions/
 
 # Logs from ./demo.sh
 .demo-*.log
+
+# Model development: private files, Python caches, and generated datasets.
+*.pem
+*.key
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+/model/results/
+/model/data/raw/
+/model/data/market/
+/model/data/forecasts/
+/model/data/market_manifest.json
+/model/data/public_price_snapshot.json
+/model/data/*.tmp
+Thumbs.db
+.worktrees/
+.test-tmp/
+.pytest_cache/
+.npm-cache/
+pnpm-lock.yaml
+pnpm-workspace.yaml
+.demo-runtime/

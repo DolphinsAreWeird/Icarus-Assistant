@@ -83,6 +83,12 @@ export interface AssistantReply {
    * (Oasis's prototype already defines this field. It is not in the context.md contract.)
    */
   speech?: string;
+  /** Backend-generated numerical script: preserve exact values and sentence scope. */
+  speech_exact?: boolean;
+  status?: string;
+  limitations?: string[];
+  numerical_summaries?: Array<Record<string, unknown>>;
+  evidence?: Array<Record<string, unknown>>;
   /** OPTIONAL. Mascot mood for the UI (happy, excited, curious, thinking). The voice layer passes it on. */
   emotion?: string;
   /** Whether to read it aloud. */

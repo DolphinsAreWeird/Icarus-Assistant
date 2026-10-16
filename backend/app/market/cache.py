@@ -5,6 +5,8 @@ snapshot file on disk ("offline").
 """
 import json
 import time
+import threading
+from copy import deepcopy
 
 import httpx
 
@@ -22,6 +24,7 @@ class PriceCache:
         self.offline = offline
         self.snapshot_file = snapshot_file
         self.clock = clock
+        self.lock = threading.RLock()
         self.prices: dict[str, dict] = {}
         self.fx: dict | None = None
         self.load_snapshot()
@@ -35,17 +38,28 @@ class PriceCache:
         return "live" if age <= LIVE_MAX_AGE_S else "delayed"
 
     def get(self, asset_id: str) -> dict | None:
-        entry = self.prices.get(asset_id)
+        with self.lock:
+            entry = deepcopy(self.prices.get(asset_id))
         if entry is None:
             return None
         return {**entry, "freshness": self.freshness(entry)}
 
     def get_all(self) -> dict[str, dict]:
-        return {asset_id: self.get(asset_id) for asset_id in self.prices}
+        with self.lock:
+            return {asset_id: self.get(asset_id) for asset_id in self.prices}
+
+    def freeze(self):
+        """Copy prices and FX together for a single model turn."""
+        with self.lock:
+            return deepcopy(self.prices), deepcopy(self.fx)
 
     # ---------- refreshing ----------
 
     def refresh(self) -> list[str]:
+        with self.lock:
+            return self._refresh()
+
+    def _refresh(self) -> list[str]:
         """Poll every source once. Returns a list of problems (empty means all good)."""
         if self.offline:
             return ["offline mode: using snapshot only"]

@@ -58,6 +58,23 @@ describe('switching the backend on', () => {
   });
 });
 
+it('drops a delayed reply after the displayed screen revision changes', async () => {
+  let ask!: (text: string, ctx: unknown) => Promise<PrototypeReply>;
+  let revision = 'screen-1';
+  let finish!: (response: Response) => void;
+  const fetchImpl = vi.fn(() => new Promise<Response>(resolve => { finish = resolve; }));
+  const showTrade = vi.fn();
+  (window as any).Icarus = { setBackend: (fn: typeof ask) => { ask = fn; }, getContext: () => ({ screen_revision: revision }) };
+  installBackend({ url: 'http://be', userId: 'u_new', getInstance: () => null, showTrade, hideCards: vi.fn(), fetchImpl });
+  const pending = ask('Put 1000 baht in gold', { screen: 'home', screen_revision: revision });
+  revision = 'screen-2';
+  finish(jsonResponse(200, { text: 'Review.', ui_actions: [TRADE_CARD] }));
+  const reply = await pending;
+  expect(reply.ui_actions).toEqual([]);
+  expect(reply.text).toContain('screen changed');
+  expect(showTrade).not.toHaveBeenCalled();
+});
+
 describe('the request: the prototype context goes as the snapshot, untouched', () => {
   it('sends session, user, language, voice mode and the snapshot', () => {
     const ctx = { screen: 'asset', language: 'en', asset: { id: 'XAU', name: 'Gold' }, period: '1M', focus: 'asset.chart' };
@@ -91,6 +108,8 @@ describe("the reply: the backend's screen actions, and the exact buy read-back",
     expect(buyReadback(BUY_ACTIONS, undefined, fakeProto(false), 'en')).toBeNull(); // not enough balance, below minimum
     expect(buyReadback(BUY_ACTIONS, undefined, null, 'en')).toBeNull();
     expect(toPrototypeReply({ text: 'Gold is a metal.' }, 'en').reply.speech).toBe('Gold is a metal.');
+    expect(toPrototypeReply({ text: 'Full explanation.', speech: 'Verified short script.', emotion: 'curious', suggestions: ['Show me gold'] }, 'en').reply)
+      .toMatchObject({ speech: 'Verified short script.', emotion: 'curious', suggestions: ['Show me gold'] });
   });
 
   it("still understands the older backend's highlight and trade card", () => {

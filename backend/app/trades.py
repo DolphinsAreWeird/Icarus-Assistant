@@ -4,6 +4,7 @@ prepare_trade never changes balances. Only confirm_trade does, and only the
 user's tap on the card calls it. The LLM has no path to confirm_trade.
 """
 import secrets
+import math
 from datetime import UTC, datetime
 
 from app import knowledge
@@ -21,11 +22,16 @@ class TradeError(Exception):
 
 def prepare_trade(state: DemoState, cache: PriceCache, user_id: str,
                   asset_id: str, side: str, amount_thb: float) -> dict:
+    with state.lock:
+        return _prepare_trade(state, cache, user_id, asset_id, side, amount_thb)
+
+
+def _prepare_trade(state, cache, user_id, asset_id, side, amount_thb):
     fees, assets = knowledge.fees(), knowledge.assets()
     user = state.users[user_id]
     if asset_id not in assets:
         raise TradeError("unknown_asset", asset_id=asset_id)
-    if amount_thb <= 0:
+    if side not in ("buy", "sell") or not math.isfinite(amount_thb) or not 0 < amount_thb <= 1e9:
         raise TradeError("bad_amount", amount_thb=amount_thb)
     if side == "buy" and amount_thb < fees["min_buy_thb"]:
         raise TradeError("below_minimum", min_buy_thb=fees["min_buy_thb"])
@@ -53,6 +59,8 @@ def prepare_trade(state: DemoState, cache: PriceCache, user_id: str,
         if qty > held:
             raise TradeError("not_enough_holdings", held_value_thb=round(held * price_thb, 2))
         received, fee = sell_proceeds(amount_thb, fees)
+        if received <= 0:
+            raise TradeError("bad_amount")
         preview.update(fee_thb=fee, qty=round(qty, 8), you_get_thb=received)
 
     if "grams_per_unit" in asset:
@@ -60,6 +68,9 @@ def prepare_trade(state: DemoState, cache: PriceCache, user_id: str,
 
     preview["expires_at"] = state.clock() + fees["preview_expiry_s"]
     preview["status"] = "pending"
+    for previous in state.previews.values():
+        if previous["user_id"] == user_id and previous["status"] == "pending":
+            previous["status"] = "cancelled"
     state.previews[preview["preview_id"]] = preview
     return preview
 

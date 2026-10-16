@@ -90,3 +90,16 @@ cd frontend && npm install && npm run build   # the app (Oasis's prototype)
 cd ../voice && npm install
 npm run dev:fake     # works with no API key. Open http://localhost:8787/app/
 ```
+
+## Model prototype (Luka and First)
+
+The standalone model and data-processing prototype is in [`model/`](model/). It includes English/Thai retrieval, deterministic financial tools, explicit user-context intake, versioned app-data adapters, and exploratory risk baselines. It has no trade-execution endpoint.
+
+Start with [`model/START_HERE.md`](model/START_HERE.md). The app/backend data contract is in [`model/INTEGRATION.md`](model/INTEGRATION.md). Guidance rules and translations remain drafts for team review before enabling them in the shared app.
+
+```powershell
+python -m unittest discover -s model/tests -v
+python model/assistant.py --interactive --lang en --session demo
+```
+
+Private `model/.env`, local conversations, generated reports, and downloaded/generated market data are ignored. Copy only the public `.env.example` template when setting up another machine.

@@ -65,6 +65,11 @@ export function normalizeReply(raw: unknown): AssistantReply {
   return {
     text: r.text,
     ...(typeof r.speech === 'string' && r.speech.trim() ? { speech: r.speech } : {}),
+    ...(r.speech_exact === true ? { speech_exact: true } : {}),
+    ...(typeof r.status === 'string' ? { status: r.status } : {}),
+    ...(Array.isArray(r.limitations) ? { limitations: r.limitations.filter((v): v is string => typeof v === 'string') } : {}),
+    ...(Array.isArray(r.numerical_summaries) ? { numerical_summaries: r.numerical_summaries.filter(isObject) } : {}),
+    ...(Array.isArray(r.evidence) ? { evidence: r.evidence.filter(isObject) } : {}),
     ...(typeof r.emotion === 'string' ? { emotion: r.emotion } : {}),
     speak: typeof r.speak === 'boolean' ? r.speak : true,
     ui_actions: Array.isArray(r.ui_actions) ? r.ui_actions.filter(isObject).map(toUiAction) : [],

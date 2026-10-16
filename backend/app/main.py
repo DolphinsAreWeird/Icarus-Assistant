@@ -1,6 +1,6 @@
 """HTTP API. Run from backend/:  .venv/bin/uvicorn app.main:app --port 8000"""
 import threading
-import time
+import os
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
@@ -11,11 +11,13 @@ from app import knowledge
 from app.assistant.llm import ChatModel, LLMError, RateLimited
 from app.assistant.loop import Assistant, UnknownUser
 from app.config import OFFLINE, POLL_INTERVAL_S
-from app.contracts import ChatReply, ChatRequest, ConfirmRequest, ErrorBody
+from app.contracts import ChatReply, ChatRequest, ConfirmRequest, ErrorBody, PreviewRequest
 from app.market.cache import PriceCache
 from app.market.history import PERIODS, period_rows, summarize
 from app.state import DemoState
-from app.trades import TradeError, confirm_trade, portfolio
+from app.trades import TradeError, confirm_trade, portfolio, prepare_trade
+from app.demo_data import demo_bundle
+from app.model_service import ModelService, SessionsBusy
 
 ERRORS = {
     "unknown_user": ("We don't know that user.", "ไม่พบผู้ใช้นี้"),
@@ -23,6 +25,10 @@ ERRORS = {
     "no_model": ("The assistant isn't set up yet.", "ผู้ช่วยยังไม่พร้อมใช้งาน"),
     "rate_limited": ("Icarus is busy. Try again in a minute.", "Icarus ยุ่งอยู่ ลองใหม่อีกนาทีนะ"),
     "assistant_failed": ("Icarus couldn't answer just now. Try again.", "Icarus ตอบไม่ได้ตอนนี้ ลองอีกครั้งนะ"),
+    "sessions_busy": ("This conversation or service is busy. Try again shortly.", "บทสนทนาหรือบริการกำลังใช้งานอยู่ โปรดลองอีกครั้งสักครู่"),
+    "bad_amount": ("Enter a supported positive amount with at most two decimal places.", "โปรดระบุจำนวนเงินที่รองรับเป็นบวกและมีทศนิยมไม่เกินสองตำแหน่ง"),
+    "below_minimum": ("The minimum demo purchase budget is 100 baht.", "งบซื้อจำลองขั้นต่ำคือ 100 บาท"),
+    "no_price": ("No reference price is available for that asset.", "ยังไม่มีราคาอ้างอิงของสินทรัพย์นี้"),
     "preview_not_found": ("That preview doesn't exist.", "ไม่พบรายการนี้"),
     "preview_expired": ("That preview expired. Ask again for a fresh price.", "รายการนี้หมดเวลาแล้ว ขอราคาใหม่อีกครั้งนะ"),
     "preview_cancelled": ("That preview was cancelled. Nothing was bought.", "รายการนี้ถูกยกเลิกแล้ว ไม่มีการซื้อ"),
@@ -44,30 +50,57 @@ def make_llm():
         return None
 
 
-def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True) -> FastAPI:
+def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True, *,
+               engine: str | None = None, model_offline: bool | None = None) -> FastAPI:
     cache = PriceCache(knowledge.assets(), offline=offline)
     state = DemoState()
-    llm = llm if llm is not None else make_llm()
-    assistant = Assistant(llm, state, cache) if llm else None
+    engine = engine or ("legacy" if llm is not None else os.getenv("ASSISTANT_ENGINE", "model"))
+    if engine not in ("model", "legacy"):
+        raise ValueError("ASSISTANT_ENGINE must be model or legacy")
+    model_offline = model_offline if model_offline is not None else os.getenv("ICARUS_MODEL_OFFLINE", "1") == "1"
+    if engine == "model":
+        assistant = ModelService(state, cache, offline=model_offline, model=os.getenv("ICARUS_LLM_MODEL"))
+    else:
+        llm = llm if llm is not None else make_llm()
+        assistant = Assistant(llm, state, cache) if llm else None
+    stop_polling = threading.Event()
 
     def poller():
-        while True:
-            cache.refresh()
-            time.sleep(POLL_INTERVAL_S)
+        while not stop_polling.is_set():
+            try:
+                cache.refresh()
+            except Exception:
+                # Keep the last good bundle; one source failure must not kill polling.
+                import logging
+                logging.getLogger(__name__).exception("Market refresh failed")
+            stop_polling.wait(POLL_INTERVAL_S)
 
     @asynccontextmanager
     async def lifespan(app):
+        stop_polling.clear()
+        thread = None
         if poll and not offline:
-            threading.Thread(target=poller, daemon=True).start()
-        yield
+            thread = threading.Thread(target=poller, daemon=True)
+            thread.start()
+        try:
+            yield
+        finally:
+            stop_polling.set()
+            if thread:
+                thread.join(timeout=30)
 
     app = FastAPI(title="Icarus backend", lifespan=lifespan)
-    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+    origins = os.getenv("CORS_ORIGINS", "http://localhost:8787,http://127.0.0.1:8787,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000")
+    app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in origins.split(",") if o.strip()],
+                       allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
     app.state.cache, app.state.demo = cache, state
+    app.state.assistant = assistant
 
     @app.get("/health")
     def health():
-        return {"offline": offline, "assistant": f"{llm.provider}/{llm.model}" if llm else "not set up",
+        return {"offline": offline, "engine": engine,
+                "assistant": ("model/offline-preview" if model_offline else "model/gateway") if engine == "model"
+                             else f"{llm.provider}/{llm.model}" if llm else "not set up",
                 "fx": cache.fx,
                 "prices": {k: v["freshness"] for k, v in cache.get_all().items()}}
 
@@ -115,6 +148,8 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True) -> FastAPI:
             fail(404, "unknown_user")
         except RateLimited:
             fail(429, "rate_limited")
+        except SessionsBusy:
+            fail(429, "sessions_busy")
         except Exception as e:
             fail(502, "assistant_failed", reason=type(e).__name__)
 
@@ -127,8 +162,39 @@ def create_app(llm=None, offline: bool = OFFLINE, poll: bool = True) -> FastAPI:
 
     @app.post("/demo/reset")
     def reset():
-        state.reset()
+        try:
+            if isinstance(assistant, ModelService):
+                assistant.reset()
+            else:
+                state.reset()
+        except SessionsBusy:
+            fail(409, "sessions_busy")
         return {"ok": True, "users": list(state.users)}
+
+    @app.get("/demo/state/{user_id}")
+    def demo_state(user_id: str):
+        if user_id not in state.users:
+            fail(404, "unknown_user")
+        return demo_bundle(cache, state, user_id)
+
+    @app.post("/trades/preview")
+    def preview(body: PreviewRequest):
+        if body.user_id not in state.users:
+            fail(404, "unknown_user")
+        try:
+            return prepare_trade(state, cache, body.user_id, body.asset_id, body.side, body.amount_thb)
+        except TradeError as e:
+            fail(409, e.code, **e.details)
+
+    @app.post("/trades/{preview_id}/cancel")
+    def cancel(preview_id: str, body: ConfirmRequest):
+        with state.lock:
+            item = state.previews.get(preview_id)
+            if item is None or item["user_id"] != body.user_id:
+                fail(404, "preview_not_found")
+            if item["status"] == "pending":
+                item["status"] = "cancelled"
+            return {"status": item["status"], "preview_id": preview_id}
 
     return app
 

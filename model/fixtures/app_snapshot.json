@@ -1,0 +1,22 @@
+{
+  "schema_version":1,
+  "snapshot_id":"synthetic-app-demo-v1",
+  "prices":[
+    {"asset_id":"btc","currency":"THB","price":"1000000.00","change_24h_pct":null,"source":{"provider":"icarus_mock","origin":"synthetic","delivery":"fixture","observed_at":"2026-10-15T00:00:00Z","source_url":null}},
+    {"asset_id":"gold","currency":"THB","price":"100000.00","change_24h_pct":null,"source":{"provider":"icarus_mock","origin":"synthetic","delivery":"fixture","observed_at":"2026-10-15T00:00:00Z","source_url":null}}
+  ],
+  "account":{
+    "account_ref":"fictional-account",
+    "currency":"THB",
+    "positions":[{"asset_id":"btc","value":"8000.00"},{"asset_id":"eth","value":"1000.00"},{"asset_id":"gold","value":"500.00"},{"asset_id":"cash","value":"500.00"}],
+    "source":{"provider":"icarus_mock","origin":"synthetic","delivery":"fixture","observed_at":"2026-10-15T00:00:00Z","source_url":null}
+  },
+  "screen":{
+    "screen_id":"asset_detail","screen_revision":"rev-demo-1","selected_asset":"gold","focused_element":"asset.chart",
+    "chart":{
+      "asset_id":"gold","currency":"THB","period":"1m","display_version":"chart-demo-1",
+      "points":[{"at":"2026-09-15T00:00:00Z","price":"100000.00"},{"at":"2026-10-01T00:00:00Z","price":"101000.00"},{"at":"2026-10-15T00:00:00Z","price":"99500.00"}],
+      "source":{"provider":"icarus_mock","origin":"synthetic","delivery":"fixture","observed_at":"2026-10-15T00:00:00Z","source_url":null}
+    }
+  }
+}
