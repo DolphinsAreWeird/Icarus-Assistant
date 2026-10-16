@@ -53,3 +53,7 @@ Thumbs.db
 pnpm-lock.yaml
 pnpm-workspace.yaml
 .demo-runtime/
+
+# Vercel static output
+vercel-dist/
+.vercel/
