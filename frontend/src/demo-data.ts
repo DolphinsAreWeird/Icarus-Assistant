@@ -165,6 +165,8 @@ export function installDemoData(proto: Prototype, url: string, userId: string, o
           if (!proto.calc(appAsset, amount, 'thb').ok) throw new Error('Check the amount and available balance.');
           pending = await request('/trades/preview', { user_id: userId, asset_id: ids[appAsset], amount_thb: amount });
         }
+        // Never confirm a preview that doesn't match what the screen shows.
+        if (!pending || ids[appAsset] !== pending.asset_id || amount !== pending.amount_thb) throw new Error('Review the amount again before confirming.');
         const preview = pending as Record<string, any>;
         await request(`/trades/${encodeURIComponent(preview.preview_id)}/confirm`, { user_id: userId });
         pending = null;
